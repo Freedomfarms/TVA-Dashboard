@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TVA Dashboard</title>
+    <script type="module" src="/main.js"></script>
+  </head>
+  <body>
+    <div class="backdrop-orb orb-one"></div>
+    <div class="backdrop-orb orb-two"></div>
+    <div class="backdrop-grid"></div>
+
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark">
+            <div class="brand-core"></div>
+          </div>
+          <div class="brand-text">
+            <strong>NEXORA</strong>
+            <span>Vendor Portal</span>
+          </div>
+        </div>
+
+        <nav class="nav-menu" aria-label="Main navigation">
+          <a class="nav-item active" href="#">
+            <span class="nav-icon nav-grid"></span>
+            <span>Overview</span>
+            <span class="nav-dot"></span>
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon nav-file"></span>
+            <span>Orders</span>
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon nav-box"></span>
+            <span>Products</span>
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon nav-pulse"></span>
+            <span>Analytics</span>
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon nav-wallet"></span>
+            <span>Finance</span>
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon nav-users"></span>
+            <span>Customers</span>
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon nav-message"></span>
+            <span>Messages</span>
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon nav-cog"></span>
+            <span>Settings</span>
+          </a>
+        </nav>
+
+        <div class="vendor-card">
+          <div class="vendor-avatar">
+            <div class="avatar-ring"></div>
+            <div class="avatar-core"></div>
+          </div>
+          <div class="vendor-name">Nova Traders</div>
+          <div class="vendor-badge">Verified Vendor</div>
+          <div class="vendor-id">Vendor ID: VDR-78291</div>
+          <button class="vendor-action" type="button" aria-label="Expand vendor card"></button>
+        </div>
+      </aside>
+
+      <main class="dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Welcome back,</p>
+            <h1>Nova Traders <span class="wave">👋</span></h1>
+            <p class="subtitle">Here's what's happening with your business today.</p>
+          </div>
+
+          <div class="topbar-actions">
+            <button class="icon-button search" type="button" aria-label="Search"></button>
+            <button class="icon-button bell" type="button" aria-label="Notifications">
+              <span class="notification-count">8</span>
+            </button>
+            <button class="profile-button" type="button" aria-label="Open profile"></button>
+          </div>
+        </header>
+
+        <section class="stats-grid">
+          <article class="stat-card purple-glow">
+            <div class="card-heading">
+              <span>Total Revenue</span>
+            </div>
+            <div class="metric-row">
+              <div>
+                <div class="metric-value">$98,760.50</div>
+                <div class="metric-trend up">24.8% <span>vs last month</span></div>
+              </div>
+              <div class="spark-bars spark-purple">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+          </article>
+
+          <article class="stat-card teal-glow">
+            <div class="card-heading">
+              <span>Orders</span>
+              <span class="mini-badge bag-icon"></span>
+            </div>
+            <div class="metric-row">
+              <div>
+                <div class="metric-value">1,248</div>
+                <div class="metric-trend up">18.2% <span>vs last month</span></div>
+              </div>
+              <svg class="sparkline" viewBox="0 0 120 56" aria-hidden="true">
+                <defs>
+                  <linearGradient id="teal-line" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#0dc9d7" stop-opacity="0" />
+                    <stop offset="35%" stop-color="#0dc9d7" />
+                    <stop offset="100%" stop-color="#7cf6c5" />
+                  </linearGradient>
+                </defs>
+                <path d="M6 45 L18 38 L30 41 L42 28 L54 34 L66 24 L78 29 L90 14 L102 19 L114 10" />
+              </svg>
+            </div>
+          </article>
+
+          <article class="stat-card blue-glow">
+            <div class="card-heading">
+              <span>Pending Payments</span>
+              <span class="mini-badge hourglass-icon"></span>
+            </div>
+            <div class="metric-row">
+              <div>
+                <div class="metric-value">$14,560.00</div>
+                <div class="metric-trend down">8.4% <span>vs last month</span></div>
+              </div>
+              <svg class="sparkline" viewBox="0 0 120 56" aria-hidden="true">
+                <defs>
+                  <linearGradient id="blue-line" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#41a2ff" stop-opacity="0" />
+                    <stop offset="25%" stop-color="#41a2ff" />
+                    <stop offset="100%" stop-color="#80eeff" />
+                  </linearGradient>
+                </defs>
+                <path d="M6 36 L20 30 L34 42 L48 28 L62 36 L76 18 L90 32 L104 22 L114 10" />
+              </svg>
+            </div>
+          </article>
+
+          <article class="stat-card amber-glow">
+            <div class="card-heading">
+              <span>Customer Rating</span>
+              <span class="mini-badge star-icon"></span>
+            </div>
+            <div class="metric-row">
+              <div>
+                <div class="metric-value">4.9</div>
+                <div class="metric-trend up">2.1% <span>vs last month</span></div>
+              </div>
+              <svg class="sparkline" viewBox="0 0 120 56" aria-hidden="true">
+                <defs>
+                  <linearGradient id="amber-line" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#ff9d2a" stop-opacity="0" />
+                    <stop offset="40%" stop-color="#ff9d2a" />
+                    <stop offset="100%" stop-color="#ffd166" />
+                  </linearGradient>
+                </defs>
+                <path d="M10 38 L26 16 L38 36 L52 30 L66 40 L82 38 L98 24 L114 18" />
+              </svg>
+            </div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel order-flow-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Order Flow</h2>
+              </div>
+              <button class="ghost-select" type="button">This Week</button>
+            </div>
+
+            <div class="order-flow-layout">
+              <div class="portal-visual">
+                <div class="portal-shadow"></div>
+                <div class="portal-ring ring-one"></div>
+                <div class="portal-ring ring-two"></div>
+                <div class="portal-ring ring-three"></div>
+                <div class="portal-core">
+                  <span>Total Orders</span>
+                  <strong>312</strong>
+                  <small>↑ 19.2%</small>
+                </div>
+                <div class="portal-base"></div>
+              </div>
+
+              <div class="status-list">
+                <div class="status-item cyan">
+                  <div class="status-top">
+                    <span>Completed</span>
+                    <strong>182</strong>
+                  </div>
+                  <span class="status-bar"><i></i></span>
+                </div>
+                <div class="status-item violet">
+                  <div class="status-top">
+                    <span>Processing</span>
+                    <strong>74</strong>
+                  </div>
+                  <span class="status-bar"><i></i></span>
+                </div>
+                <div class="status-item amber">
+                  <div class="status-top">
+                    <span>Shipped</span>
+                    <strong>38</strong>
+                  </div>
+                  <span class="status-bar"><i></i></span>
+                </div>
+                <div class="status-item pink">
+                  <div class="status-top">
+                    <span>Cancelled</span>
+                    <strong>18</strong>
+                  </div>
+                  <span class="status-bar"><i></i></span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel sales-panel">
+            <div class="panel-header">
+              <h2>Sales Performance</h2>
+              <button class="ghost-select" type="button">This Month</button>
+            </div>
+
+            <div class="sales-chart">
+              <div class="chart-tooltip">
+                <strong>$32,680</strong>
+                <span>May 15</span>
+              </div>
+
+              <div class="chart-y-axis">
+                <span>$40K</span>
+                <span>$30K</span>
+                <span>$20K</span>
+                <span>$10K</span>
+                <span>$0</span>
+              </div>
+
+              <svg viewBox="0 0 660 260" class="sales-svg" aria-hidden="true">
+                <defs>
+                  <linearGradient id="mesh-cyan" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#3db4ff" />
+                    <stop offset="100%" stop-color="#53f5ff" />
+                  </linearGradient>
+                  <linearGradient id="mesh-violet" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#7f5cff" />
+                    <stop offset="100%" stop-color="#cb6cff" />
+                  </linearGradient>
+                  <linearGradient id="mesh-pink" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#d34cff" />
+                    <stop offset="100%" stop-color="#ff61d8" />
+                  </linearGradient>
+                </defs>
+
+                <g class="grid-lines">
+                  <line x1="60" y1="30" x2="60" y2="220"></line>
+                  <line x1="180" y1="30" x2="180" y2="220"></line>
+                  <line x1="300" y1="30" x2="300" y2="220"></line>
+                  <line x1="420" y1="30" x2="420" y2="220"></line>
+                  <line x1="540" y1="30" x2="540" y2="220"></line>
+                  <line x1="60" y1="220" x2="600" y2="220"></line>
+                </g>
+
+                <path class="mesh-fill mesh-fill-cyan" d="M40 180 C90 140, 130 130, 160 178 C190 225, 230 205, 270 158 C310 112, 350 118, 392 168 C425 206, 465 198, 505 158 C545 120, 570 134, 610 180 L610 220 L40 220 Z"></path>
+                <path class="mesh-fill mesh-fill-violet" d="M40 188 C90 212, 130 184, 168 122 C204 68, 246 78, 282 152 C320 230, 360 220, 398 136 C430 68, 470 74, 510 148 C548 222, 576 232, 610 190 L610 220 L40 220 Z"></path>
+                <path class="mesh-fill mesh-fill-pink" d="M40 200 C92 174, 126 170, 160 192 C194 214, 238 218, 278 180 C310 152, 342 114, 388 84 C430 56, 470 82, 502 146 C536 214, 568 228, 610 182 L610 220 L40 220 Z"></path>
+
+                <path class="mesh-line mesh-line-cyan" d="M40 180 C90 140, 130 130, 160 178 C190 225, 230 205, 270 158 C310 112, 350 118, 392 168 C425 206, 465 198, 505 158 C545 120, 570 134, 610 180"></path>
+                <path class="mesh-line mesh-line-violet" d="M40 188 C90 212, 130 184, 168 122 C204 68, 246 78, 282 152 C320 230, 360 220, 398 136 C430 68, 470 74, 510 148 C548 222, 576 232, 610 190"></path>
+                <path class="mesh-line mesh-line-pink" d="M40 200 C92 174, 126 170, 160 192 C194 214, 238 218, 278 180 C310 152, 342 114, 388 84 C430 56, 470 82, 502 146 C536 214, 568 228, 610 182"></path>
+
+                <line class="hover-line" x1="388" y1="20" x2="388" y2="224"></line>
+              </svg>
+
+              <div class="chart-x-axis">
+                <span>May 01</span>
+                <span>May 08</span>
+                <span>May 15</span>
+                <span>May 22</span>
+                <span>May 29</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel neon-scape-panel">
+            <div class="scape-stars" aria-hidden="true"></div>
+            <div class="scape-columns" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="scape-horizon" aria-hidden="true"></div>
+            <div class="scape-river" aria-hidden="true"></div>
+          </article>
+
+          <article class="panel products-panel">
+            <div class="panel-header">
+              <h2>Top Selling Products</h2>
+            </div>
+
+            <div class="product-list">
+              <div class="product-item">
+                <div class="product-rank">01</div>
+                <div class="product-thumb cyan-frame"></div>
+                <div class="product-copy">
+                  <strong>QuantumDrive X1</strong>
+                  <span>SKU: QDX1-001</span>
+                </div>
+                <div class="product-stats">
+                  <strong>$24,680</strong>
+                  <span>812 units</span>
+                </div>
+              </div>
+
+              <div class="product-item">
+                <div class="product-rank">02</div>
+                <div class="product-thumb violet-frame"></div>
+                <div class="product-copy">
+                  <strong>Lumina Pro Display</strong>
+                  <span>SKU: LPD-002</span>
+                </div>
+                <div class="product-stats">
+                  <strong>$18,760</strong>
+                  <span>645 units</span>
+                </div>
+              </div>
+
+              <div class="product-item">
+                <div class="product-rank">03</div>
+                <div class="product-thumb pink-frame"></div>
+                <div class="product-copy">
+                  <strong>Nebula Wireless Earbuds</strong>
+                  <span>SKU: NWE-003</span>
+                </div>
+                <div class="product-stats">
+                  <strong>$12,490</strong>
+                  <span>521 units</span>
+                </div>
+              </div>
+
+              <div class="product-item">
+                <div class="product-rank">04</div>
+                <div class="product-thumb amber-frame"></div>
+                <div class="product-copy">
+                  <strong>AeroColt Pro Laptop Stand</strong>
+                  <span>SKU: ACPLS-004</span>
+                </div>
+                <div class="product-stats">
+                  <strong>$9,850</strong>
+                  <span>389 units</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel financial-panel">
+            <div class="panel-header">
+              <h2>Financial Overview</h2>
+            </div>
+
+            <div class="financial-layout">
+              <div class="finance-copy left">
+                <span>Total Earnings</span>
+                <strong>$98,760.50</strong>
+              </div>
+
+              <div class="finance-gem">
+                <div class="finance-gem-inner"></div>
+              </div>
+
+              <div class="finance-copy right">
+                <span>Total Payouts</span>
+                <strong>$84,200.00</strong>
+              </div>
+            </div>
+
+            <div class="profit-copy">
+              <span>Net Profit</span>
+              <strong>$14,560.50</strong>
+            </div>
+          </article>
+
+          <article class="panel activity-panel">
+            <div class="panel-header">
+              <h2>Recent Activity</h2>
+            </div>
+
+            <div class="activity-list">
+              <div class="activity-item">
+                <div class="activity-icon violet"></div>
+                <div class="activity-copy">
+                  <strong>Order #ORD-78452</strong>
+                  <span>New order received</span>
+                </div>
+                <time>2m ago</time>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon green"></div>
+                <div class="activity-copy">
+                  <strong>Payment of $2,450</strong>
+                  <span>Received from order #ORD-78440</span>
+                </div>
+                <time>15m ago</time>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon blue"></div>
+                <div class="activity-copy">
+                  <strong>Order #ORD-78431</strong>
+                  <span>Shipped</span>
+                </div>
+                <time>1h ago</time>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon magenta"></div>
+                <div class="activity-copy">
+                  <strong>Product QuantumDrive X1</strong>
+                  <span>Inventory updated</span>
+                </div>
+                <time>2h ago</time>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel quote-panel">
+            <div class="quote-mark">“</div>
+            <p>Your growth is our mission. Let's build the future together.</p>
+          </article>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
