@@ -34,51 +34,7 @@ const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
 const storedDataset = localStorage.getItem(datasetStorageKey);
 const storedAnchor = localStorage.getItem(anchorStorageKey);
-const defaultWipRaw = `Part Number\tVendor\tProcess\tClean WIP\tMin WIP\tMTD Del.\tBU
-4119904\tATA\tCBN\t7\t0\t0\tMilitary
-4119905\tATA\tCBN\t4\t0\t0\tMilitary
-4320806\tATA\tCBN\t0\t0\t0\tMilitary
-4318207\tATA\tCBN\t0\t0\t0\tMilitary
-4317508\tATA\tCBN\t0\t0\t0\tMilitary
-4131129-01\tATA\tCBN\t0\t0\t0\tMilitary
-4085004\tATA\tCBN\t0\t0\t0\tMilitary
-4084105\tATA\tCBN\t100\t0\t0\tMilitary
-4084106\tATA\tCBN\t89\t0\t0\tMilitary
-4081507\tATA\tCBN\t234\t0\t0\tMilitary
-MD4134613-91\tBudney\tTurn\t30\t35\t2\tMilitary
-4119904\tCW\tPlasma\t4\t0\t4\tMilitary
-4119905\tCW\tPlasma\t0\t0\t0\tMilitary
-4318207\tCW\tPlasma\t0\t0\t1\tMilitary
-4131129-01\tCW\tPlasma\t1\t0\t1\tMilitary
-4138202\tCW\tPlasma\t0\t0\t0\tMilitary
-4137321\tDHI\tDeburr\t9\t21\t2\tMilitary
-MD4088768-02\tDHI\tDeburr\t0\t0\t0\tMilitary
-MD4088768-03\tDHI\tDeburr\t0\t0\t0\tMilitary
-MD4131129-21\tHanwha\tTurn\t24\t15\t0\tMilitary
-4089026-01\tLinde\tCoat / Grind\t26\t1\t0\tMilitary
-4082602\tLinde\tCoat / Grind\t2\t2\t0\tMilitary
-4326628\tMSC\tCoat\t0\t1\t0\tMilitary
-4322743-01\tMSC\tCoat\t0\t0\t0\tMilitary
-6W30P2594-01\tATL\tSonic\t11\t1\t8\tCommercial
-30G5307\tBudney\tTurn\t10\t6\t5\tCommercial
-2A4802\tBudney\tTurn\t6\t5\t0\tCommercial
-31G1508\tBudney\tTurn\t9\t2\t0\tCommercial
-31G1508\tBudney\tBalance\t0\t0\t0\tCommercial
-30G7208\tCW\tAlox\t18\t10\t1\tCommercial
-1B4237\tHanwha\tTurn\t2\t0\t0\tCommercial
-50D497\tHanwha\tTurn\t2\t1\t0\tCommercial
-30G4407\tLinde\tCBN\t19\t10\t6\tCommercial
-30G5307\tLinde\tCBN\t11\t10\t6\tCommercial
-30G8908\tLinde\tCBN / Alox\t52\t31\t0\tCommercial
-31G1508\tLinde\tAlox\t9\t0\t0\tCommercial
-31G0508\tLinde\tAlox\t10\t0\t0\tCommercial
-30G8908\tMDS\tBlack Gold\t14\t18\t0\tCommercial
-31G0508\tMDS\tBlack Gold\t0\t0\t0\tCommercial
-1B6275-01\tNE Plasma\tPlasma\t0\t1\t0\tCommercial
-2A5001\tTest Devices\tSpin\t0\t0\t0\tCommercial
-2A4802\tTest Devices\tSpin\t0\t0\t0\tCommercial
-52G158\tValence\tAnodize\t2\t1\t0\tCommercial
-53D925\tValence\tAnodize\t4\t2\t0\tCommercial`;
+const defaultWipRaw = "";
 const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
 \t4700912755\t4119904\tATA\tCBN\t0\t12\tMilitary
 \t4700912732\t4119905\tATA\tCBN\t0\t12\tMilitary
