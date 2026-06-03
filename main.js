@@ -29,7 +29,7 @@ const dataColumnCount = document.querySelector("#data-column-count");
 const dataStorageStatus = document.querySelector("#data-storage-status");
 const deliveriesInput = document.querySelector("#deliveries-input");
 const parseDeliveriesButton = document.querySelector("#parse-deliveries-button");
-const saveDeliveriesButton = document.querySelector("#save-deliveries-button");
+const addDeliveriesButton = document.querySelector("#add-deliveries-button");
 const clearDeliveriesButton = document.querySelector("#clear-deliveries-button");
 const deliveriesPreviewHead = document.querySelector("#deliveries-preview-head");
 const deliveriesPreviewBody = document.querySelector("#deliveries-preview-body");
@@ -1082,14 +1082,51 @@ const loadAnchorTemplate = () => {
   renderAnchorPreview(dataset, "Template loaded");
 };
 
-const loadDeliveriesTemplate = () => {
-  const dataset = parseSpreadsheetData(defaultDeliveriesRaw);
-  window.dashboardDeliveries = dataset;
+const todaySlash = () => new Date().toLocaleDateString("en-US");
 
-  if (deliveriesInput) {
-    deliveriesInput.value = defaultDeliveriesRaw;
+const DELIVERIES_HEADERS = ["PO", "Qty", "Received", "Date Entered"];
+
+const buildDeliveriesDataset = (rows) => ({ headers: DELIVERIES_HEADERS, rows });
+
+const normalizeDeliveryRow = (row, enteredDate) => ({
+  PO: getRowValue(row, ["PO", "Incoming PO", "REF_DOC / PO"]),
+  Qty: getRowValue(row, ["Qty", "Quantity"]),
+  Received: getRowValue(row, ["Received", "Ship Date", "Date"]),
+  "Date Entered": getRowValue(row, ["Date Entered"]) || enteredDate,
+});
+
+const parseDeliveryPaste = (text, enteredDate) => {
+  if (!text || !text.trim()) {
+    return [];
   }
 
+  const parsed = parseSpreadsheetData(text);
+  const headerTokens = parsed.headers.map((header) => String(header).toLowerCase().trim());
+  const hasHeader = headerTokens.includes("po") || headerTokens.includes("ref_doc / po");
+
+  if (hasHeader) {
+    return parsed.rows.map((row) => normalizeDeliveryRow(row, enteredDate));
+  }
+
+  const lines = text.trim().split(/\r?\n/).filter((line) => line.trim().length > 0);
+  const delimiter = text.includes("\t") ? "\t" : ",";
+  return lines.map((line) => {
+    const cells = parseDelimitedLine(line, delimiter);
+    return {
+      PO: cells[0] || "",
+      Qty: cells[1] || "",
+      Received: cells[2] || "",
+      "Date Entered": enteredDate,
+    };
+  });
+};
+
+const loadDeliveriesTemplate = () => {
+  const parsed = parseSpreadsheetData(defaultDeliveriesRaw);
+  const dataset = buildDeliveriesDataset(
+    parsed.rows.map((row) => normalizeDeliveryRow(row, todaySlash())),
+  );
+  window.dashboardDeliveries = dataset;
   renderDeliveriesPreview(dataset, "Template loaded");
 };
 
@@ -1174,11 +1211,10 @@ if (storedDeliveries) {
   try {
     const dataset = JSON.parse(storedDeliveries);
     if (isDeliveriesDataset(dataset)) {
-      window.dashboardDeliveries = dataset;
-      if (deliveriesInput && dataset.raw) {
-        deliveriesInput.value = dataset.raw;
-      }
-      renderDeliveriesPreview(dataset, "Saved locally");
+      window.dashboardDeliveries = buildDeliveriesDataset(
+        (dataset.rows || []).map((row) => normalizeDeliveryRow(row, todaySlash())),
+      );
+      renderDeliveriesPreview(window.dashboardDeliveries, "Saved locally");
     } else {
       localStorage.removeItem(deliveriesStorageKey);
       loadDeliveriesTemplate();
@@ -1263,26 +1299,39 @@ clearAnchorButton?.addEventListener("click", () => {
 });
 
 parseDeliveriesButton?.addEventListener("click", () => {
-  const dataset = parseSpreadsheetData(deliveriesInput?.value || "");
-  window.dashboardDeliveries = dataset;
-  renderDeliveriesPreview(dataset);
+  const added = parseDeliveryPaste(deliveriesInput?.value || "", todaySlash());
+  const current = window.dashboardDeliveries?.rows || [];
+  const preview = buildDeliveriesDataset([...current, ...added]);
+  renderDeliveriesPreview(
+    preview,
+    added.length
+      ? `Preview \u2014 ${added.length} new row${added.length === 1 ? "" : "s"} to add (not saved)`
+      : undefined,
+  );
 });
 
-saveDeliveriesButton?.addEventListener("click", () => {
-  const dataset = parseSpreadsheetData(deliveriesInput?.value || "");
+addDeliveriesButton?.addEventListener("click", () => {
+  const added = parseDeliveryPaste(deliveriesInput?.value || "", todaySlash());
+
+  if (!added.length) {
+    return;
+  }
+
+  const current = window.dashboardDeliveries?.rows || [];
+  const dataset = buildDeliveriesDataset([...current, ...added]);
   window.dashboardDeliveries = dataset;
-  renderDeliveriesPreview(dataset);
+  renderDeliveriesPreview(dataset, `Added ${added.length} row${added.length === 1 ? "" : "s"}`);
   saveDataset({ storageKey: deliveriesStorageKey, dataset, status: deliveriesStorageStatus });
+
+  if (deliveriesInput) {
+    deliveriesInput.value = "";
+  }
 });
 
 clearDeliveriesButton?.addEventListener("click", () => {
   if (deliveriesInput) {
     deliveriesInput.value = "";
   }
-
-  localStorage.removeItem(deliveriesStorageKey);
-  window.dashboardDeliveries = emptyDataset;
-  renderDeliveriesPreview(emptyDataset);
 });
 
 parseOutgoingButton?.addEventListener("click", () => {
