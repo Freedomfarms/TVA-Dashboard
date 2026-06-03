@@ -1,6 +1,7 @@
 import "./styles.css";
 import defaultWipRaw from "./wip-data.txt?raw";
 import defaultDeliveriesRaw from "./deliveries-data.txt?raw";
+import defaultOutgoingRaw from "./outgoing-data.txt?raw";
 
 const scenicPanel = document.querySelector(".scape-stars");
 const dashboardTitle = document.querySelector("#dashboard-title");
@@ -35,6 +36,15 @@ const deliveriesPreviewBody = document.querySelector("#deliveries-preview-body")
 const deliveriesRowCount = document.querySelector("#deliveries-row-count");
 const deliveriesColumnCount = document.querySelector("#deliveries-column-count");
 const deliveriesStorageStatus = document.querySelector("#deliveries-storage-status");
+const outgoingInput = document.querySelector("#outgoing-input");
+const parseOutgoingButton = document.querySelector("#parse-outgoing-button");
+const saveOutgoingButton = document.querySelector("#save-outgoing-button");
+const clearOutgoingButton = document.querySelector("#clear-outgoing-button");
+const outgoingPreviewHead = document.querySelector("#outgoing-preview-head");
+const outgoingPreviewBody = document.querySelector("#outgoing-preview-body");
+const outgoingRowCount = document.querySelector("#outgoing-row-count");
+const outgoingColumnCount = document.querySelector("#outgoing-column-count");
+const outgoingStorageStatus = document.querySelector("#outgoing-storage-status");
 const militaryWipBody = document.querySelector("#military-wip-body");
 const commercialWipBody = document.querySelector("#commercial-wip-body");
 const militaryWipCount = document.querySelector("#military-wip-count");
@@ -54,6 +64,8 @@ const storedDataset = localStorage.getItem(datasetStorageKey);
 const storedAnchor = localStorage.getItem(anchorStorageKey);
 const deliveriesStorageKey = "dashboardDeliveries";
 const storedDeliveries = localStorage.getItem(deliveriesStorageKey);
+const outgoingStorageKey = "dashboardOutgoing";
+const storedOutgoing = localStorage.getItem(outgoingStorageKey);
 const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
 \t4700912755\t4119904\tATA\tCBN\t0\t12\tMilitary
 \t4700912732\t4119905\tATA\tCBN\t0\t12\tMilitary
@@ -103,6 +115,7 @@ const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\
 window.dashboardDataset = emptyDataset;
 window.dashboardDataAnchor = emptyDataset;
 window.dashboardDeliveries = emptyDataset;
+window.dashboardOutgoing = emptyDataset;
 
 if (scenicPanel) {
   const starMarkup = Array.from({ length: 18 }, (_, index) => {
@@ -294,6 +307,19 @@ const renderDeliveriesPreview = (dataset, statusText) => {
   });
 };
 
+const renderOutgoingPreview = (dataset, statusText) => {
+  renderDatasetPreview({
+    dataset,
+    head: outgoingPreviewHead,
+    body: outgoingPreviewBody,
+    rowCount: outgoingRowCount,
+    columnCount: outgoingColumnCount,
+    status: outgoingStorageStatus,
+    emptyMessage: "Paste outgoing rows from Excel and click Preview Data.",
+    statusText,
+  });
+};
+
 const hasHeaders = (dataset, requiredHeaders) => {
   const headers = dataset?.headers || [];
   return requiredHeaders.every((requiredHeader) => headers.includes(requiredHeader));
@@ -307,6 +333,9 @@ const isAnchorDataset = (dataset) =>
 
 const isDeliveriesDataset = (dataset) =>
   hasHeaders(dataset, ["PO", "Qty", "Received"]);
+
+const isOutgoingDataset = (dataset) =>
+  hasHeaders(dataset, ["REF_DOC / PO", "Ship Date", "LT Return"]);
 
 const getRowValue = (row, labels) => {
   const labelList = Array.isArray(labels) ? labels : [labels];
@@ -982,6 +1011,17 @@ const loadDeliveriesTemplate = () => {
   renderDeliveriesPreview(dataset, "Template loaded");
 };
 
+const loadOutgoingTemplate = () => {
+  const dataset = parseSpreadsheetData(defaultOutgoingRaw);
+  window.dashboardOutgoing = dataset;
+
+  if (outgoingInput) {
+    outgoingInput.value = defaultOutgoingRaw;
+  }
+
+  renderOutgoingPreview(dataset, "Template loaded");
+};
+
 navItems.forEach((item) => {
   item.addEventListener("click", (event) => {
     const viewName = item.dataset.view;
@@ -1069,6 +1109,27 @@ if (storedDeliveries) {
   loadDeliveriesTemplate();
 }
 
+if (storedOutgoing) {
+  try {
+    const dataset = JSON.parse(storedOutgoing);
+    if (isOutgoingDataset(dataset)) {
+      window.dashboardOutgoing = dataset;
+      if (outgoingInput && dataset.raw) {
+        outgoingInput.value = dataset.raw;
+      }
+      renderOutgoingPreview(dataset, "Saved locally");
+    } else {
+      localStorage.removeItem(outgoingStorageKey);
+      loadOutgoingTemplate();
+    }
+  } catch {
+    localStorage.removeItem(outgoingStorageKey);
+    loadOutgoingTemplate();
+  }
+} else {
+  loadOutgoingTemplate();
+}
+
 parseDataButton?.addEventListener("click", () => {
   const dataset = parseSpreadsheetData(dataInput?.value || "");
   window.dashboardDataset = dataset;
@@ -1139,6 +1200,29 @@ clearDeliveriesButton?.addEventListener("click", () => {
   localStorage.removeItem(deliveriesStorageKey);
   window.dashboardDeliveries = emptyDataset;
   renderDeliveriesPreview(emptyDataset);
+});
+
+parseOutgoingButton?.addEventListener("click", () => {
+  const dataset = parseSpreadsheetData(outgoingInput?.value || "");
+  window.dashboardOutgoing = dataset;
+  renderOutgoingPreview(dataset);
+});
+
+saveOutgoingButton?.addEventListener("click", () => {
+  const dataset = parseSpreadsheetData(outgoingInput?.value || "");
+  window.dashboardOutgoing = dataset;
+  renderOutgoingPreview(dataset);
+  saveDataset({ storageKey: outgoingStorageKey, dataset, status: outgoingStorageStatus });
+});
+
+clearOutgoingButton?.addEventListener("click", () => {
+  if (outgoingInput) {
+    outgoingInput.value = "";
+  }
+
+  localStorage.removeItem(outgoingStorageKey);
+  window.dashboardOutgoing = emptyDataset;
+  renderOutgoingPreview(emptyDataset);
 });
 
 escalationAddButton?.addEventListener("click", addEscalationNote);

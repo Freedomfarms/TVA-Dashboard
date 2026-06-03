@@ -380,6 +380,7 @@
               <button class="data-tab-button" type="button" data-data-tab="anchor">Data Anchor</button>
               <button class="data-tab-button active" type="button" data-data-tab="wip">WIP Data</button>
               <button class="data-tab-button" type="button" data-data-tab="deliveries">Deliveries</button>
+              <button class="data-tab-button" type="button" data-data-tab="outgoing">Outgoing</button>
             </div>
 
             <div class="data-subview" data-data-subview="anchor" hidden>
@@ -525,6 +526,56 @@
                     <tbody id="deliveries-preview-body">
                       <tr class="empty-row">
                         <td>Paste delivery rows from Excel and click Preview Data.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+
+            <div class="data-subview" data-data-subview="outgoing" hidden>
+              <article class="panel data-entry-panel">
+                <div class="data-panel-heading">
+                  <div>
+                    <p class="eyebrow">Manual Excel Intake</p>
+                    <h2>Paste Outgoing spreadsheet data</h2>
+                    <p>Copy outgoing rows from Excel, paste them here, and preview the structured data before we connect charts and metrics.</p>
+                  </div>
+                  <span class="data-pill">Local draft</span>
+                </div>
+
+                <div class="data-import-grid">
+                  <div class="data-paste-card">
+                    <label for="outgoing-input">Excel rows</label>
+                    <textarea id="outgoing-input" spellcheck="false" placeholder="REF_DOC / PO&#9;Ship Date&#9;LT Return&#10;4700911904&#9;06/01/2026&#9;06/05/2026"></textarea>
+                    <div class="data-actions">
+                      <button class="primary-action" id="parse-outgoing-button" type="button">Preview Data</button>
+                      <button class="primary-action save-action" id="save-outgoing-button" type="button">Save Outgoing</button>
+                      <button class="secondary-action" id="clear-outgoing-button" type="button">Clear</button>
+                    </div>
+                  </div>
+
+                  <div class="data-summary-card">
+                    <span>Ready for dashboard mapping</span>
+                    <strong id="outgoing-row-count">0 rows</strong>
+                    <small id="outgoing-column-count">0 columns detected</small>
+                    <p>Outgoing shipments are stored in this browser so charts, tables, and metrics can read from the same dataset next.</p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel data-preview-panel">
+                <div class="panel-header">
+                  <h2>Outgoing Preview</h2>
+                  <span class="data-status" id="outgoing-storage-status">Waiting for data</span>
+                </div>
+
+                <div class="data-table-shell">
+                  <table class="data-table" aria-label="Preview of pasted Outgoing data">
+                    <thead id="outgoing-preview-head"></thead>
+                    <tbody id="outgoing-preview-body">
+                      <tr class="empty-row">
+                        <td>Paste outgoing rows from Excel and click Preview Data.</td>
                       </tr>
                     </tbody>
                   </table>
