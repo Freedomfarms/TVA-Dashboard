@@ -10,9 +10,13 @@ const dataInput = document.querySelector("#excel-data-input");
 const parseDataButton = document.querySelector("#parse-data-button");
 const clearDataButton = document.querySelector("#clear-data-button");
 const dataAnchorInput = document.querySelector("#data-anchor-input");
-const saveAnchorButton = document.querySelector("#save-anchor-button");
+const parseAnchorButton = document.querySelector("#parse-anchor-button");
 const clearAnchorButton = document.querySelector("#clear-anchor-button");
-const dataAnchorStatus = document.querySelector("#data-anchor-status");
+const anchorPreviewHead = document.querySelector("#anchor-preview-head");
+const anchorPreviewBody = document.querySelector("#anchor-preview-body");
+const anchorRowCount = document.querySelector("#anchor-row-count");
+const anchorColumnCount = document.querySelector("#anchor-column-count");
+const anchorStorageStatus = document.querySelector("#anchor-storage-status");
 const dataPreviewHead = document.querySelector("#data-preview-head");
 const dataPreviewBody = document.querySelector("#data-preview-body");
 const dataRowCount = document.querySelector("#data-row-count");
@@ -25,6 +29,7 @@ const storedDataset = localStorage.getItem(datasetStorageKey);
 const storedAnchor = localStorage.getItem(anchorStorageKey);
 
 window.dashboardDataset = emptyDataset;
+window.dashboardDataAnchor = emptyDataset;
 
 if (scenicPanel) {
   const starMarkup = Array.from({ length: 18 }, (_, index) => {
@@ -131,25 +136,27 @@ const parseSpreadsheetData = (rawValue) => {
   return { headers, rows };
 };
 
-const renderDataPreview = ({ headers, rows }) => {
-  if (!dataPreviewHead || !dataPreviewBody || !dataRowCount || !dataColumnCount || !dataStorageStatus) {
+const renderDatasetPreview = ({ dataset, head, body, rowCount, columnCount, status, emptyMessage }) => {
+  if (!head || !body || !rowCount || !columnCount || !status) {
     return;
   }
 
-  dataPreviewHead.replaceChildren();
-  dataPreviewBody.replaceChildren();
+  const { headers, rows } = dataset;
 
-  dataRowCount.textContent = `${rows.length} ${rows.length === 1 ? "row" : "rows"}`;
-  dataColumnCount.textContent = `${headers.length} ${headers.length === 1 ? "column" : "columns"} detected`;
+  head.replaceChildren();
+  body.replaceChildren();
+
+  rowCount.textContent = `${rows.length} ${rows.length === 1 ? "row" : "rows"}`;
+  columnCount.textContent = `${headers.length} ${headers.length === 1 ? "column" : "columns"} detected`;
 
   if (headers.length === 0) {
     const emptyRow = document.createElement("tr");
     emptyRow.className = "empty-row";
     const emptyCell = document.createElement("td");
-    emptyCell.textContent = "Paste rows from Excel and click Preview Data.";
+    emptyCell.textContent = emptyMessage;
     emptyRow.append(emptyCell);
-    dataPreviewBody.append(emptyRow);
-    dataStorageStatus.textContent = "Waiting for data";
+    body.append(emptyRow);
+    status.textContent = "Waiting for data";
     return;
   }
 
@@ -159,7 +166,7 @@ const renderDataPreview = ({ headers, rows }) => {
     cell.textContent = header;
     headRow.append(cell);
   });
-  dataPreviewHead.append(headRow);
+  head.append(headRow);
 
   rows.forEach((row) => {
     const bodyRow = document.createElement("tr");
@@ -168,10 +175,34 @@ const renderDataPreview = ({ headers, rows }) => {
       cell.textContent = row[header] || "";
       bodyRow.append(cell);
     });
-    dataPreviewBody.append(bodyRow);
+    body.append(bodyRow);
   });
 
-  dataStorageStatus.textContent = rows.length > 0 ? "Saved locally" : "Headers detected";
+  status.textContent = rows.length > 0 ? "Saved locally" : "Headers detected";
+};
+
+const renderDataPreview = (dataset) => {
+  renderDatasetPreview({
+    dataset,
+    head: dataPreviewHead,
+    body: dataPreviewBody,
+    rowCount: dataRowCount,
+    columnCount: dataColumnCount,
+    status: dataStorageStatus,
+    emptyMessage: "Paste rows from Excel and click Preview Data.",
+  });
+};
+
+const renderAnchorPreview = (dataset) => {
+  renderDatasetPreview({
+    dataset,
+    head: anchorPreviewHead,
+    body: anchorPreviewBody,
+    rowCount: anchorRowCount,
+    columnCount: anchorColumnCount,
+    status: anchorStorageStatus,
+    emptyMessage: "Paste anchor rows from Excel and click Preview Data.",
+  });
 };
 
 navItems.forEach((item) => {
@@ -207,11 +238,13 @@ if (storedDataset) {
   }
 }
 
-if (storedAnchor && dataAnchorInput) {
-  dataAnchorInput.value = storedAnchor;
-
-  if (dataAnchorStatus) {
-    dataAnchorStatus.textContent = "Data Anchor saved locally.";
+if (storedAnchor) {
+  try {
+    const dataset = JSON.parse(storedAnchor);
+    window.dashboardDataAnchor = dataset;
+    renderAnchorPreview(dataset);
+  } catch {
+    localStorage.removeItem(anchorStorageKey);
   }
 }
 
@@ -232,12 +265,11 @@ clearDataButton?.addEventListener("click", () => {
   renderDataPreview(emptyDataset);
 });
 
-saveAnchorButton?.addEventListener("click", () => {
-  localStorage.setItem(anchorStorageKey, dataAnchorInput?.value || "");
-
-  if (dataAnchorStatus) {
-    dataAnchorStatus.textContent = "Data Anchor saved locally.";
-  }
+parseAnchorButton?.addEventListener("click", () => {
+  const dataset = parseSpreadsheetData(dataAnchorInput?.value || "");
+  localStorage.setItem(anchorStorageKey, JSON.stringify(dataset));
+  window.dashboardDataAnchor = dataset;
+  renderAnchorPreview(dataset);
 });
 
 clearAnchorButton?.addEventListener("click", () => {
@@ -246,8 +278,6 @@ clearAnchorButton?.addEventListener("click", () => {
   }
 
   localStorage.removeItem(anchorStorageKey);
-
-  if (dataAnchorStatus) {
-    dataAnchorStatus.textContent = "No anchor information saved yet.";
-  }
+  window.dashboardDataAnchor = emptyDataset;
+  renderAnchorPreview(emptyDataset);
 });

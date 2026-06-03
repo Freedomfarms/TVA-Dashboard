@@ -478,21 +478,47 @@
               <article class="panel data-anchor-panel">
                 <div class="data-panel-heading">
                   <div>
-                    <p class="eyebrow">Permanent Reference</p>
-                    <h2>Data Anchor</h2>
-                    <p>Store baseline context, rules, definitions, or notes that should stay available as the dashboard grows.</p>
+                    <p class="eyebrow">Manual Excel Intake</p>
+                    <h2>Paste Data Anchor spreadsheet data</h2>
+                    <p>Copy anchor rows from Excel, paste them here, and keep this baseline dataset available for future dashboard mapping.</p>
                   </div>
                   <span class="data-pill">Always available</span>
                 </div>
 
-                <div class="data-anchor-card">
-                  <label for="data-anchor-input">Anchor information</label>
-                  <textarea id="data-anchor-input" spellcheck="true" placeholder="Add reference information here. This is saved locally and can be used later when charts and metrics are connected."></textarea>
-                  <div class="data-actions">
-                    <button class="primary-action" id="save-anchor-button" type="button">Save Data Anchor</button>
-                    <button class="secondary-action" id="clear-anchor-button" type="button">Clear</button>
+                <div class="data-import-grid">
+                  <div class="data-paste-card">
+                    <label for="data-anchor-input">Excel rows</label>
+                    <textarea id="data-anchor-input" spellcheck="false" placeholder="Anchor&#9;Category&#9;Value&#9;Notes&#10;Target Min WIP&#9;Policy&#9;25&#9;Baseline planning rule"></textarea>
+                    <div class="data-actions">
+                      <button class="primary-action" id="parse-anchor-button" type="button">Preview Data</button>
+                      <button class="secondary-action" id="clear-anchor-button" type="button">Clear</button>
+                    </div>
                   </div>
-                  <p id="data-anchor-status">No anchor information saved yet.</p>
+
+                  <div class="data-summary-card">
+                    <span>Ready for dashboard mapping</span>
+                    <strong id="anchor-row-count">0 rows</strong>
+                    <small id="anchor-column-count">0 columns detected</small>
+                    <p>Anchor rows are stored in this browser so future charts, tables, and logic can reference stable baseline data.</p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel data-preview-panel">
+                <div class="panel-header">
+                  <h2>Data Anchor Preview</h2>
+                  <span class="data-status" id="anchor-storage-status">Waiting for data</span>
+                </div>
+
+                <div class="data-table-shell">
+                  <table class="data-table" aria-label="Preview of pasted Data Anchor data">
+                    <thead id="anchor-preview-head"></thead>
+                    <tbody id="anchor-preview-body">
+                      <tr class="empty-row">
+                        <td>Paste anchor rows from Excel and click Preview Data.</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </article>
             </div>
