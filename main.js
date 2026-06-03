@@ -8,9 +8,11 @@ const dataTabButtons = document.querySelectorAll("[data-data-tab]");
 const dataSubViews = document.querySelectorAll("[data-data-subview]");
 const dataInput = document.querySelector("#excel-data-input");
 const parseDataButton = document.querySelector("#parse-data-button");
+const saveDataButton = document.querySelector("#save-data-button");
 const clearDataButton = document.querySelector("#clear-data-button");
 const dataAnchorInput = document.querySelector("#data-anchor-input");
 const parseAnchorButton = document.querySelector("#parse-anchor-button");
+const saveAnchorButton = document.querySelector("#save-anchor-button");
 const clearAnchorButton = document.querySelector("#clear-anchor-button");
 const anchorPreviewHead = document.querySelector("#anchor-preview-head");
 const anchorPreviewBody = document.querySelector("#anchor-preview-body");
@@ -114,7 +116,7 @@ const parseSpreadsheetData = (rawValue) => {
     .filter(Boolean);
 
   if (lines.length === 0) {
-    return { headers: [], rows: [] };
+    return { headers: [], rows: [], raw: rawValue };
   }
 
   const delimiter = rawValue.includes("\t") ? "\t" : ",";
@@ -133,10 +135,10 @@ const parseSpreadsheetData = (rawValue) => {
     }, {}),
   );
 
-  return { headers, rows };
+  return { headers, rows, raw: rawValue };
 };
 
-const renderDatasetPreview = ({ dataset, head, body, rowCount, columnCount, status, emptyMessage }) => {
+const renderDatasetPreview = ({ dataset, head, body, rowCount, columnCount, status, emptyMessage, statusText }) => {
   if (!head || !body || !rowCount || !columnCount || !status) {
     return;
   }
@@ -178,10 +180,10 @@ const renderDatasetPreview = ({ dataset, head, body, rowCount, columnCount, stat
     body.append(bodyRow);
   });
 
-  status.textContent = rows.length > 0 ? "Saved locally" : "Headers detected";
+  status.textContent = statusText || (rows.length > 0 ? "Preview ready" : "Headers detected");
 };
 
-const renderDataPreview = (dataset) => {
+const renderDataPreview = (dataset, statusText) => {
   renderDatasetPreview({
     dataset,
     head: dataPreviewHead,
@@ -190,10 +192,11 @@ const renderDataPreview = (dataset) => {
     columnCount: dataColumnCount,
     status: dataStorageStatus,
     emptyMessage: "Paste rows from Excel and click Preview Data.",
+    statusText,
   });
 };
 
-const renderAnchorPreview = (dataset) => {
+const renderAnchorPreview = (dataset, statusText) => {
   renderDatasetPreview({
     dataset,
     head: anchorPreviewHead,
@@ -202,7 +205,16 @@ const renderAnchorPreview = (dataset) => {
     columnCount: anchorColumnCount,
     status: anchorStorageStatus,
     emptyMessage: "Paste anchor rows from Excel and click Preview Data.",
+    statusText,
   });
+};
+
+const saveDataset = ({ storageKey, dataset, status }) => {
+  localStorage.setItem(storageKey, JSON.stringify(dataset));
+
+  if (status) {
+    status.textContent = "Saved locally";
+  }
 };
 
 navItems.forEach((item) => {
@@ -232,7 +244,10 @@ if (storedDataset) {
   try {
     const dataset = JSON.parse(storedDataset);
     window.dashboardDataset = dataset;
-    renderDataPreview(dataset);
+    if (dataInput && dataset.raw) {
+      dataInput.value = dataset.raw;
+    }
+    renderDataPreview(dataset, "Saved locally");
   } catch {
     localStorage.removeItem(datasetStorageKey);
   }
@@ -242,7 +257,10 @@ if (storedAnchor) {
   try {
     const dataset = JSON.parse(storedAnchor);
     window.dashboardDataAnchor = dataset;
-    renderAnchorPreview(dataset);
+    if (dataAnchorInput && dataset.raw) {
+      dataAnchorInput.value = dataset.raw;
+    }
+    renderAnchorPreview(dataset, "Saved locally");
   } catch {
     localStorage.removeItem(anchorStorageKey);
   }
@@ -250,9 +268,15 @@ if (storedAnchor) {
 
 parseDataButton?.addEventListener("click", () => {
   const dataset = parseSpreadsheetData(dataInput?.value || "");
-  localStorage.setItem(datasetStorageKey, JSON.stringify(dataset));
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
+});
+
+saveDataButton?.addEventListener("click", () => {
+  const dataset = parseSpreadsheetData(dataInput?.value || "");
+  window.dashboardDataset = dataset;
+  renderDataPreview(dataset);
+  saveDataset({ storageKey: datasetStorageKey, dataset, status: dataStorageStatus });
 });
 
 clearDataButton?.addEventListener("click", () => {
@@ -267,9 +291,15 @@ clearDataButton?.addEventListener("click", () => {
 
 parseAnchorButton?.addEventListener("click", () => {
   const dataset = parseSpreadsheetData(dataAnchorInput?.value || "");
-  localStorage.setItem(anchorStorageKey, JSON.stringify(dataset));
   window.dashboardDataAnchor = dataset;
   renderAnchorPreview(dataset);
+});
+
+saveAnchorButton?.addEventListener("click", () => {
+  const dataset = parseSpreadsheetData(dataAnchorInput?.value || "");
+  window.dashboardDataAnchor = dataset;
+  renderAnchorPreview(dataset);
+  saveDataset({ storageKey: anchorStorageKey, dataset, status: anchorStorageStatus });
 });
 
 clearAnchorButton?.addEventListener("click", () => {

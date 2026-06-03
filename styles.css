@@ -1026,6 +1026,11 @@ body::before {
   box-shadow: 0 0 22px rgba(68, 169, 255, 0.2);
 }
 
+.save-action {
+  background: linear-gradient(135deg, rgba(68, 232, 255, 0.95), rgba(78, 224, 157, 0.82));
+  box-shadow: 0 0 22px rgba(68, 232, 255, 0.18);
+}
+
 .secondary-action {
   border: 1px solid rgba(151, 169, 255, 0.14);
   background: rgba(255, 255, 255, 0.04);
