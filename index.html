@@ -379,7 +379,7 @@
             <div class="data-tab-bar" aria-label="Data section tabs">
               <button class="data-tab-button" type="button" data-data-tab="anchor">Data Anchor</button>
               <button class="data-tab-button active" type="button" data-data-tab="wip">WIP Data</button>
-              <button class="data-tab-button" type="button" data-data-tab="lt">LT Data</button>
+              <button class="data-tab-button" type="button" data-data-tab="deliveries">Deliveries</button>
             </div>
 
             <div class="data-subview" data-data-subview="anchor" hidden>
@@ -482,7 +482,55 @@
               </article>
             </div>
 
-            <div class="data-subview" data-data-subview="lt" hidden></div>
+                        <div class="data-subview" data-data-subview="deliveries" hidden>
+              <article class="panel data-entry-panel">
+                <div class="data-panel-heading">
+                  <div>
+                    <p class="eyebrow">Manual Excel Intake</p>
+                    <h2>Paste Deliveries spreadsheet data</h2>
+                    <p>Copy delivery rows from Excel, paste them here, and preview the structured data before we connect charts and metrics.</p>
+                  </div>
+                  <span class="data-pill">Local draft</span>
+                </div>
+
+                <div class="data-import-grid">
+                  <div class="data-paste-card">
+                    <label for="deliveries-input">Excel rows</label>
+                    <textarea id="deliveries-input" spellcheck="false" placeholder="PO&#9;Qty&#9;Received&#10;4700915330&#9;141&#9;6/3/26 0:00"></textarea>
+                    <div class="data-actions">
+                      <button class="primary-action" id="parse-deliveries-button" type="button">Preview Data</button>
+                      <button class="primary-action save-action" id="save-deliveries-button" type="button">Save Deliveries</button>
+                      <button class="secondary-action" id="clear-deliveries-button" type="button">Clear</button>
+                    </div>
+                  </div>
+
+                  <div class="data-summary-card">
+                    <span>Ready for dashboard mapping</span>
+                    <strong id="deliveries-row-count">0 rows</strong>
+                    <small id="deliveries-column-count">0 columns detected</small>
+                    <p>Delivery receipts are stored in this browser so charts, tables, and metrics can read from the same dataset next.</p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel data-preview-panel">
+                <div class="panel-header">
+                  <h2>Deliveries Preview</h2>
+                  <span class="data-status" id="deliveries-storage-status">Waiting for data</span>
+                </div>
+
+                <div class="data-table-shell">
+                  <table class="data-table" aria-label="Preview of pasted Deliveries data">
+                    <thead id="deliveries-preview-head"></thead>
+                    <tbody id="deliveries-preview-body">
+                      <tr class="empty-row">
+                        <td>Paste delivery rows from Excel and click Preview Data.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
           </section>
         </div>
         <div class="dashboard-view" data-dashboard-view="escalation" hidden>
