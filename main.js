@@ -25,7 +25,6 @@ const dataPreviewBody = document.querySelector("#data-preview-body");
 const dataRowCount = document.querySelector("#data-row-count");
 const dataColumnCount = document.querySelector("#data-column-count");
 const dataStorageStatus = document.querySelector("#data-storage-status");
-const wipShortageCards = document.querySelector("#wip-shortage-cards");
 const militaryWipBody = document.querySelector("#military-wip-body");
 const commercialWipBody = document.querySelector("#commercial-wip-body");
 const militaryWipCount = document.querySelector("#military-wip-count");
@@ -372,44 +371,8 @@ const renderReadinessTable = ({ rows, body, count }) => {
 };
 
 const renderProductionReadiness = () => {
-  if (!wipShortageCards) {
-    return;
-  }
-
   const wipIndex = buildWipQtyIndex(window.dashboardDataset);
   const readinessRows = buildReadinessRows(window.dashboardDataAnchor, wipIndex);
-
-  const lowWipRows = readinessRows
-    .filter(({ shortage }) => shortage > 0)
-    .sort((a, b) => b.shortage - a.shortage);
-
-  wipShortageCards.replaceChildren();
-
-  if (lowWipRows.length === 0) {
-    const card = document.createElement("div");
-    card.className = "tva-metric-card";
-    const label = document.createElement("span");
-    const value = document.createElement("strong");
-    const detail = document.createElement("small");
-    label.textContent = "WIP Coverage";
-    value.textContent = "OK";
-    detail.textContent = "No parts below minimum WIP";
-    card.append(label, value, detail);
-    wipShortageCards.append(card);
-  } else {
-    lowWipRows.slice(0, 5).forEach(({ part, vendor, process, cleanWip, minWip, shortage }) => {
-      const card = document.createElement("div");
-      card.className = "tva-metric-card warning";
-      const label = document.createElement("span");
-      const value = document.createElement("strong");
-      const detail = document.createElement("small");
-      label.textContent = part;
-      value.textContent = `-${shortage}`;
-      detail.textContent = `${vendor} ${process}: ${cleanWip} clean / ${minWip} min`;
-      card.append(label, value, detail);
-      wipShortageCards.append(card);
-    });
-  }
 
   renderReadinessTable({
     rows: readinessRows.filter(({ bu }) => bu.toLowerCase() === "military"),
