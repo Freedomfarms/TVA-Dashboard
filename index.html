@@ -24,14 +24,14 @@
         </div>
 
         <nav class="nav-menu" aria-label="Main navigation">
-          <a class="nav-item active" href="#">
+          <a class="nav-item active" href="#" data-view="overview" aria-current="page">
             <span class="nav-icon nav-grid"></span>
             <span>Overview</span>
             <span class="nav-dot"></span>
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-view="data">
             <span class="nav-icon nav-file"></span>
-            <span>Orders</span>
+            <span>Data</span>
           </a>
           <a class="nav-item" href="#">
             <span class="nav-icon nav-box"></span>
@@ -74,7 +74,7 @@
       <main class="dashboard">
         <header class="topbar">
           <div>
-            <h1>Overview</h1>
+            <h1 id="dashboard-title">Overview</h1>
           </div>
 
           <div class="topbar-actions">
@@ -86,6 +86,7 @@
           </div>
         </header>
 
+        <div class="dashboard-view active" data-dashboard-view="overview">
         <section class="stats-grid">
           <article class="stat-card purple-glow">
             <div class="card-heading">
@@ -439,6 +440,58 @@
             <p>Your growth is our mission. Let's build the future together.</p>
           </article>
         </section>
+        </div>
+
+        <div class="dashboard-view" data-dashboard-view="data" hidden>
+          <section class="data-workspace">
+            <article class="panel data-entry-panel">
+              <div class="data-panel-heading">
+                <div>
+                  <p class="eyebrow">Manual Excel Intake</p>
+                  <h2>Paste spreadsheet data</h2>
+                  <p>Copy rows from Excel, paste them here, and preview the structured data before we connect charts and metrics.</p>
+                </div>
+                <span class="data-pill">Local draft</span>
+              </div>
+
+              <div class="data-import-grid">
+                <div class="data-paste-card">
+                  <label for="excel-data-input">Excel rows</label>
+                  <textarea id="excel-data-input" spellcheck="false" placeholder="Date&#9;Program&#9;Orders&#9;Revenue&#10;2026-06-01&#9;Aerospace&#9;42&#9;128500"></textarea>
+                  <div class="data-actions">
+                    <button class="primary-action" id="parse-data-button" type="button">Preview Data</button>
+                    <button class="secondary-action" id="clear-data-button" type="button">Clear</button>
+                  </div>
+                </div>
+
+                <div class="data-summary-card">
+                  <span>Ready for dashboard mapping</span>
+                  <strong id="data-row-count">0 rows</strong>
+                  <small id="data-column-count">0 columns detected</small>
+                  <p>Parsed rows are stored in this browser so charts, tables, and metrics can read from the same dashboard dataset next.</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel data-preview-panel">
+              <div class="panel-header">
+                <h2>Data Preview</h2>
+                <span class="data-status" id="data-storage-status">Waiting for data</span>
+              </div>
+
+              <div class="data-table-shell">
+                <table class="data-table" aria-label="Preview of pasted Excel data">
+                  <thead id="data-preview-head"></thead>
+                  <tbody id="data-preview-body">
+                    <tr class="empty-row">
+                      <td>Paste rows from Excel and click Preview Data.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+        </div>
       </main>
     </div>
   </body>
