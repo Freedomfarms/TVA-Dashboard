@@ -29,6 +29,7 @@ const militaryWipBody = document.querySelector("#military-wip-body");
 const commercialWipBody = document.querySelector("#commercial-wip-body");
 const militaryWipCount = document.querySelector("#military-wip-count");
 const commercialWipCount = document.querySelector("#commercial-wip-count");
+const escalationFeed = document.querySelector("#escalation-feed");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -383,6 +384,191 @@ const renderProductionReadiness = () => {
     rows: readinessRows.filter(({ bu }) => bu.toLowerCase() === "commercial"),
     body: commercialWipBody,
     count: commercialWipCount,
+  });
+
+  renderEscalationNotes();
+};
+
+const formatCount = (value) => Number(value).toLocaleString("en-US");
+
+const severityLabels = {
+  critical: "Critical",
+  warning: "Watch",
+  positive: "Healthy",
+  info: "Note",
+};
+
+const categoryGlyphs = {
+  WIP: "\u25B2",
+  Performance: "\u25D1",
+  Outgoing: "\u2197",
+  Incoming: "\u2198",
+};
+
+const parseShipDate = (value) => {
+  const match = String(value).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return match ? new Date(Number(match[3]), Number(match[1]) - 1, Number(match[2])) : null;
+};
+
+const buildEscalationNotes = () => {
+  const wipDataset = window.dashboardDataset;
+  const anchorDataset = window.dashboardDataAnchor;
+  const wipRows = wipDataset?.rows || [];
+  const wipIndex = buildWipQtyIndex(wipDataset);
+  const readiness = buildReadinessRows(anchorDataset, wipIndex);
+  const notes = [];
+
+  const poToPart = new Map();
+  (anchorDataset?.rows || []).forEach((row) => {
+    const info = {
+      part: getRowValue(row, "Part Number"),
+      vendor: getRowValue(row, "Vendor"),
+      process: getRowValue(row, "Process"),
+    };
+    [getRowValue(row, ["PO 1", "PO1"]), getRowValue(row, ["PO 2", "PO2"])]
+      .map((po) => String(po).trim())
+      .filter(Boolean)
+      .forEach((po) => {
+        if (!poToPart.has(po)) {
+          poToPart.set(po, info);
+        }
+      });
+  });
+
+  const shortages = readiness
+    .filter((row) => row.cleanWip < row.minWip)
+    .sort((a, b) => (b.minWip - b.cleanWip) - (a.minWip - a.cleanWip));
+
+  shortages.slice(0, 4).forEach((row) => {
+    const gap = row.minWip - row.cleanWip;
+    notes.push({
+      severity: "critical",
+      category: "WIP",
+      title: `${row.part} below minimum WIP`,
+      detail: `${row.vendor} \u00B7 ${row.process} \u2014 ${row.cleanWip} clean vs ${row.minWip} required.`,
+      metric: `-${gap}`,
+    });
+  });
+
+  if (readiness.length) {
+    const covered = readiness.filter((row) => row.cleanWip >= row.minWip).length;
+    const pct = Math.round((covered / readiness.length) * 100);
+    notes.push({
+      severity: pct >= 80 ? "positive" : "warning",
+      category: "Performance",
+      title: `${pct}% WIP coverage across tracked parts`,
+      detail: `${covered} of ${readiness.length} anchor parts meet or exceed minimum WIP.`,
+      metric: `${pct}%`,
+    });
+  }
+
+  if (wipRows.length) {
+    const totalShipped = wipRows.reduce((sum, row) => sum + toNumber(getRowValue(row, ["Qty", "Quantity"])), 0);
+    const dates = wipRows
+      .map((row) => parseShipDate(getRowValue(row, ["Ship Date", "Date"])))
+      .filter(Boolean);
+    const latest = dates.length ? new Date(Math.max(...dates.map((date) => date.getTime()))) : null;
+    const latestLabel = latest
+      ? latest.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      : "\u2014";
+
+    notes.push({
+      severity: "info",
+      category: "Outgoing",
+      title: `${formatCount(totalShipped)} units delivered this period`,
+      detail: `${formatCount(wipRows.length)} delivery lines logged \u00B7 latest movement ${latestLabel}.`,
+      metric: formatCount(totalShipped),
+    });
+
+    let topPo = null;
+    let topQty = -1;
+    wipIndex.forEach((qty, po) => {
+      if (qty > topQty) {
+        topQty = qty;
+        topPo = po;
+      }
+    });
+
+    if (topPo) {
+      const info = poToPart.get(topPo);
+      const who = info ? `${info.part} (${info.vendor} \u00B7 ${info.process})` : `PO ${topPo}`;
+      notes.push({
+        severity: "info",
+        category: "Outgoing",
+        title: `Highest throughput \u2014 ${who}`,
+        detail: `PO ${topPo} accounts for ${topQty} delivered units, the most active line this period.`,
+        metric: formatCount(topQty),
+      });
+    }
+  }
+
+  notes.push({
+    severity: "info",
+    category: "Incoming",
+    title: "Incoming receipts pending integration",
+    detail: "Feed currently reflects outgoing deliveries; incoming + performance sources are coming online.",
+    metric: "\u2014",
+  });
+
+  return notes;
+};
+
+const renderEscalationNotes = () => {
+  if (!escalationFeed) {
+    return;
+  }
+
+  const notes = buildEscalationNotes();
+  escalationFeed.replaceChildren();
+
+  if (!notes.length) {
+    const empty = document.createElement("p");
+    empty.className = "escalation-empty";
+    empty.textContent = "No escalation signals yet \u2014 load WIP and anchor data to generate notes.";
+    escalationFeed.append(empty);
+    return;
+  }
+
+  notes.forEach((note) => {
+    const item = document.createElement("article");
+    item.className = `escalation-note sev-${note.severity}`;
+
+    const rail = document.createElement("span");
+    rail.className = "note-rail";
+
+    const icon = document.createElement("div");
+    icon.className = "note-icon";
+    icon.textContent = categoryGlyphs[note.category] || "\u2022";
+
+    const bodyEl = document.createElement("div");
+    bodyEl.className = "note-body";
+
+    const meta = document.createElement("div");
+    meta.className = "note-meta";
+    const cat = document.createElement("span");
+    cat.className = "note-cat";
+    cat.textContent = note.category;
+    const sev = document.createElement("span");
+    sev.className = "note-sev";
+    sev.textContent = severityLabels[note.severity] || "Note";
+    meta.append(cat, sev);
+
+    const title = document.createElement("strong");
+    title.className = "note-title";
+    title.textContent = note.title;
+
+    const detail = document.createElement("p");
+    detail.className = "note-detail";
+    detail.textContent = note.detail;
+
+    bodyEl.append(meta, title, detail);
+
+    const metric = document.createElement("div");
+    metric.className = "note-metric";
+    metric.textContent = note.metric;
+
+    item.append(rail, icon, bodyEl, metric);
+    escalationFeed.append(item);
   });
 };
 
