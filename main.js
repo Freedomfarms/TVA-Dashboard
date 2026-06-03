@@ -303,6 +303,17 @@ const renderAnchorPreview = (dataset, statusText) => {
   });
 };
 
+const hasHeaders = (dataset, requiredHeaders) => {
+  const headers = dataset?.headers || [];
+  return requiredHeaders.every((requiredHeader) => headers.includes(requiredHeader));
+};
+
+const isWipDataset = (dataset) =>
+  hasHeaders(dataset, ["Part Number", "Vendor", "Process", "Clean WIP", "Min WIP", "MTD Del.", "BU"]);
+
+const isAnchorDataset = (dataset) =>
+  hasHeaders(dataset, ["PO 1", "Part Number", "Vendor", "Process", "Min WIP", "LT", "BU"]);
+
 const getRowValue = (row, labels) => {
   const labelList = Array.isArray(labels) ? labels : [labels];
   const key = labelList.find((label) => Object.prototype.hasOwnProperty.call(row, label));
@@ -434,6 +445,29 @@ const saveDataset = ({ storageKey, dataset, status }) => {
   }
 };
 
+const loadWipTemplate = () => {
+  const dataset = parseSpreadsheetData(defaultWipRaw);
+  window.dashboardDataset = dataset;
+
+  if (dataInput) {
+    dataInput.value = defaultWipRaw;
+  }
+
+  renderDataPreview(dataset, "Template loaded");
+  renderWipStatus(dataset);
+};
+
+const loadAnchorTemplate = () => {
+  const dataset = parseSpreadsheetData(defaultAnchorRaw);
+  window.dashboardDataAnchor = dataset;
+
+  if (dataAnchorInput) {
+    dataAnchorInput.value = defaultAnchorRaw;
+  }
+
+  renderAnchorPreview(dataset, "Template loaded");
+};
+
 navItems.forEach((item) => {
   item.addEventListener("click", (event) => {
     const viewName = item.dataset.view;
@@ -460,43 +494,44 @@ dataTabButtons.forEach((button) => {
 if (storedDataset) {
   try {
     const dataset = JSON.parse(storedDataset);
-    window.dashboardDataset = dataset;
-    if (dataInput && dataset.raw) {
-      dataInput.value = dataset.raw;
+    if (isWipDataset(dataset)) {
+      window.dashboardDataset = dataset;
+      if (dataInput && dataset.raw) {
+        dataInput.value = dataset.raw;
+      }
+      renderDataPreview(dataset, "Saved locally");
+      renderWipStatus(dataset);
+    } else {
+      localStorage.removeItem(datasetStorageKey);
+      loadWipTemplate();
     }
-    renderDataPreview(dataset, "Saved locally");
-    renderWipStatus(dataset);
   } catch {
     localStorage.removeItem(datasetStorageKey);
+    loadWipTemplate();
   }
 } else {
-  const dataset = parseSpreadsheetData(defaultWipRaw);
-  window.dashboardDataset = dataset;
-  if (dataInput) {
-    dataInput.value = defaultWipRaw;
-  }
-  renderDataPreview(dataset, "Template loaded");
-  renderWipStatus(dataset);
+  loadWipTemplate();
 }
 
 if (storedAnchor) {
   try {
     const dataset = JSON.parse(storedAnchor);
-    window.dashboardDataAnchor = dataset;
-    if (dataAnchorInput && dataset.raw) {
-      dataAnchorInput.value = dataset.raw;
+    if (isAnchorDataset(dataset)) {
+      window.dashboardDataAnchor = dataset;
+      if (dataAnchorInput && dataset.raw) {
+        dataAnchorInput.value = dataset.raw;
+      }
+      renderAnchorPreview(dataset, "Saved locally");
+    } else {
+      localStorage.removeItem(anchorStorageKey);
+      loadAnchorTemplate();
     }
-    renderAnchorPreview(dataset, "Saved locally");
   } catch {
     localStorage.removeItem(anchorStorageKey);
+    loadAnchorTemplate();
   }
 } else {
-  const dataset = parseSpreadsheetData(defaultAnchorRaw);
-  window.dashboardDataAnchor = dataset;
-  if (dataAnchorInput) {
-    dataAnchorInput.value = defaultAnchorRaw;
-  }
-  renderAnchorPreview(dataset, "Template loaded");
+  loadAnchorTemplate();
 }
 
 parseDataButton?.addEventListener("click", () => {
