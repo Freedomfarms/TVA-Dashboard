@@ -31,6 +31,12 @@ const militaryWipCount = document.querySelector("#military-wip-count");
 const commercialWipCount = document.querySelector("#commercial-wip-count");
 const escalationFeed = document.querySelector("#escalation-feed");
 const escalationAddButton = document.querySelector("#escalation-add");
+const escalationAddButtonTab = document.querySelector("#escalation-add-tab");
+const escalationTabFeed = document.querySelector("#escalation-tab-feed");
+const escalationSortSelect = document.querySelector("#escalation-sort");
+const escDatePrev = document.querySelector("#esc-date-prev");
+const escDateNext = document.querySelector("#esc-date-next");
+const escDateLabel = document.querySelector("#esc-date-label");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -116,7 +122,8 @@ const setActiveView = (viewName) => {
   });
 
   if (dashboardTitle) {
-    dashboardTitle.textContent = viewName === "data" ? "Data" : "Mission Control";
+    dashboardTitle.textContent =
+      viewName === "data" ? "Data" : viewName === "escalation" ? "Escalation Notes" : "Mission Control";
   }
 };
 
@@ -387,7 +394,7 @@ const renderProductionReadiness = () => {
     count: commercialWipCount,
   });
 
-  renderEscalationNotes();
+  renderEscalation();
 };
 
 const formatCount = (value) => Number(value).toLocaleString("en-US");
@@ -401,11 +408,14 @@ const severityLabels = {
 
 const severityOptions = ["critical", "warning", "positive", "info"];
 
+const severityRank = { critical: 0, warning: 1, positive: 2, info: 3 };
+
 const categoryGlyphs = {
   WIP: "\u25B2",
   Performance: "\u25D1",
   Outgoing: "\u2197",
   Incoming: "\u2198",
+  Delivery: "\u25C8",
 };
 
 const parseShipDate = (value) => {
@@ -413,11 +423,12 @@ const parseShipDate = (value) => {
   return match ? new Date(Number(match[3]), Number(match[1]) - 1, Number(match[2])) : null;
 };
 
-const todayIso = () => {
-  const now = new Date();
-  const offset = now.getTimezoneOffset() * 60000;
-  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+const toIsoDate = (date) => {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
 };
+
+const todayIso = () => toIsoDate(new Date());
 
 const formatNoteDate = (iso) => {
   const date = iso ? new Date(`${iso}T00:00:00`) : new Date();
@@ -453,6 +464,20 @@ const saveEscalationState = (state) => {
 };
 
 let escalationEditingId = null;
+let escalationSelectedDate = todayIso();
+let escalationSort = "date-desc";
+
+const mockHistoryNotes = [
+  { id: "mock-0531-1", kind: "mock", date: "2026-05-31", severity: "critical", category: "WIP", title: "4326628 below minimum WIP", detail: "MSC \u00B7 Coat \u2014 0 clean vs 1 required.", metric: "-1" },
+  { id: "mock-0531-2", kind: "mock", date: "2026-05-31", severity: "warning", category: "Performance", title: "70% WIP coverage across tracked parts", detail: "31 of 44 anchor parts meet or exceed minimum WIP.", metric: "70%" },
+  { id: "mock-0531-3", kind: "mock", date: "2026-05-31", severity: "info", category: "Outgoing", title: "8 units delivered", detail: "8 delivery lines logged \u00B7 latest movement May 31.", metric: "8" },
+  { id: "mock-0601-1", kind: "mock", date: "2026-06-01", severity: "critical", category: "WIP", title: "30G8908 below minimum WIP", detail: "MDS \u00B7 Black Gold \u2014 14 clean vs 18 required.", metric: "-4" },
+  { id: "mock-0601-2", kind: "mock", date: "2026-06-01", severity: "positive", category: "Delivery", title: "On-time delivery rate at 94%", detail: "On-time performance held above target across active POs.", metric: "94%" },
+  { id: "mock-0601-3", kind: "mock", date: "2026-06-01", severity: "info", category: "Outgoing", title: "21 units delivered", detail: "21 delivery lines logged \u00B7 latest movement Jun 1.", metric: "21" },
+  { id: "mock-0602-1", kind: "mock", date: "2026-06-02", severity: "warning", category: "WIP", title: "1B6275-01 approaching minimum WIP", detail: "NE Plasma \u00B7 Plasma \u2014 0 clean vs 1 required.", metric: "-1" },
+  { id: "mock-0602-2", kind: "mock", date: "2026-06-02", severity: "info", category: "Incoming", title: "Incoming PO 4700917312 received", detail: "4 units received against PO 4700917312 (MD4131129-21).", metric: "+4" },
+  { id: "mock-0602-3", kind: "mock", date: "2026-06-02", severity: "info", category: "Outgoing", title: "8 units delivered", detail: "8 delivery lines logged \u00B7 latest movement Jun 2.", metric: "8" },
+];
 
 const buildEscalationNotes = () => {
   const wipDataset = window.dashboardDataset;
@@ -488,6 +513,7 @@ const buildEscalationNotes = () => {
     const gap = row.minWip - row.cleanWip;
     notes.push({
       id: `ai-wip-${row.part}-${row.vendor}-${row.process}`,
+      kind: "ai",
       date,
       severity: "critical",
       category: "WIP",
@@ -502,6 +528,7 @@ const buildEscalationNotes = () => {
     const pct = Math.round((covered / readiness.length) * 100);
     notes.push({
       id: "ai-performance",
+      kind: "ai",
       date,
       severity: pct >= 80 ? "positive" : "warning",
       category: "Performance",
@@ -523,6 +550,7 @@ const buildEscalationNotes = () => {
 
     notes.push({
       id: "ai-outgoing-total",
+      kind: "ai",
       date,
       severity: "info",
       category: "Outgoing",
@@ -545,6 +573,7 @@ const buildEscalationNotes = () => {
       const who = info ? `${info.part} (${info.vendor} \u00B7 ${info.process})` : `PO ${topPo}`;
       notes.push({
         id: "ai-outgoing-top",
+        kind: "ai",
         date,
         severity: "info",
         category: "Outgoing",
@@ -557,6 +586,7 @@ const buildEscalationNotes = () => {
 
   notes.push({
     id: "ai-incoming",
+    kind: "ai",
     date,
     severity: "info",
     category: "Incoming",
@@ -568,18 +598,41 @@ const buildEscalationNotes = () => {
   return notes;
 };
 
+const getGeneratedNotes = () => [...buildEscalationNotes(), ...mockHistoryNotes];
+
 const getResolvedNotes = () => {
   const state = getEscalationState();
-  const aiNotes = buildEscalationNotes()
+  const generated = getGeneratedNotes()
     .filter((note) => !state.dismissed.includes(note.id))
     .map((note) => {
       const override = state.overrides[note.id];
-      return override
-        ? { ...note, ...override, kind: "ai", edited: true }
-        : { ...note, kind: "ai" };
+      return override ? { ...note, ...override, edited: true } : { ...note };
     });
   const userNotes = state.userNotes.map((note) => ({ ...note, kind: "user" }));
-  return [...userNotes, ...aiNotes];
+  return [...userNotes, ...generated];
+};
+
+const sortNotes = (notes, sort) => {
+  const copy = [...notes];
+  switch (sort) {
+    case "date-asc":
+      copy.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+      break;
+    case "severity":
+      copy.sort((a, b) => (severityRank[a.severity] ?? 9) - (severityRank[b.severity] ?? 9));
+      break;
+    case "category":
+      copy.sort((a, b) => String(a.category).localeCompare(String(b.category)));
+      break;
+    case "title":
+      copy.sort((a, b) => String(a.title).localeCompare(String(b.title)));
+      break;
+    case "date-desc":
+    default:
+      copy.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+      break;
+  }
+  return copy;
 };
 
 const saveEscalationNote = (note, updated) => {
@@ -600,7 +653,7 @@ const saveEscalationNote = (note, updated) => {
 
   saveEscalationState(state);
   escalationEditingId = null;
-  renderEscalationNotes();
+  renderEscalation();
 };
 
 const deleteEscalationNote = (note) => {
@@ -619,7 +672,7 @@ const deleteEscalationNote = (note) => {
   if (escalationEditingId === note.id) {
     escalationEditingId = null;
   }
-  renderEscalationNotes();
+  renderEscalation();
 };
 
 const cancelEscalationEdit = (note) => {
@@ -629,7 +682,7 @@ const cancelEscalationEdit = (note) => {
     saveEscalationState(state);
   }
   escalationEditingId = null;
-  renderEscalationNotes();
+  renderEscalation();
 };
 
 const addEscalationNote = () => {
@@ -641,14 +694,21 @@ const addEscalationNote = () => {
     title: "",
     detail: "",
     metric: "\u2014",
-    date: todayIso(),
+    date: escalationSelectedDate,
     isNew: true,
   };
   const state = getEscalationState();
   state.userNotes.unshift(note);
   saveEscalationState(state);
   escalationEditingId = note.id;
-  renderEscalationNotes();
+  renderEscalation();
+};
+
+const shiftEscalationDate = (deltaDays) => {
+  const base = new Date(`${escalationSelectedDate}T00:00:00`);
+  base.setDate(base.getDate() + deltaDays);
+  escalationSelectedDate = toIsoDate(base);
+  renderEscalation();
 };
 
 const buildNoteActionButton = (className, glyph, label, handler) => {
@@ -711,7 +771,7 @@ const buildNoteView = (note) => {
   actions.append(
     buildNoteActionButton("note-edit", "\u270E", "Edit note", () => {
       escalationEditingId = note.id;
-      renderEscalationNotes();
+      renderEscalation();
     }),
     buildNoteActionButton("note-delete", "\u2715", "Delete note", () => deleteEscalationNote(note)),
   );
@@ -720,7 +780,7 @@ const buildNoteView = (note) => {
   item.append(rail, icon, body, aside);
   item.addEventListener("dblclick", () => {
     escalationEditingId = note.id;
-    renderEscalationNotes();
+    renderEscalation();
   });
 
   return item;
@@ -815,26 +875,39 @@ const buildNoteEditor = (note) => {
   return form;
 };
 
-const renderEscalationNotes = () => {
-  if (!escalationFeed) {
+const renderNotesInto = (container, notes, emptyMessage) => {
+  if (!container) {
     return;
   }
 
-  const notes = getResolvedNotes();
-  escalationFeed.replaceChildren();
+  container.replaceChildren();
 
   if (!notes.length) {
     const empty = document.createElement("p");
     empty.className = "escalation-empty";
-    empty.textContent = "No escalation notes yet \u2014 use + to add one.";
-    escalationFeed.append(empty);
+    empty.textContent = emptyMessage;
+    container.append(empty);
     return;
   }
 
   notes.forEach((note) => {
     const element = escalationEditingId === note.id ? buildNoteEditor(note) : buildNoteView(note);
-    escalationFeed.append(element);
+    container.append(element);
   });
+};
+
+const renderEscalation = () => {
+  const all = getResolvedNotes();
+
+  if (escDateLabel) {
+    escDateLabel.textContent = formatNoteDate(escalationSelectedDate);
+  }
+
+  const dayNotes = all.filter((note) => note.date === escalationSelectedDate);
+  renderNotesInto(escalationFeed, dayNotes, "No escalation notes for this date \u2014 use + to add one.");
+
+  const sorted = sortNotes(all, escalationSort);
+  renderNotesInto(escalationTabFeed, sorted, "No escalation notes yet.");
 };
 
 
@@ -985,3 +1058,10 @@ clearAnchorButton?.addEventListener("click", () => {
 });
 
 escalationAddButton?.addEventListener("click", addEscalationNote);
+escalationAddButtonTab?.addEventListener("click", addEscalationNote);
+escDatePrev?.addEventListener("click", () => shiftEscalationDate(-1));
+escDateNext?.addEventListener("click", () => shiftEscalationDate(1));
+escalationSortSelect?.addEventListener("change", () => {
+  escalationSort = escalationSortSelect.value;
+  renderEscalation();
+});

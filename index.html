@@ -33,7 +33,7 @@
             <span class="nav-icon nav-file"></span>
             <span>Data</span>
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-view="escalation">
             <span class="nav-icon nav-box"></span>
             <span>Escalation Notes</span>
           </a>
@@ -309,6 +309,11 @@
               <h2>Escalation Notes</h2>
               <div class="escalation-header-actions">
                 <span class="ai-badge"><i></i>AI synthesized</span>
+                <div class="date-nav">
+                  <button type="button" class="date-nav-arrow" id="esc-date-prev" aria-label="Previous day">‹</button>
+                  <span class="date-nav-label" id="esc-date-label">Jun 3</span>
+                  <button type="button" class="date-nav-arrow" id="esc-date-next" aria-label="Next day">›</button>
+                </div>
                 <button type="button" class="escalation-add" id="escalation-add" aria-label="Add escalation note">+</button>
               </div>
             </div>
@@ -478,6 +483,31 @@
             </div>
 
             <div class="data-subview" data-data-subview="lt" hidden></div>
+          </section>
+        </div>
+        <div class="dashboard-view" data-dashboard-view="escalation" hidden>
+          <section class="escalation-workspace">
+            <article class="panel escalation-archive-panel">
+              <div class="panel-header">
+                <h2>Escalation Notes</h2>
+                <div class="escalation-header-actions">
+                  <span class="ai-badge"><i></i>Running log</span>
+                  <label class="esc-sort">
+                    Sort
+                    <select id="escalation-sort">
+                      <option value="date-desc">Date (newest)</option>
+                      <option value="date-asc">Date (oldest)</option>
+                      <option value="severity">Severity</option>
+                      <option value="category">Category</option>
+                      <option value="title">Title</option>
+                    </select>
+                  </label>
+                  <button type="button" class="escalation-add" id="escalation-add-tab" aria-label="Add escalation note">+</button>
+                </div>
+              </div>
+              <p class="escalation-lede">Running history of every escalation note across all dates</p>
+              <div class="escalation-feed escalation-feed-archive" id="escalation-tab-feed"></div>
+            </article>
           </section>
         </div>
       </main>

@@ -2357,3 +2357,78 @@ body::before {
   gap: 0.3rem;
   align-items: flex-end;
 }
+
+/* ---------- Escalation: date nav + tab/archive + sort ---------- */
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.date-nav-arrow {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 0.4rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(120, 160, 255, 0.24);
+  background: rgba(10, 18, 44, 0.7);
+  color: rgba(200, 214, 255, 0.85);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.date-nav-arrow:hover {
+  background: rgba(86, 142, 255, 0.22);
+  color: #fff;
+}
+
+.date-nav-label {
+  min-width: 3.4rem;
+  text-align: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(214, 226, 255, 0.9);
+}
+
+.escalation-workspace {
+  display: block;
+}
+
+.escalation-archive-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: calc(100vh - 9rem);
+}
+
+.esc-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(180, 196, 244, 0.7);
+}
+
+.esc-sort select {
+  background: rgba(6, 12, 30, 0.8);
+  border: 1px solid rgba(120, 160, 255, 0.24);
+  border-radius: 0.45rem;
+  color: rgba(232, 240, 255, 0.95);
+  font-size: 0.66rem;
+  padding: 0.3rem 0.45rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.esc-sort select:focus {
+  outline: none;
+  border-color: rgba(120, 160, 255, 0.5);
+}
