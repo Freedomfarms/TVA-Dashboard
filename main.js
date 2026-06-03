@@ -24,6 +24,11 @@ const dataPreviewBody = document.querySelector("#data-preview-body");
 const dataRowCount = document.querySelector("#data-row-count");
 const dataColumnCount = document.querySelector("#data-column-count");
 const dataStorageStatus = document.querySelector("#data-storage-status");
+const wipShortageCards = document.querySelector("#wip-shortage-cards");
+const militaryWipBody = document.querySelector("#military-wip-body");
+const commercialWipBody = document.querySelector("#commercial-wip-body");
+const militaryWipCount = document.querySelector("#military-wip-count");
+const commercialWipCount = document.querySelector("#commercial-wip-count");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -299,6 +304,129 @@ const renderAnchorPreview = (dataset, statusText) => {
   });
 };
 
+const getRowValue = (row, labels) => {
+  const labelList = Array.isArray(labels) ? labels : [labels];
+  const key = labelList.find((label) => Object.prototype.hasOwnProperty.call(row, label));
+  return key ? row[key] : "";
+};
+
+const toNumber = (value) => {
+  const parsed = Number.parseFloat(String(value).replace(/[$,%]/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const createCell = (value, className) => {
+  const cell = document.createElement("td");
+  cell.textContent = value;
+
+  if (className) {
+    cell.className = className;
+  }
+
+  return cell;
+};
+
+const renderWipStatusTable = ({ rows, body, count }) => {
+  if (!body || !count) {
+    return;
+  }
+
+  body.replaceChildren();
+  count.textContent = `${rows.length} ${rows.length === 1 ? "row" : "rows"}`;
+
+  if (rows.length === 0) {
+    const emptyRow = document.createElement("tr");
+    const emptyCell = createCell("No WIP rows loaded.", "");
+    emptyCell.colSpan = 6;
+    emptyRow.append(emptyCell);
+    body.append(emptyRow);
+    return;
+  }
+
+  rows.forEach((row) => {
+    const cleanWip = toNumber(getRowValue(row, ["Clean WIP", "CleanWIP"]));
+    const minWip = toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"]));
+    const tableRow = document.createElement("tr");
+
+    tableRow.append(
+      createCell(getRowValue(row, "Part Number")),
+      createCell(getRowValue(row, "Vendor")),
+      createCell(getRowValue(row, "Process")),
+      createCell(cleanWip, cleanWip < minWip ? "wip-short" : "wip-good"),
+      createCell(minWip),
+      createCell(getRowValue(row, ["MTD Del.", "MTD Delivered", "MTD Del"])),
+    );
+
+    body.append(tableRow);
+  });
+};
+
+const renderWipStatus = (dataset) => {
+  if (!wipShortageCards) {
+    return;
+  }
+
+  const rows = dataset?.rows || [];
+  const rowsWithStatus = rows.map((row) => {
+    const cleanWip = toNumber(getRowValue(row, ["Clean WIP", "CleanWIP"]));
+    const minWip = toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"]));
+
+    return {
+      row,
+      cleanWip,
+      minWip,
+      shortage: minWip - cleanWip,
+      bu: getRowValue(row, ["BU", "Business Unit"]),
+    };
+  });
+
+  const lowWipRows = rowsWithStatus
+    .filter(({ shortage }) => shortage > 0)
+    .sort((a, b) => b.shortage - a.shortage);
+
+  wipShortageCards.replaceChildren();
+
+  if (lowWipRows.length === 0) {
+    const card = document.createElement("div");
+    card.className = "tva-metric-card";
+    const label = document.createElement("span");
+    const value = document.createElement("strong");
+    const detail = document.createElement("small");
+    label.textContent = "WIP Coverage";
+    value.textContent = "OK";
+    detail.textContent = "No low-WIP parts in current dataset";
+    card.append(label, value, detail);
+    wipShortageCards.append(card);
+  } else {
+    lowWipRows.slice(0, 5).forEach(({ row, cleanWip, minWip, shortage }) => {
+      const card = document.createElement("div");
+      card.className = "tva-metric-card warning";
+      const label = document.createElement("span");
+      const value = document.createElement("strong");
+      const detail = document.createElement("small");
+      const part = getRowValue(row, "Part Number");
+      const vendor = getRowValue(row, "Vendor");
+      const process = getRowValue(row, "Process");
+      label.textContent = part;
+      value.textContent = `-${shortage}`;
+      detail.textContent = `${vendor} ${process}: ${cleanWip} clean / ${minWip} min`;
+      card.append(label, value, detail);
+      wipShortageCards.append(card);
+    });
+  }
+
+  renderWipStatusTable({
+    rows: rowsWithStatus.filter(({ bu }) => bu.toLowerCase() === "military").map(({ row }) => row),
+    body: militaryWipBody,
+    count: militaryWipCount,
+  });
+  renderWipStatusTable({
+    rows: rowsWithStatus.filter(({ bu }) => bu.toLowerCase() === "commercial").map(({ row }) => row),
+    body: commercialWipBody,
+    count: commercialWipCount,
+  });
+};
+
 const saveDataset = ({ storageKey, dataset, status }) => {
   localStorage.setItem(storageKey, JSON.stringify(dataset));
 
@@ -338,6 +466,7 @@ if (storedDataset) {
       dataInput.value = dataset.raw;
     }
     renderDataPreview(dataset, "Saved locally");
+    renderWipStatus(dataset);
   } catch {
     localStorage.removeItem(datasetStorageKey);
   }
@@ -348,6 +477,7 @@ if (storedDataset) {
     dataInput.value = defaultWipRaw;
   }
   renderDataPreview(dataset, "Template loaded");
+  renderWipStatus(dataset);
 }
 
 if (storedAnchor) {
@@ -374,12 +504,14 @@ parseDataButton?.addEventListener("click", () => {
   const dataset = parseSpreadsheetData(dataInput?.value || "");
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
+  renderWipStatus(dataset);
 });
 
 saveDataButton?.addEventListener("click", () => {
   const dataset = parseSpreadsheetData(dataInput?.value || "");
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
+  renderWipStatus(dataset);
   saveDataset({ storageKey: datasetStorageKey, dataset, status: dataStorageStatus });
 });
 
@@ -391,6 +523,7 @@ clearDataButton?.addEventListener("click", () => {
   localStorage.removeItem(datasetStorageKey);
   window.dashboardDataset = emptyDataset;
   renderDataPreview(emptyDataset);
+  renderWipStatus(emptyDataset);
 });
 
 parseAnchorButton?.addEventListener("click", () => {
