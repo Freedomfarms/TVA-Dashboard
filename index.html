@@ -18,24 +18,24 @@
             <div class="brand-core"></div>
           </div>
           <div class="brand-text">
-            <strong>NEXORA</strong>
+            <strong>Pratt &amp; Whitney</strong>
             <span>Vendor Portal</span>
           </div>
         </div>
 
         <nav class="nav-menu" aria-label="Main navigation">
-          <a class="nav-item active" href="#">
+          <a class="nav-item active" href="#" data-view="overview" aria-current="page">
             <span class="nav-icon nav-grid"></span>
-            <span>Overview</span>
+            <span>Mission Control</span>
             <span class="nav-dot"></span>
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-view="data">
             <span class="nav-icon nav-file"></span>
-            <span>Orders</span>
+            <span>Data</span>
           </a>
           <a class="nav-item" href="#">
             <span class="nav-icon nav-box"></span>
-            <span>Products</span>
+            <span>Escalation Notes</span>
           </a>
           <a class="nav-item" href="#">
             <span class="nav-icon nav-pulse"></span>
@@ -74,9 +74,7 @@
       <main class="dashboard">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Welcome back,</p>
-            <h1>Nova Traders <span class="wave">👋</span></h1>
-            <p class="subtitle">Here's what's happening with your business today.</p>
+            <h1 id="dashboard-title">Mission Control</h1>
           </div>
 
           <div class="topbar-actions">
@@ -88,6 +86,7 @@
           </div>
         </header>
 
+        <div class="dashboard-view active" data-dashboard-view="overview">
         <section class="stats-grid">
           <article class="stat-card purple-glow">
             <div class="card-heading">
@@ -307,7 +306,7 @@
 
           <article class="panel products-panel">
             <div class="panel-header">
-              <h2>Top Selling Products</h2>
+              <h2>Escalation Notes</h2>
             </div>
 
             <div class="product-list">
@@ -365,82 +364,248 @@
             </div>
           </article>
 
-          <article class="panel financial-panel">
-            <div class="panel-header">
-              <h2>Financial Overview</h2>
-            </div>
-
-            <div class="financial-layout">
-              <div class="finance-copy left">
-                <span>Total Earnings</span>
-                <strong>$98,760.50</strong>
+          <article class="panel tva-wip-panel">
+            <div class="tva-wip-header">
+              <div>
+                <h2>June Production Readiness</h2>
               </div>
+              <span class="tva-wip-badge">Excel snapshot</span>
+            </div>
 
-              <div class="finance-gem">
-                <div class="finance-gem-inner"></div>
+            <div class="tva-metrics" id="wip-shortage-cards">
+              <div class="tva-metric-card warning">
+                <span>MD4134613-91</span>
+                <strong>-5</strong>
+                <small>Budney Turn: 30 clean / 35 min</small>
               </div>
-
-              <div class="finance-copy right">
-                <span>Total Payouts</span>
-                <strong>$84,200.00</strong>
+              <div class="tva-metric-card warning">
+                <span>4137321</span>
+                <strong>-12</strong>
+                <small>DHI Deburr: 9 clean / 21 min</small>
+              </div>
+              <div class="tva-metric-card warning">
+                <span>4326628</span>
+                <strong>-1</strong>
+                <small>MSC Coat: 0 clean / 1 min</small>
+              </div>
+              <div class="tva-metric-card warning">
+                <span>30G8908</span>
+                <strong>-4</strong>
+                <small>MDS Black Gold: 14 clean / 18 min</small>
+              </div>
+              <div class="tva-metric-card warning">
+                <span>1B6275-01</span>
+                <strong>-1</strong>
+                <small>NE Plasma: 0 clean / 1 min</small>
               </div>
             </div>
 
-            <div class="profit-copy">
-              <span>Net Profit</span>
-              <strong>$14,560.50</strong>
-            </div>
-          </article>
-
-          <article class="panel activity-panel">
-            <div class="panel-header">
-              <h2>Recent Activity</h2>
-            </div>
-
-            <div class="activity-list">
-              <div class="activity-item">
-                <div class="activity-icon violet"></div>
-                <div class="activity-copy">
-                  <strong>Order #ORD-78452</strong>
-                  <span>New order received</span>
+            <div class="wip-table-grid">
+              <div class="wip-table-card">
+                <div class="wip-table-title">
+                  <h3>Military June TVA Data</h3>
+                  <span id="military-wip-count">24 rows</span>
                 </div>
-                <time>2m ago</time>
+                <div class="wip-table-shell">
+                  <table class="wip-status-table">
+                    <thead>
+                      <tr>
+                        <th>Part Number</th>
+                        <th>Vendor</th>
+                        <th>Process</th>
+                        <th>Clean WIP</th>
+                        <th>Min WIP</th>
+                        <th>MTD Del.</th>
+                      </tr>
+                    </thead>
+                    <tbody id="military-wip-body">
+                      <tr><td>4119904</td><td>ATA</td><td>CBN</td><td class="wip-good">7</td><td>0</td><td>0</td></tr>
+                      <tr><td>4119905</td><td>ATA</td><td>CBN</td><td class="wip-good">4</td><td>0</td><td>0</td></tr>
+                      <tr><td>4320806</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4318207</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4317508</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4131129-01</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4085004</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4084105</td><td>ATA</td><td>CBN</td><td class="wip-good">100</td><td>0</td><td>0</td></tr>
+                      <tr><td>4084106</td><td>ATA</td><td>CBN</td><td class="wip-good">89</td><td>0</td><td>0</td></tr>
+                      <tr><td>4081507</td><td>ATA</td><td>CBN</td><td class="wip-good">234</td><td>0</td><td>0</td></tr>
+                      <tr><td>MD4134613-91</td><td>Budney</td><td>Turn</td><td class="wip-short">30</td><td>35</td><td>2</td></tr>
+                      <tr><td>4119904</td><td>CW</td><td>Plasma</td><td class="wip-good">4</td><td>0</td><td>4</td></tr>
+                      <tr><td>4119905</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4318207</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>1</td></tr>
+                      <tr><td>4131129-01</td><td>CW</td><td>Plasma</td><td class="wip-good">1</td><td>0</td><td>1</td></tr>
+                      <tr><td>4138202</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4137321</td><td>DHI</td><td>Deburr</td><td class="wip-short">9</td><td>21</td><td>2</td></tr>
+                      <tr><td>MD4088768-02</td><td>DHI</td><td>Deburr</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>MD4088768-03</td><td>DHI</td><td>Deburr</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>MD4131129-21</td><td>Hanwha</td><td>Turn</td><td class="wip-good">24</td><td>15</td><td>0</td></tr>
+                      <tr><td>4089026-01</td><td>Linde</td><td>Coat / Grind</td><td class="wip-good">26</td><td>1</td><td>0</td></tr>
+                      <tr><td>4082602</td><td>Linde</td><td>Coat / Grind</td><td class="wip-good">2</td><td>2</td><td>0</td></tr>
+                      <tr><td>4326628</td><td>MSC</td><td>Coat</td><td class="wip-short">0</td><td>1</td><td>0</td></tr>
+                      <tr><td>4322743-01</td><td>MSC</td><td>Coat</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <div class="activity-item">
-                <div class="activity-icon green"></div>
-                <div class="activity-copy">
-                  <strong>Payment of $2,450</strong>
-                  <span>Received from order #ORD-78440</span>
+              <div class="wip-table-card">
+                <div class="wip-table-title">
+                  <h3>Commercial June TVA Data</h3>
+                  <span id="commercial-wip-count">20 rows</span>
                 </div>
-                <time>15m ago</time>
-              </div>
-
-              <div class="activity-item">
-                <div class="activity-icon blue"></div>
-                <div class="activity-copy">
-                  <strong>Order #ORD-78431</strong>
-                  <span>Shipped</span>
+                <div class="wip-table-shell">
+                  <table class="wip-status-table">
+                    <thead>
+                      <tr>
+                        <th>Part Number</th>
+                        <th>Vendor</th>
+                        <th>Process</th>
+                        <th>Clean WIP</th>
+                        <th>Min WIP</th>
+                        <th>MTD Del.</th>
+                      </tr>
+                    </thead>
+                    <tbody id="commercial-wip-body">
+                      <tr><td>6W30P2594-01</td><td>ATL</td><td>Sonic</td><td class="wip-good">11</td><td>1</td><td>8</td></tr>
+                      <tr><td>30G5307</td><td>Budney</td><td>Turn</td><td class="wip-good">10</td><td>6</td><td>5</td></tr>
+                      <tr><td>2A4802</td><td>Budney</td><td>Turn</td><td class="wip-good">6</td><td>5</td><td>0</td></tr>
+                      <tr><td>31G1508</td><td>Budney</td><td>Turn</td><td class="wip-good">9</td><td>2</td><td>0</td></tr>
+                      <tr><td>31G1508</td><td>Budney</td><td>Balance</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>30G7208</td><td>CW</td><td>Alox</td><td class="wip-good">18</td><td>10</td><td>1</td></tr>
+                      <tr><td>1B4237</td><td>Hanwha</td><td>Turn</td><td class="wip-good">2</td><td>0</td><td>0</td></tr>
+                      <tr><td>50D497</td><td>Hanwha</td><td>Turn</td><td class="wip-good">2</td><td>1</td><td>0</td></tr>
+                      <tr><td>30G4407</td><td>Linde</td><td>CBN</td><td class="wip-good">19</td><td>10</td><td>6</td></tr>
+                      <tr><td>30G5307</td><td>Linde</td><td>CBN</td><td class="wip-good">11</td><td>10</td><td>6</td></tr>
+                      <tr><td>30G8908</td><td>Linde</td><td>CBN / Alox</td><td class="wip-good">52</td><td>31</td><td>0</td></tr>
+                      <tr><td>31G1508</td><td>Linde</td><td>Alox</td><td class="wip-good">9</td><td>0</td><td>0</td></tr>
+                      <tr><td>31G0508</td><td>Linde</td><td>Alox</td><td class="wip-good">10</td><td>0</td><td>0</td></tr>
+                      <tr><td>30G8908</td><td>MDS</td><td>Black Gold</td><td class="wip-short">14</td><td>18</td><td>0</td></tr>
+                      <tr><td>31G0508</td><td>MDS</td><td>Black Gold</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>1B6275-01</td><td>NE Plasma</td><td>Plasma</td><td class="wip-short">0</td><td>1</td><td>0</td></tr>
+                      <tr><td>2A5001</td><td>Test Devices</td><td>Spin</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>2A4802</td><td>Test Devices</td><td>Spin</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>52G158</td><td>Valence</td><td>Anodize</td><td class="wip-good">2</td><td>1</td><td>0</td></tr>
+                      <tr><td>53D925</td><td>Valence</td><td>Anodize</td><td class="wip-good">4</td><td>2</td><td>0</td></tr>
+                    </tbody>
+                  </table>
                 </div>
-                <time>1h ago</time>
-              </div>
-
-              <div class="activity-item">
-                <div class="activity-icon magenta"></div>
-                <div class="activity-copy">
-                  <strong>Product QuantumDrive X1</strong>
-                  <span>Inventory updated</span>
-                </div>
-                <time>2h ago</time>
               </div>
             </div>
-          </article>
-
-          <article class="panel quote-panel">
-            <div class="quote-mark">“</div>
-            <p>Your growth is our mission. Let's build the future together.</p>
           </article>
         </section>
+        </div>
+
+        <div class="dashboard-view" data-dashboard-view="data" hidden>
+          <section class="data-workspace">
+            <div class="data-tab-bar" aria-label="Data section tabs">
+              <button class="data-tab-button" type="button" data-data-tab="anchor">Data Anchor</button>
+              <button class="data-tab-button active" type="button" data-data-tab="wip">WIP Data</button>
+              <button class="data-tab-button" type="button" data-data-tab="lt">LT Data</button>
+            </div>
+
+            <div class="data-subview" data-data-subview="anchor" hidden>
+              <article class="panel data-anchor-panel">
+                <div class="data-panel-heading">
+                  <div>
+                    <p class="eyebrow">Manual Excel Intake</p>
+                    <h2>Paste Data Anchor spreadsheet data</h2>
+                    <p>Copy anchor rows from Excel, paste them here, and keep this baseline dataset available for future dashboard mapping.</p>
+                  </div>
+                  <span class="data-pill">Always available</span>
+                </div>
+
+                <div class="data-import-grid">
+                  <div class="data-paste-card">
+                    <label for="data-anchor-input">Excel rows</label>
+                    <textarea id="data-anchor-input" spellcheck="false" placeholder="Anchor&#9;Category&#9;Value&#9;Notes&#10;Target Min WIP&#9;Policy&#9;25&#9;Baseline planning rule"></textarea>
+                    <div class="data-actions">
+                      <button class="primary-action" id="parse-anchor-button" type="button">Preview Data</button>
+                      <button class="primary-action save-action" id="save-anchor-button" type="button">Save Data Anchor</button>
+                      <button class="secondary-action" id="clear-anchor-button" type="button">Clear</button>
+                    </div>
+                  </div>
+
+                  <div class="data-summary-card">
+                    <span>Ready for dashboard mapping</span>
+                    <strong id="anchor-row-count">0 rows</strong>
+                    <small id="anchor-column-count">0 columns detected</small>
+                    <p>Anchor rows are stored in this browser so future charts, tables, and logic can reference stable baseline data.</p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel data-preview-panel">
+                <div class="panel-header">
+                  <h2>Data Anchor Preview</h2>
+                  <span class="data-status" id="anchor-storage-status">Waiting for data</span>
+                </div>
+
+                <div class="data-table-shell">
+                  <table class="data-table" aria-label="Preview of pasted Data Anchor data">
+                    <thead id="anchor-preview-head"></thead>
+                    <tbody id="anchor-preview-body">
+                      <tr class="empty-row">
+                        <td>Paste anchor rows from Excel and click Preview Data.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+
+            <div class="data-subview active" data-data-subview="wip">
+              <article class="panel data-entry-panel">
+                <div class="data-panel-heading">
+                  <div>
+                    <p class="eyebrow">Manual Excel Intake</p>
+                    <h2>Paste WIP spreadsheet data</h2>
+                    <p>Copy WIP rows from Excel, paste them here, and preview the structured data before we connect charts and metrics.</p>
+                  </div>
+                  <span class="data-pill">Local draft</span>
+                </div>
+
+                <div class="data-import-grid">
+                  <div class="data-paste-card">
+                    <label for="excel-data-input">Excel rows</label>
+                    <textarea id="excel-data-input" spellcheck="false" placeholder="Date&#9;Program&#9;Orders&#9;Revenue&#10;2026-06-01&#9;Aerospace&#9;42&#9;128500"></textarea>
+                    <div class="data-actions">
+                      <button class="primary-action" id="parse-data-button" type="button">Preview Data</button>
+                      <button class="primary-action save-action" id="save-data-button" type="button">Save WIP Data</button>
+                      <button class="secondary-action" id="clear-data-button" type="button">Clear</button>
+                    </div>
+                  </div>
+
+                  <div class="data-summary-card">
+                    <span>Ready for dashboard mapping</span>
+                    <strong id="data-row-count">0 rows</strong>
+                    <small id="data-column-count">0 columns detected</small>
+                    <p>Parsed rows are stored in this browser so charts, tables, and metrics can read from the same dashboard dataset next.</p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel data-preview-panel">
+                <div class="panel-header">
+                  <h2>WIP Data Preview</h2>
+                  <span class="data-status" id="data-storage-status">Waiting for data</span>
+                </div>
+
+                <div class="data-table-shell">
+                  <table class="data-table" aria-label="Preview of pasted WIP data">
+                    <thead id="data-preview-head"></thead>
+                    <tbody id="data-preview-body">
+                      <tr class="empty-row">
+                        <td>Paste rows from Excel and click Preview Data.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+
+            <div class="data-subview" data-data-subview="lt" hidden></div>
+          </section>
+        </div>
       </main>
     </div>
   </body>
