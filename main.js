@@ -4,9 +4,15 @@ const scenicPanel = document.querySelector(".scape-stars");
 const dashboardTitle = document.querySelector("#dashboard-title");
 const navItems = document.querySelectorAll("[data-view]");
 const dashboardViews = document.querySelectorAll("[data-dashboard-view]");
+const dataTabButtons = document.querySelectorAll("[data-data-tab]");
+const dataSubViews = document.querySelectorAll("[data-data-subview]");
 const dataInput = document.querySelector("#excel-data-input");
 const parseDataButton = document.querySelector("#parse-data-button");
 const clearDataButton = document.querySelector("#clear-data-button");
+const dataAnchorInput = document.querySelector("#data-anchor-input");
+const saveAnchorButton = document.querySelector("#save-anchor-button");
+const clearAnchorButton = document.querySelector("#clear-anchor-button");
+const dataAnchorStatus = document.querySelector("#data-anchor-status");
 const dataPreviewHead = document.querySelector("#data-preview-head");
 const dataPreviewBody = document.querySelector("#data-preview-body");
 const dataRowCount = document.querySelector("#data-row-count");
@@ -14,7 +20,9 @@ const dataColumnCount = document.querySelector("#data-column-count");
 const dataStorageStatus = document.querySelector("#data-storage-status");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
+const anchorStorageKey = "dashboardDataAnchor";
 const storedDataset = localStorage.getItem(datasetStorageKey);
+const storedAnchor = localStorage.getItem(anchorStorageKey);
 
 window.dashboardDataset = emptyDataset;
 
@@ -51,6 +59,20 @@ const setActiveView = (viewName) => {
   if (dashboardTitle) {
     dashboardTitle.textContent = viewName === "data" ? "Data" : "Overview";
   }
+};
+
+const setActiveDataTab = (tabName) => {
+  dataTabButtons.forEach((button) => {
+    const isActive = button.dataset.dataTab === tabName;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+
+  dataSubViews.forEach((view) => {
+    const isActive = view.dataset.dataSubview === tabName;
+    view.hidden = !isActive;
+    view.classList.toggle("active", isActive);
+  });
 };
 
 const parseDelimitedLine = (line, delimiter) => {
@@ -165,6 +187,16 @@ navItems.forEach((item) => {
   });
 });
 
+dataTabButtons.forEach((button) => {
+  button.setAttribute("aria-pressed", String(button.classList.contains("active")));
+
+  button.addEventListener("click", () => {
+    const tabName = button.dataset.dataTab;
+    const shouldDeselect = button.classList.contains("active");
+    setActiveDataTab(shouldDeselect ? "" : tabName);
+  });
+});
+
 if (storedDataset) {
   try {
     const dataset = JSON.parse(storedDataset);
@@ -172,6 +204,14 @@ if (storedDataset) {
     renderDataPreview(dataset);
   } catch {
     localStorage.removeItem(datasetStorageKey);
+  }
+}
+
+if (storedAnchor && dataAnchorInput) {
+  dataAnchorInput.value = storedAnchor;
+
+  if (dataAnchorStatus) {
+    dataAnchorStatus.textContent = "Data Anchor saved locally.";
   }
 }
 
@@ -190,4 +230,24 @@ clearDataButton?.addEventListener("click", () => {
   localStorage.removeItem(datasetStorageKey);
   window.dashboardDataset = emptyDataset;
   renderDataPreview(emptyDataset);
+});
+
+saveAnchorButton?.addEventListener("click", () => {
+  localStorage.setItem(anchorStorageKey, dataAnchorInput?.value || "");
+
+  if (dataAnchorStatus) {
+    dataAnchorStatus.textContent = "Data Anchor saved locally.";
+  }
+});
+
+clearAnchorButton?.addEventListener("click", () => {
+  if (dataAnchorInput) {
+    dataAnchorInput.value = "";
+  }
+
+  localStorage.removeItem(anchorStorageKey);
+
+  if (dataAnchorStatus) {
+    dataAnchorStatus.textContent = "No anchor information saved yet.";
+  }
 });

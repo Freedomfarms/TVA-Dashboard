@@ -468,52 +468,85 @@
 
         <div class="dashboard-view" data-dashboard-view="data" hidden>
           <section class="data-workspace">
-            <article class="panel data-entry-panel">
-              <div class="data-panel-heading">
-                <div>
-                  <p class="eyebrow">Manual Excel Intake</p>
-                  <h2>Paste spreadsheet data</h2>
-                  <p>Copy rows from Excel, paste them here, and preview the structured data before we connect charts and metrics.</p>
-                </div>
-                <span class="data-pill">Local draft</span>
-              </div>
+            <div class="data-tab-bar" aria-label="Data section tabs">
+              <button class="data-tab-button" type="button" data-data-tab="anchor">Data Anchor</button>
+              <button class="data-tab-button active" type="button" data-data-tab="wip">WIP Data</button>
+              <button class="data-tab-button" type="button" data-data-tab="lt">LT Data</button>
+            </div>
 
-              <div class="data-import-grid">
-                <div class="data-paste-card">
-                  <label for="excel-data-input">Excel rows</label>
-                  <textarea id="excel-data-input" spellcheck="false" placeholder="Date&#9;Program&#9;Orders&#9;Revenue&#10;2026-06-01&#9;Aerospace&#9;42&#9;128500"></textarea>
+            <div class="data-subview" data-data-subview="anchor" hidden>
+              <article class="panel data-anchor-panel">
+                <div class="data-panel-heading">
+                  <div>
+                    <p class="eyebrow">Permanent Reference</p>
+                    <h2>Data Anchor</h2>
+                    <p>Store baseline context, rules, definitions, or notes that should stay available as the dashboard grows.</p>
+                  </div>
+                  <span class="data-pill">Always available</span>
+                </div>
+
+                <div class="data-anchor-card">
+                  <label for="data-anchor-input">Anchor information</label>
+                  <textarea id="data-anchor-input" spellcheck="true" placeholder="Add reference information here. This is saved locally and can be used later when charts and metrics are connected."></textarea>
                   <div class="data-actions">
-                    <button class="primary-action" id="parse-data-button" type="button">Preview Data</button>
-                    <button class="secondary-action" id="clear-data-button" type="button">Clear</button>
+                    <button class="primary-action" id="save-anchor-button" type="button">Save Data Anchor</button>
+                    <button class="secondary-action" id="clear-anchor-button" type="button">Clear</button>
+                  </div>
+                  <p id="data-anchor-status">No anchor information saved yet.</p>
+                </div>
+              </article>
+            </div>
+
+            <div class="data-subview active" data-data-subview="wip">
+              <article class="panel data-entry-panel">
+                <div class="data-panel-heading">
+                  <div>
+                    <p class="eyebrow">Manual Excel Intake</p>
+                    <h2>Paste WIP spreadsheet data</h2>
+                    <p>Copy WIP rows from Excel, paste them here, and preview the structured data before we connect charts and metrics.</p>
+                  </div>
+                  <span class="data-pill">Local draft</span>
+                </div>
+
+                <div class="data-import-grid">
+                  <div class="data-paste-card">
+                    <label for="excel-data-input">Excel rows</label>
+                    <textarea id="excel-data-input" spellcheck="false" placeholder="Date&#9;Program&#9;Orders&#9;Revenue&#10;2026-06-01&#9;Aerospace&#9;42&#9;128500"></textarea>
+                    <div class="data-actions">
+                      <button class="primary-action" id="parse-data-button" type="button">Preview Data</button>
+                      <button class="secondary-action" id="clear-data-button" type="button">Clear</button>
+                    </div>
+                  </div>
+
+                  <div class="data-summary-card">
+                    <span>Ready for dashboard mapping</span>
+                    <strong id="data-row-count">0 rows</strong>
+                    <small id="data-column-count">0 columns detected</small>
+                    <p>Parsed rows are stored in this browser so charts, tables, and metrics can read from the same dashboard dataset next.</p>
                   </div>
                 </div>
+              </article>
 
-                <div class="data-summary-card">
-                  <span>Ready for dashboard mapping</span>
-                  <strong id="data-row-count">0 rows</strong>
-                  <small id="data-column-count">0 columns detected</small>
-                  <p>Parsed rows are stored in this browser so charts, tables, and metrics can read from the same dashboard dataset next.</p>
+              <article class="panel data-preview-panel">
+                <div class="panel-header">
+                  <h2>WIP Data Preview</h2>
+                  <span class="data-status" id="data-storage-status">Waiting for data</span>
                 </div>
-              </div>
-            </article>
 
-            <article class="panel data-preview-panel">
-              <div class="panel-header">
-                <h2>Data Preview</h2>
-                <span class="data-status" id="data-storage-status">Waiting for data</span>
-              </div>
+                <div class="data-table-shell">
+                  <table class="data-table" aria-label="Preview of pasted WIP data">
+                    <thead id="data-preview-head"></thead>
+                    <tbody id="data-preview-body">
+                      <tr class="empty-row">
+                        <td>Paste rows from Excel and click Preview Data.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
 
-              <div class="data-table-shell">
-                <table class="data-table" aria-label="Preview of pasted Excel data">
-                  <thead id="data-preview-head"></thead>
-                  <tbody id="data-preview-body">
-                    <tr class="empty-row">
-                      <td>Paste rows from Excel and click Preview Data.</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </article>
+            <div class="data-subview" data-data-subview="lt" hidden></div>
           </section>
         </div>
       </main>
