@@ -30,6 +30,7 @@ const commercialWipBody = document.querySelector("#commercial-wip-body");
 const militaryWipCount = document.querySelector("#military-wip-count");
 const commercialWipCount = document.querySelector("#commercial-wip-count");
 const escalationFeed = document.querySelector("#escalation-feed");
+const escalationAddButton = document.querySelector("#escalation-add");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -398,6 +399,8 @@ const severityLabels = {
   info: "Note",
 };
 
+const severityOptions = ["critical", "warning", "positive", "info"];
+
 const categoryGlyphs = {
   WIP: "\u25B2",
   Performance: "\u25D1",
@@ -410,12 +413,54 @@ const parseShipDate = (value) => {
   return match ? new Date(Number(match[3]), Number(match[1]) - 1, Number(match[2])) : null;
 };
 
+const todayIso = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+};
+
+const formatNoteDate = (iso) => {
+  const date = iso ? new Date(`${iso}T00:00:00`) : new Date();
+  return Number.isNaN(date.getTime())
+    ? ""
+    : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+const formatNoteDateFull = (iso) => {
+  const date = iso ? new Date(`${iso}T00:00:00`) : new Date();
+  return Number.isNaN(date.getTime())
+    ? ""
+    : date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+};
+
+const escalationStateKey = "escalationNotesState";
+
+const getEscalationState = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(escalationStateKey));
+    return {
+      overrides: parsed?.overrides || {},
+      dismissed: parsed?.dismissed || [],
+      userNotes: parsed?.userNotes || [],
+    };
+  } catch {
+    return { overrides: {}, dismissed: [], userNotes: [] };
+  }
+};
+
+const saveEscalationState = (state) => {
+  localStorage.setItem(escalationStateKey, JSON.stringify(state));
+};
+
+let escalationEditingId = null;
+
 const buildEscalationNotes = () => {
   const wipDataset = window.dashboardDataset;
   const anchorDataset = window.dashboardDataAnchor;
   const wipRows = wipDataset?.rows || [];
   const wipIndex = buildWipQtyIndex(wipDataset);
   const readiness = buildReadinessRows(anchorDataset, wipIndex);
+  const date = todayIso();
   const notes = [];
 
   const poToPart = new Map();
@@ -442,6 +487,8 @@ const buildEscalationNotes = () => {
   shortages.slice(0, 4).forEach((row) => {
     const gap = row.minWip - row.cleanWip;
     notes.push({
+      id: `ai-wip-${row.part}-${row.vendor}-${row.process}`,
+      date,
       severity: "critical",
       category: "WIP",
       title: `${row.part} below minimum WIP`,
@@ -454,6 +501,8 @@ const buildEscalationNotes = () => {
     const covered = readiness.filter((row) => row.cleanWip >= row.minWip).length;
     const pct = Math.round((covered / readiness.length) * 100);
     notes.push({
+      id: "ai-performance",
+      date,
       severity: pct >= 80 ? "positive" : "warning",
       category: "Performance",
       title: `${pct}% WIP coverage across tracked parts`,
@@ -467,12 +516,14 @@ const buildEscalationNotes = () => {
     const dates = wipRows
       .map((row) => parseShipDate(getRowValue(row, ["Ship Date", "Date"])))
       .filter(Boolean);
-    const latest = dates.length ? new Date(Math.max(...dates.map((date) => date.getTime()))) : null;
+    const latest = dates.length ? new Date(Math.max(...dates.map((value) => value.getTime()))) : null;
     const latestLabel = latest
       ? latest.toLocaleDateString("en-US", { month: "short", day: "numeric" })
       : "\u2014";
 
     notes.push({
+      id: "ai-outgoing-total",
+      date,
       severity: "info",
       category: "Outgoing",
       title: `${formatCount(totalShipped)} units delivered this period`,
@@ -493,6 +544,8 @@ const buildEscalationNotes = () => {
       const info = poToPart.get(topPo);
       const who = info ? `${info.part} (${info.vendor} \u00B7 ${info.process})` : `PO ${topPo}`;
       notes.push({
+        id: "ai-outgoing-top",
+        date,
         severity: "info",
         category: "Outgoing",
         title: `Highest throughput \u2014 ${who}`,
@@ -503,6 +556,8 @@ const buildEscalationNotes = () => {
   }
 
   notes.push({
+    id: "ai-incoming",
+    date,
     severity: "info",
     category: "Incoming",
     title: "Incoming receipts pending integration",
@@ -513,64 +568,275 @@ const buildEscalationNotes = () => {
   return notes;
 };
 
+const getResolvedNotes = () => {
+  const state = getEscalationState();
+  const aiNotes = buildEscalationNotes()
+    .filter((note) => !state.dismissed.includes(note.id))
+    .map((note) => {
+      const override = state.overrides[note.id];
+      return override
+        ? { ...note, ...override, kind: "ai", edited: true }
+        : { ...note, kind: "ai" };
+    });
+  const userNotes = state.userNotes.map((note) => ({ ...note, kind: "user" }));
+  return [...userNotes, ...aiNotes];
+};
+
+const saveEscalationNote = (note, updated) => {
+  const state = getEscalationState();
+
+  if (note.kind === "user") {
+    const merged = { ...note, ...updated, kind: "user" };
+    delete merged.isNew;
+    const index = state.userNotes.findIndex((entry) => entry.id === note.id);
+    if (index >= 0) {
+      state.userNotes[index] = merged;
+    } else {
+      state.userNotes.unshift(merged);
+    }
+  } else {
+    state.overrides[note.id] = updated;
+  }
+
+  saveEscalationState(state);
+  escalationEditingId = null;
+  renderEscalationNotes();
+};
+
+const deleteEscalationNote = (note) => {
+  const state = getEscalationState();
+
+  if (note.kind === "user") {
+    state.userNotes = state.userNotes.filter((entry) => entry.id !== note.id);
+  } else {
+    if (!state.dismissed.includes(note.id)) {
+      state.dismissed.push(note.id);
+    }
+    delete state.overrides[note.id];
+  }
+
+  saveEscalationState(state);
+  if (escalationEditingId === note.id) {
+    escalationEditingId = null;
+  }
+  renderEscalationNotes();
+};
+
+const cancelEscalationEdit = (note) => {
+  if (note.kind === "user" && note.isNew) {
+    const state = getEscalationState();
+    state.userNotes = state.userNotes.filter((entry) => entry.id !== note.id);
+    saveEscalationState(state);
+  }
+  escalationEditingId = null;
+  renderEscalationNotes();
+};
+
+const addEscalationNote = () => {
+  const note = {
+    id: `user-${Date.now()}`,
+    kind: "user",
+    severity: "info",
+    category: "Note",
+    title: "",
+    detail: "",
+    metric: "\u2014",
+    date: todayIso(),
+    isNew: true,
+  };
+  const state = getEscalationState();
+  state.userNotes.unshift(note);
+  saveEscalationState(state);
+  escalationEditingId = note.id;
+  renderEscalationNotes();
+};
+
+const buildNoteActionButton = (className, glyph, label, handler) => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `note-action ${className}`;
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  button.textContent = glyph;
+  button.addEventListener("click", handler);
+  return button;
+};
+
+const buildNoteView = (note) => {
+  const item = document.createElement("article");
+  item.className = `escalation-note sev-${note.severity}`;
+  item.dataset.id = note.id;
+
+  const rail = document.createElement("span");
+  rail.className = "note-rail";
+
+  const icon = document.createElement("div");
+  icon.className = "note-icon";
+  icon.textContent = categoryGlyphs[note.category] || "\u2022";
+
+  const body = document.createElement("div");
+  body.className = "note-body";
+
+  const meta = document.createElement("div");
+  meta.className = "note-meta";
+  const cat = document.createElement("span");
+  cat.className = "note-cat";
+  cat.textContent = note.category;
+  const sev = document.createElement("span");
+  sev.className = "note-sev";
+  sev.textContent = severityLabels[note.severity] || "Note";
+  const date = document.createElement("span");
+  date.className = "note-date";
+  date.textContent = formatNoteDate(note.date);
+  date.title = formatNoteDateFull(note.date);
+  meta.append(cat, sev, date);
+
+  const title = document.createElement("strong");
+  title.className = "note-title";
+  title.textContent = note.title || "Untitled note";
+
+  const detail = document.createElement("p");
+  detail.className = "note-detail";
+  detail.textContent = note.detail;
+
+  body.append(meta, title, detail);
+
+  const aside = document.createElement("div");
+  aside.className = "note-aside";
+  const metric = document.createElement("div");
+  metric.className = "note-metric";
+  metric.textContent = note.metric;
+  const actions = document.createElement("div");
+  actions.className = "note-actions";
+  actions.append(
+    buildNoteActionButton("note-edit", "\u270E", "Edit note", () => {
+      escalationEditingId = note.id;
+      renderEscalationNotes();
+    }),
+    buildNoteActionButton("note-delete", "\u2715", "Delete note", () => deleteEscalationNote(note)),
+  );
+  aside.append(metric, actions);
+
+  item.append(rail, icon, body, aside);
+  item.addEventListener("dblclick", () => {
+    escalationEditingId = note.id;
+    renderEscalationNotes();
+  });
+
+  return item;
+};
+
+const buildNoteEditor = (note) => {
+  const form = document.createElement("form");
+  form.className = `escalation-note escalation-note-edit sev-${note.severity}`;
+  form.dataset.id = note.id;
+
+  const rail = document.createElement("span");
+  rail.className = "note-rail";
+
+  const grid = document.createElement("div");
+  grid.className = "note-edit-grid";
+
+  const sevSelect = document.createElement("select");
+  sevSelect.className = "note-input note-input-sev";
+  severityOptions.forEach((option) => {
+    const opt = document.createElement("option");
+    opt.value = option;
+    opt.textContent = severityLabels[option];
+    if (option === note.severity) {
+      opt.selected = true;
+    }
+    sevSelect.append(opt);
+  });
+  sevSelect.addEventListener("change", () => {
+    form.className = `escalation-note escalation-note-edit sev-${sevSelect.value}`;
+  });
+
+  const catInput = document.createElement("input");
+  catInput.className = "note-input";
+  catInput.value = note.category || "";
+  catInput.placeholder = "Category";
+
+  const dateInput = document.createElement("input");
+  dateInput.type = "date";
+  dateInput.className = "note-input note-input-date";
+  dateInput.value = note.date || todayIso();
+
+  const titleInput = document.createElement("input");
+  titleInput.className = "note-input note-input-title";
+  titleInput.value = note.title || "";
+  titleInput.placeholder = "Title";
+
+  const detailInput = document.createElement("textarea");
+  detailInput.className = "note-input note-input-detail";
+  detailInput.rows = 2;
+  detailInput.value = note.detail || "";
+  detailInput.placeholder = "Detail";
+
+  const metricInput = document.createElement("input");
+  metricInput.className = "note-input note-input-metric";
+  metricInput.value = note.metric || "";
+  metricInput.placeholder = "Metric";
+
+  const topRow = document.createElement("div");
+  topRow.className = "note-edit-row";
+  topRow.append(sevSelect, catInput, dateInput);
+
+  const bottomRow = document.createElement("div");
+  bottomRow.className = "note-edit-row";
+  bottomRow.append(metricInput);
+
+  grid.append(topRow, titleInput, detailInput, bottomRow);
+
+  const actions = document.createElement("div");
+  actions.className = "note-edit-actions";
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "submit";
+  saveBtn.className = "note-action note-save";
+  saveBtn.title = "Save note";
+  saveBtn.setAttribute("aria-label", "Save note");
+  saveBtn.textContent = "\u2713";
+  const cancelBtn = buildNoteActionButton("note-cancel", "\u2715", "Cancel", () => cancelEscalationEdit(note));
+  actions.append(saveBtn, cancelBtn);
+
+  form.append(rail, grid, actions);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveEscalationNote(note, {
+      severity: sevSelect.value,
+      category: catInput.value.trim() || "Note",
+      date: dateInput.value || todayIso(),
+      title: titleInput.value.trim() || "Untitled note",
+      detail: detailInput.value.trim(),
+      metric: metricInput.value.trim() || "\u2014",
+    });
+  });
+
+  return form;
+};
+
 const renderEscalationNotes = () => {
   if (!escalationFeed) {
     return;
   }
 
-  const notes = buildEscalationNotes();
+  const notes = getResolvedNotes();
   escalationFeed.replaceChildren();
 
   if (!notes.length) {
     const empty = document.createElement("p");
     empty.className = "escalation-empty";
-    empty.textContent = "No escalation signals yet \u2014 load WIP and anchor data to generate notes.";
+    empty.textContent = "No escalation notes yet \u2014 use + to add one.";
     escalationFeed.append(empty);
     return;
   }
 
   notes.forEach((note) => {
-    const item = document.createElement("article");
-    item.className = `escalation-note sev-${note.severity}`;
-
-    const rail = document.createElement("span");
-    rail.className = "note-rail";
-
-    const icon = document.createElement("div");
-    icon.className = "note-icon";
-    icon.textContent = categoryGlyphs[note.category] || "\u2022";
-
-    const bodyEl = document.createElement("div");
-    bodyEl.className = "note-body";
-
-    const meta = document.createElement("div");
-    meta.className = "note-meta";
-    const cat = document.createElement("span");
-    cat.className = "note-cat";
-    cat.textContent = note.category;
-    const sev = document.createElement("span");
-    sev.className = "note-sev";
-    sev.textContent = severityLabels[note.severity] || "Note";
-    meta.append(cat, sev);
-
-    const title = document.createElement("strong");
-    title.className = "note-title";
-    title.textContent = note.title;
-
-    const detail = document.createElement("p");
-    detail.className = "note-detail";
-    detail.textContent = note.detail;
-
-    bodyEl.append(meta, title, detail);
-
-    const metric = document.createElement("div");
-    metric.className = "note-metric";
-    metric.textContent = note.metric;
-
-    item.append(rail, icon, bodyEl, metric);
-    escalationFeed.append(item);
+    const element = escalationEditingId === note.id ? buildNoteEditor(note) : buildNoteView(note);
+    escalationFeed.append(element);
   });
 };
+
 
 const saveDataset = ({ storageKey, dataset, status }) => {
   localStorage.setItem(storageKey, JSON.stringify(dataset));
@@ -717,3 +983,5 @@ clearAnchorButton?.addEventListener("click", () => {
   window.dashboardDataAnchor = emptyDataset;
   renderAnchorPreview(emptyDataset);
 });
+
+escalationAddButton?.addEventListener("click", addEscalationNote);
