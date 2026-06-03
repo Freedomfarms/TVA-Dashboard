@@ -1,4 +1,5 @@
 import "./styles.css";
+import defaultWipRaw from "./wip-data.txt?raw";
 
 const scenicPanel = document.querySelector(".scape-stars");
 const dashboardTitle = document.querySelector("#dashboard-title");
@@ -34,7 +35,6 @@ const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
 const storedDataset = localStorage.getItem(datasetStorageKey);
 const storedAnchor = localStorage.getItem(anchorStorageKey);
-const defaultWipRaw = "";
 const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
 \t4700912755\t4119904\tATA\tCBN\t0\t12\tMilitary
 \t4700912732\t4119905\tATA\tCBN\t0\t12\tMilitary
@@ -265,7 +265,7 @@ const hasHeaders = (dataset, requiredHeaders) => {
 };
 
 const isWipDataset = (dataset) =>
-  hasHeaders(dataset, ["Part Number", "Vendor", "Process", "Clean WIP", "Min WIP", "MTD Del.", "BU"]);
+  hasHeaders(dataset, ["Incoming PO", "Ship Date", "Qty"]);
 
 const isAnchorDataset = (dataset) =>
   hasHeaders(dataset, ["PO 1", "Part Number", "Vendor", "Process", "Min WIP", "LT", "BU"]);
