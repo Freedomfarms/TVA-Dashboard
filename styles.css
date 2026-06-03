@@ -1095,6 +1095,7 @@ body::before {
 .sales-panel { grid-column: span 5; }
 .neon-scape-panel { grid-column: span 2; }
 .products-panel { grid-column: span 4; }
+.tva-wip-panel { grid-column: span 8; }
 .financial-panel { grid-column: span 3; }
 .activity-panel { grid-column: span 3; }
 .quote-panel { grid-column: span 2; }
@@ -1511,6 +1512,173 @@ body::before {
   font-size: 0.85rem;
 }
 
+.tva-wip-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(47, 181, 255, 0.16), transparent 32%),
+    radial-gradient(circle at 84% 8%, rgba(142, 88, 255, 0.14), transparent 26%),
+    linear-gradient(180deg, rgba(8, 15, 41, 0.95), rgba(7, 12, 34, 0.97));
+}
+
+.tva-wip-header,
+.tva-metrics,
+.wip-table-grid,
+.wip-table-title {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.tva-wip-header,
+.wip-table-title {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tva-wip-header h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.tva-wip-badge,
+.wip-table-title span {
+  flex: 0 0 auto;
+  border: 1px solid rgba(75, 194, 255, 0.24);
+  border-radius: 999px;
+  padding: 0.38rem 0.65rem;
+  color: rgba(198, 233, 255, 0.86);
+  background: rgba(37, 141, 255, 0.11);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tva-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tva-metric-card {
+  padding: 0.8rem;
+  border: 1px solid rgba(117, 145, 255, 0.12);
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(13, 24, 61, 0.82), rgba(8, 15, 38, 0.84));
+}
+
+.tva-metric-card span,
+.tva-metric-card small {
+  display: block;
+  color: rgba(188, 201, 239, 0.72);
+  font-size: 0.68rem;
+}
+
+.tva-metric-card span {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.tva-metric-card strong {
+  display: block;
+  margin: 0.18rem 0;
+  color: #f7faff;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.tva-metric-card.warning strong {
+  color: #ffb3be;
+}
+
+.wip-table-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wip-table-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(116, 143, 255, 0.12);
+  border-radius: 1.1rem;
+  background: rgba(3, 8, 24, 0.35);
+}
+
+.wip-table-title {
+  padding: 0.72rem 0.8rem;
+  background:
+    linear-gradient(90deg, rgba(67, 186, 255, 0.34), rgba(129, 88, 255, 0.22));
+}
+
+.wip-table-title h3 {
+  margin: 0;
+  color: rgba(244, 248, 255, 0.95);
+  font-size: 0.86rem;
+  letter-spacing: 0.01em;
+}
+
+.wip-table-title span {
+  padding: 0.28rem 0.5rem;
+  font-size: 0.58rem;
+}
+
+.wip-table-shell {
+  max-height: 18.5rem;
+  overflow: auto;
+}
+
+.wip-status-table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+}
+
+.wip-status-table th,
+.wip-status-table td {
+  border-right: 1px solid rgba(169, 186, 241, 0.06);
+  border-bottom: 1px solid rgba(169, 186, 241, 0.09);
+  padding: 0.42rem 0.48rem;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 0.68rem;
+}
+
+.wip-status-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  color: rgba(235, 241, 255, 0.92);
+  text-transform: uppercase;
+  background: rgba(12, 30, 62, 0.98);
+  letter-spacing: 0.04em;
+}
+
+.wip-status-table td {
+  color: rgba(219, 228, 252, 0.84);
+}
+
+.wip-status-table td:nth-child(4),
+.wip-status-table td:nth-child(5),
+.wip-status-table td:nth-child(6) {
+  text-align: center;
+  font-weight: 700;
+}
+
+.wip-status-table .wip-good {
+  color: #092a1a;
+  background: rgba(109, 225, 166, 0.72);
+}
+
+.wip-status-table .wip-short {
+  color: #3a0710;
+  background: rgba(255, 124, 145, 0.78);
+}
+
 .financial-layout {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -1644,9 +1812,14 @@ body::before {
   .neon-scape-panel,
   .quote-panel,
   .products-panel,
+  .tva-wip-panel,
   .financial-panel,
   .activity-panel {
     grid-column: span 4;
+  }
+
+  .tva-wip-panel {
+    grid-column: span 8;
   }
 }
 
@@ -1663,6 +1836,7 @@ body::before {
   .sales-panel,
   .neon-scape-panel,
   .products-panel,
+  .tva-wip-panel,
   .financial-panel,
   .activity-panel,
   .quote-panel {
@@ -1685,12 +1859,19 @@ body::before {
 
   .order-flow-layout,
   .financial-layout,
-  .data-import-grid {
+  .data-import-grid,
+  .wip-table-grid,
+  .tva-metrics {
     grid-template-columns: 1fr;
   }
 
   .data-panel-heading {
     flex-direction: column;
+  }
+
+  .tva-wip-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .sales-svg {
