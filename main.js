@@ -292,6 +292,7 @@ const renderAnchorPreview = (dataset, statusText) => {
     statusText,
   });
   renderProductionReadiness();
+  refreshOutgoing();
 };
 
 const renderDeliveriesPreview = (dataset, statusText) => {
@@ -336,6 +337,87 @@ const isDeliveriesDataset = (dataset) =>
 
 const isOutgoingDataset = (dataset) =>
   hasHeaders(dataset, ["REF_DOC / PO", "Ship Date", "LT Return"]);
+
+const parseSlashDate = (value) => {
+  const match = String(value).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!match) {
+    return null;
+  }
+  let year = Number(match[3]);
+  if (year < 100) {
+    year += 2000;
+  }
+  return new Date(year, Number(match[1]) - 1, Number(match[2]));
+};
+
+const formatSlashDate = (date) => {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${month}/${day}/${date.getFullYear()}`;
+};
+
+const addBusinessDays = (date, days) => {
+  const result = new Date(date.getTime());
+  const target = Math.abs(days);
+  const step = days >= 0 ? 1 : -1;
+  let added = 0;
+  while (added < target) {
+    result.setDate(result.getDate() + step);
+    const weekday = result.getDay();
+    if (weekday !== 0 && weekday !== 6) {
+      added += 1;
+    }
+  }
+  return result;
+};
+
+const buildAnchorLtIndex = (anchorDataset) => {
+  const index = new Map();
+  (anchorDataset?.rows || []).forEach((row) => {
+    const lt = toNumber(getRowValue(row, ["LT", "Lead Time"]));
+    [getRowValue(row, ["PO 1", "PO1"]), getRowValue(row, ["PO 2", "PO2"])]
+      .map((po) => String(po).trim())
+      .filter(Boolean)
+      .forEach((po) => {
+        if (!index.has(po)) {
+          index.set(po, lt);
+        }
+      });
+  });
+  return index;
+};
+
+const computeOutgoing = (dataset) => {
+  if (!dataset || !dataset.headers || dataset.headers.length === 0) {
+    return dataset || emptyDataset;
+  }
+
+  const ltIndex = buildAnchorLtIndex(window.dashboardDataAnchor);
+  const rows = (dataset.rows || []).map((row) => {
+    const next = { ...row };
+    const ref = String(getRowValue(row, ["REF_DOC / PO", "REF_DOC", "PO"])).trim();
+    const shipDate = parseSlashDate(getRowValue(row, ["Ship Date", "Date"]));
+
+    if (ref && shipDate && ltIndex.has(ref)) {
+      next["LT Return"] = formatSlashDate(addBusinessDays(shipDate, ltIndex.get(ref)));
+    } else {
+      next["LT Return"] = "";
+    }
+
+    return next;
+  });
+
+  return { headers: dataset.headers, rows, raw: dataset.raw };
+};
+
+const refreshOutgoing = () => {
+  if (!outgoingPreviewHead) {
+    return;
+  }
+  const computed = computeOutgoing(window.dashboardOutgoing || emptyDataset);
+  window.dashboardOutgoing = computed;
+  renderOutgoingPreview(computed);
+};
 
 const getRowValue = (row, labels) => {
   const labelList = Array.isArray(labels) ? labels : [labels];
@@ -1012,7 +1094,7 @@ const loadDeliveriesTemplate = () => {
 };
 
 const loadOutgoingTemplate = () => {
-  const dataset = parseSpreadsheetData(defaultOutgoingRaw);
+  const dataset = computeOutgoing(parseSpreadsheetData(defaultOutgoingRaw));
   window.dashboardOutgoing = dataset;
 
   if (outgoingInput) {
@@ -1113,11 +1195,12 @@ if (storedOutgoing) {
   try {
     const dataset = JSON.parse(storedOutgoing);
     if (isOutgoingDataset(dataset)) {
-      window.dashboardOutgoing = dataset;
+      const computed = computeOutgoing(dataset);
+      window.dashboardOutgoing = computed;
       if (outgoingInput && dataset.raw) {
         outgoingInput.value = dataset.raw;
       }
-      renderOutgoingPreview(dataset, "Saved locally");
+      renderOutgoingPreview(computed, "Saved locally");
     } else {
       localStorage.removeItem(outgoingStorageKey);
       loadOutgoingTemplate();
@@ -1203,13 +1286,13 @@ clearDeliveriesButton?.addEventListener("click", () => {
 });
 
 parseOutgoingButton?.addEventListener("click", () => {
-  const dataset = parseSpreadsheetData(outgoingInput?.value || "");
+  const dataset = computeOutgoing(parseSpreadsheetData(outgoingInput?.value || ""));
   window.dashboardOutgoing = dataset;
   renderOutgoingPreview(dataset);
 });
 
 saveOutgoingButton?.addEventListener("click", () => {
-  const dataset = parseSpreadsheetData(outgoingInput?.value || "");
+  const dataset = computeOutgoing(parseSpreadsheetData(outgoingInput?.value || ""));
   window.dashboardOutgoing = dataset;
   renderOutgoingPreview(dataset);
   saveDataset({ storageKey: outgoingStorageKey, dataset, status: outgoingStorageStatus });
