@@ -64,7 +64,7 @@ const setActiveView = (viewName) => {
   });
 
   if (dashboardTitle) {
-    dashboardTitle.textContent = viewName === "data" ? "Data" : "Overview";
+    dashboardTitle.textContent = viewName === "data" ? "Data" : "Mission Control";
   }
 };
 

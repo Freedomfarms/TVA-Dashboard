@@ -26,7 +26,7 @@
         <nav class="nav-menu" aria-label="Main navigation">
           <a class="nav-item active" href="#" data-view="overview" aria-current="page">
             <span class="nav-icon nav-grid"></span>
-            <span>Overview</span>
+            <span>Mission Control</span>
             <span class="nav-dot"></span>
           </a>
           <a class="nav-item" href="#" data-view="data">
@@ -74,7 +74,7 @@
       <main class="dashboard">
         <header class="topbar">
           <div>
-            <h1 id="dashboard-title">Overview</h1>
+            <h1 id="dashboard-title">Mission Control</h1>
           </div>
 
           <div class="topbar-actions">
@@ -367,27 +367,36 @@
           <article class="panel tva-wip-panel">
             <div class="tva-wip-header">
               <div>
-                <p class="eyebrow">June Production Readiness</p>
-                <h2>TVA WIP Status</h2>
+                <h2>June Production Readiness</h2>
               </div>
               <span class="tva-wip-badge">Excel snapshot</span>
             </div>
 
             <div class="tva-metrics">
-              <div class="tva-metric-card">
-                <span>Total Clean WIP</span>
-                <strong>709</strong>
-                <small>530 military + 179 commercial</small>
+              <div class="tva-metric-card warning">
+                <span>MD4134613-91</span>
+                <strong>-5</strong>
+                <small>Budney Turn: 30 clean / 35 min</small>
               </div>
               <div class="tva-metric-card warning">
-                <span>Minimum WIP</span>
-                <strong>173</strong>
-                <small>Shortage rows highlighted</small>
+                <span>4137321</span>
+                <strong>-12</strong>
+                <small>DHI Deburr: 9 clean / 21 min</small>
               </div>
-              <div class="tva-metric-card">
-                <span>MTD Delivered</span>
-                <strong>36</strong>
-                <small>10 military + 26 commercial</small>
+              <div class="tva-metric-card warning">
+                <span>4326628</span>
+                <strong>-1</strong>
+                <small>MSC Coat: 0 clean / 1 min</small>
+              </div>
+              <div class="tva-metric-card warning">
+                <span>30G8908</span>
+                <strong>-4</strong>
+                <small>MDS Black Gold: 14 clean / 18 min</small>
+              </div>
+              <div class="tva-metric-card warning">
+                <span>1B6275-01</span>
+                <strong>-1</strong>
+                <small>NE Plasma: 0 clean / 1 min</small>
               </div>
             </div>
 
@@ -395,7 +404,7 @@
               <div class="wip-table-card">
                 <div class="wip-table-title">
                   <h3>Military June TVA Data</h3>
-                  <span>12 active rows</span>
+                  <span>24 rows</span>
                 </div>
                 <div class="wip-table-shell">
                   <table class="wip-status-table">
@@ -412,16 +421,28 @@
                     <tbody>
                       <tr><td>4119904</td><td>ATA</td><td>CBN</td><td class="wip-good">7</td><td>0</td><td>0</td></tr>
                       <tr><td>4119905</td><td>ATA</td><td>CBN</td><td class="wip-good">4</td><td>0</td><td>0</td></tr>
+                      <tr><td>4320806</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4318207</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4317508</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4131129-01</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4085004</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
                       <tr><td>4084105</td><td>ATA</td><td>CBN</td><td class="wip-good">100</td><td>0</td><td>0</td></tr>
                       <tr><td>4084106</td><td>ATA</td><td>CBN</td><td class="wip-good">89</td><td>0</td><td>0</td></tr>
                       <tr><td>4081507</td><td>ATA</td><td>CBN</td><td class="wip-good">234</td><td>0</td><td>0</td></tr>
                       <tr><td>MD4134613-91</td><td>Budney</td><td>Turn</td><td class="wip-short">30</td><td>35</td><td>2</td></tr>
                       <tr><td>4119904</td><td>CW</td><td>Plasma</td><td class="wip-good">4</td><td>0</td><td>4</td></tr>
+                      <tr><td>4119905</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>4318207</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>1</td></tr>
                       <tr><td>4131129-01</td><td>CW</td><td>Plasma</td><td class="wip-good">1</td><td>0</td><td>1</td></tr>
+                      <tr><td>4138202</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
                       <tr><td>4137321</td><td>DHI</td><td>Deburr</td><td class="wip-short">9</td><td>21</td><td>2</td></tr>
+                      <tr><td>MD4088768-02</td><td>DHI</td><td>Deburr</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>MD4088768-03</td><td>DHI</td><td>Deburr</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
                       <tr><td>MD4131129-21</td><td>Hanwha</td><td>Turn</td><td class="wip-good">24</td><td>15</td><td>0</td></tr>
                       <tr><td>4089026-01</td><td>Linde</td><td>Coat / Grind</td><td class="wip-good">26</td><td>1</td><td>0</td></tr>
+                      <tr><td>4082602</td><td>Linde</td><td>Coat / Grind</td><td class="wip-good">2</td><td>2</td><td>0</td></tr>
                       <tr><td>4326628</td><td>MSC</td><td>Coat</td><td class="wip-short">0</td><td>1</td><td>0</td></tr>
+                      <tr><td>4322743-01</td><td>MSC</td><td>Coat</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -430,7 +451,7 @@
               <div class="wip-table-card">
                 <div class="wip-table-title">
                   <h3>Commercial June TVA Data</h3>
-                  <span>12 active rows</span>
+                  <span>20 rows</span>
                 </div>
                 <div class="wip-table-shell">
                   <table class="wip-status-table">
@@ -449,13 +470,21 @@
                       <tr><td>30G5307</td><td>Budney</td><td>Turn</td><td class="wip-good">10</td><td>6</td><td>5</td></tr>
                       <tr><td>2A4802</td><td>Budney</td><td>Turn</td><td class="wip-good">6</td><td>5</td><td>0</td></tr>
                       <tr><td>31G1508</td><td>Budney</td><td>Turn</td><td class="wip-good">9</td><td>2</td><td>0</td></tr>
+                      <tr><td>31G1508</td><td>Budney</td><td>Balance</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
                       <tr><td>30G7208</td><td>CW</td><td>Alox</td><td class="wip-good">18</td><td>10</td><td>1</td></tr>
+                      <tr><td>1B4237</td><td>Hanwha</td><td>Turn</td><td class="wip-good">2</td><td>0</td><td>0</td></tr>
+                      <tr><td>50D497</td><td>Hanwha</td><td>Turn</td><td class="wip-good">2</td><td>1</td><td>0</td></tr>
                       <tr><td>30G4407</td><td>Linde</td><td>CBN</td><td class="wip-good">19</td><td>10</td><td>6</td></tr>
                       <tr><td>30G5307</td><td>Linde</td><td>CBN</td><td class="wip-good">11</td><td>10</td><td>6</td></tr>
                       <tr><td>30G8908</td><td>Linde</td><td>CBN / Alox</td><td class="wip-good">52</td><td>31</td><td>0</td></tr>
                       <tr><td>31G1508</td><td>Linde</td><td>Alox</td><td class="wip-good">9</td><td>0</td><td>0</td></tr>
+                      <tr><td>31G0508</td><td>Linde</td><td>Alox</td><td class="wip-good">10</td><td>0</td><td>0</td></tr>
                       <tr><td>30G8908</td><td>MDS</td><td>Black Gold</td><td class="wip-short">14</td><td>18</td><td>0</td></tr>
+                      <tr><td>31G0508</td><td>MDS</td><td>Black Gold</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
                       <tr><td>1B6275-01</td><td>NE Plasma</td><td>Plasma</td><td class="wip-short">0</td><td>1</td><td>0</td></tr>
+                      <tr><td>2A5001</td><td>Test Devices</td><td>Spin</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>2A4802</td><td>Test Devices</td><td>Spin</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
+                      <tr><td>52G158</td><td>Valence</td><td>Anodize</td><td class="wip-good">2</td><td>1</td><td>0</td></tr>
                       <tr><td>53D925</td><td>Valence</td><td>Anodize</td><td class="wip-good">4</td><td>2</td><td>0</td></tr>
                     </tbody>
                   </table>
