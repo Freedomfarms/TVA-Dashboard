@@ -257,6 +257,7 @@ const renderAnchorPreview = (dataset, statusText) => {
     emptyMessage: "Paste anchor rows from Excel and click Preview Data.",
     statusText,
   });
+  renderProductionReadiness();
 };
 
 const hasHeaders = (dataset, requiredHeaders) => {
@@ -292,7 +293,48 @@ const createCell = (value, className) => {
   return cell;
 };
 
-const renderWipStatusTable = ({ rows, body, count }) => {
+const buildWipQtyIndex = (wipDataset) => {
+  const totals = new Map();
+
+  (wipDataset?.rows || []).forEach((row) => {
+    const po = String(getRowValue(row, ["Incoming PO", "PO"])).trim();
+
+    if (!po) {
+      return;
+    }
+
+    const qty = toNumber(getRowValue(row, ["Qty", "Quantity"]));
+    totals.set(po, (totals.get(po) || 0) + qty);
+  });
+
+  return totals;
+};
+
+const buildReadinessRows = (anchorDataset, wipIndex) =>
+  (anchorDataset?.rows || []).map((row) => {
+    const poNumbers = [
+      ...new Set(
+        [getRowValue(row, ["PO 1", "PO1"]), getRowValue(row, ["PO 2", "PO2"])]
+          .map((po) => String(po).trim())
+          .filter(Boolean),
+      ),
+    ];
+
+    const cleanWip = poNumbers.reduce((sum, po) => sum + (wipIndex.get(po) || 0), 0);
+    const minWip = toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"]));
+
+    return {
+      part: getRowValue(row, "Part Number"),
+      vendor: getRowValue(row, "Vendor"),
+      process: getRowValue(row, "Process"),
+      cleanWip,
+      minWip,
+      shortage: minWip - cleanWip,
+      bu: String(getRowValue(row, ["BU", "Business Unit"])),
+    };
+  });
+
+const renderReadinessTable = ({ rows, body, count }) => {
   if (!body || !count) {
     return;
   }
@@ -302,51 +344,42 @@ const renderWipStatusTable = ({ rows, body, count }) => {
 
   if (rows.length === 0) {
     const emptyRow = document.createElement("tr");
-    const emptyCell = createCell("No WIP rows loaded.", "");
-    emptyCell.colSpan = 6;
+    const emptyCell = createCell("No anchor rows loaded.", "");
+    emptyCell.colSpan = 5;
     emptyRow.append(emptyCell);
     body.append(emptyRow);
     return;
   }
 
-  rows.forEach((row) => {
-    const cleanWip = toNumber(getRowValue(row, ["Clean WIP", "CleanWIP"]));
-    const minWip = toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"]));
+  rows.forEach(({ part, vendor, process, cleanWip, minWip }) => {
+    const isShort = cleanWip < minWip;
     const tableRow = document.createElement("tr");
 
+    if (isShort) {
+      tableRow.className = "wip-row-short";
+    }
+
     tableRow.append(
-      createCell(getRowValue(row, "Part Number")),
-      createCell(getRowValue(row, "Vendor")),
-      createCell(getRowValue(row, "Process")),
-      createCell(cleanWip, cleanWip < minWip ? "wip-short" : "wip-good"),
+      createCell(part),
+      createCell(vendor),
+      createCell(process),
+      createCell(cleanWip, isShort ? "wip-short" : "wip-good"),
       createCell(minWip),
-      createCell(getRowValue(row, ["MTD Del.", "MTD Delivered", "MTD Del"])),
     );
 
     body.append(tableRow);
   });
 };
 
-const renderWipStatus = (dataset) => {
+const renderProductionReadiness = () => {
   if (!wipShortageCards) {
     return;
   }
 
-  const rows = dataset?.rows || [];
-  const rowsWithStatus = rows.map((row) => {
-    const cleanWip = toNumber(getRowValue(row, ["Clean WIP", "CleanWIP"]));
-    const minWip = toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"]));
+  const wipIndex = buildWipQtyIndex(window.dashboardDataset);
+  const readinessRows = buildReadinessRows(window.dashboardDataAnchor, wipIndex);
 
-    return {
-      row,
-      cleanWip,
-      minWip,
-      shortage: minWip - cleanWip,
-      bu: getRowValue(row, ["BU", "Business Unit"]),
-    };
-  });
-
-  const lowWipRows = rowsWithStatus
+  const lowWipRows = readinessRows
     .filter(({ shortage }) => shortage > 0)
     .sort((a, b) => b.shortage - a.shortage);
 
@@ -360,19 +393,16 @@ const renderWipStatus = (dataset) => {
     const detail = document.createElement("small");
     label.textContent = "WIP Coverage";
     value.textContent = "OK";
-    detail.textContent = "No low-WIP parts in current dataset";
+    detail.textContent = "No parts below minimum WIP";
     card.append(label, value, detail);
     wipShortageCards.append(card);
   } else {
-    lowWipRows.slice(0, 5).forEach(({ row, cleanWip, minWip, shortage }) => {
+    lowWipRows.slice(0, 5).forEach(({ part, vendor, process, cleanWip, minWip, shortage }) => {
       const card = document.createElement("div");
       card.className = "tva-metric-card warning";
       const label = document.createElement("span");
       const value = document.createElement("strong");
       const detail = document.createElement("small");
-      const part = getRowValue(row, "Part Number");
-      const vendor = getRowValue(row, "Vendor");
-      const process = getRowValue(row, "Process");
       label.textContent = part;
       value.textContent = `-${shortage}`;
       detail.textContent = `${vendor} ${process}: ${cleanWip} clean / ${minWip} min`;
@@ -381,13 +411,13 @@ const renderWipStatus = (dataset) => {
     });
   }
 
-  renderWipStatusTable({
-    rows: rowsWithStatus.filter(({ bu }) => bu.toLowerCase() === "military").map(({ row }) => row),
+  renderReadinessTable({
+    rows: readinessRows.filter(({ bu }) => bu.toLowerCase() === "military"),
     body: militaryWipBody,
     count: militaryWipCount,
   });
-  renderWipStatusTable({
-    rows: rowsWithStatus.filter(({ bu }) => bu.toLowerCase() === "commercial").map(({ row }) => row),
+  renderReadinessTable({
+    rows: readinessRows.filter(({ bu }) => bu.toLowerCase() === "commercial"),
     body: commercialWipBody,
     count: commercialWipCount,
   });
@@ -410,7 +440,7 @@ const loadWipTemplate = () => {
   }
 
   renderDataPreview(dataset, "Template loaded");
-  renderWipStatus(dataset);
+  renderProductionReadiness();
 };
 
 const loadAnchorTemplate = () => {
@@ -456,7 +486,7 @@ if (storedDataset) {
         dataInput.value = dataset.raw;
       }
       renderDataPreview(dataset, "Saved locally");
-      renderWipStatus(dataset);
+      renderProductionReadiness();
     } else {
       localStorage.removeItem(datasetStorageKey);
       loadWipTemplate();
@@ -494,14 +524,14 @@ parseDataButton?.addEventListener("click", () => {
   const dataset = parseSpreadsheetData(dataInput?.value || "");
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
-  renderWipStatus(dataset);
+  renderProductionReadiness();
 });
 
 saveDataButton?.addEventListener("click", () => {
   const dataset = parseSpreadsheetData(dataInput?.value || "");
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
-  renderWipStatus(dataset);
+  renderProductionReadiness();
   saveDataset({ storageKey: datasetStorageKey, dataset, status: dataStorageStatus });
 });
 
@@ -513,7 +543,7 @@ clearDataButton?.addEventListener("click", () => {
   localStorage.removeItem(datasetStorageKey);
   window.dashboardDataset = emptyDataset;
   renderDataPreview(emptyDataset);
-  renderWipStatus(emptyDataset);
+  renderProductionReadiness();
 });
 
 parseAnchorButton?.addEventListener("click", () => {

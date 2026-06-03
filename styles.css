@@ -1706,8 +1706,7 @@ body::before {
 }
 
 .wip-status-table td:nth-child(4),
-.wip-status-table td:nth-child(5),
-.wip-status-table td:nth-child(6) {
+.wip-status-table td:nth-child(5) {
   text-align: center;
   font-weight: 700;
 }
@@ -1718,8 +1717,18 @@ body::before {
 }
 
 .wip-status-table .wip-short {
-  color: #3a0710;
-  background: rgba(255, 124, 145, 0.78);
+  color: #ff5d73;
+  background: rgba(255, 42, 74, 0.28);
+  text-shadow: 0 0 10px rgba(255, 60, 90, 0.6);
+}
+
+.wip-status-table tr.wip-row-short td {
+  background: rgba(255, 42, 74, 0.12);
+  color: #ff8a9b;
+}
+
+.wip-status-table tr.wip-row-short .wip-short {
+  background: rgba(255, 42, 74, 0.32);
 }
 
 .financial-layout {
