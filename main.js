@@ -207,8 +207,7 @@ const parseSpreadsheetData = (rawValue) => {
   const lines = rawValue
     .trim()
     .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+    .filter((line) => line.trim().length > 0);
 
   if (lines.length === 0) {
     return { headers: [], rows: [], raw: rawValue };
