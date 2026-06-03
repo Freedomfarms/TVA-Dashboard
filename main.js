@@ -29,6 +29,51 @@ const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
 const storedDataset = localStorage.getItem(datasetStorageKey);
 const storedAnchor = localStorage.getItem(anchorStorageKey);
+const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
+\t4700912755\t4119904\tATA\tCBN\t0\t12\tMilitary
+\t4700912732\t4119905\tATA\tCBN\t0\t12\tMilitary
+\t4700917070\t4320806\tATA\tCBN\t0\t12\tMilitary
+\t4700917067\t4318207\tATA\tCBN\t0\t12\tMilitary
+\t4700917074\t4317508\tATA\tCBN\t0\t12\tMilitary
+\t4700917065\t4131129-01\tATA\tCBN\t0\t12\tMilitary
+\t4700915307\t4085004\tATA\tCBN\t0\t12\tMilitary
+\t4700915328\t4084105\tATA\tCBN\t0\t12\tMilitary
+\t4700915329\t4084106\tATA\tCBN\t0\t12\tMilitary
+4700911991\t4700915330\t4081507\tATA\tCBN\t0\t12\tMilitary
+\t4700915629\tMD4134613-91\tBudney\tTurn\t35\t45\tMilitary
+4700909661\t4700916287\t4119904\tCW\tPlasma\t0\t4\tMilitary
+4700909884\t4700916352\t4119905\tCW\tPlasma\t0\t4\tMilitary
+\t4700916356\t4318207\tCW\tPlasma\t0\t4\tMilitary
+4700912553\t4700916355\t4131129-01\tCW\tPlasma\t0\t4\tMilitary
+\t4700913839\t4138202\tCW\tPlasma\t0\t4\tMilitary
+\t4700916350\t4137321\tDHI\tDeburr\t21\t28\tMilitary
+\t\tMD4088768-02\tDHI\tDeburr\t0\t7\tMilitary
+\t4700917773\tMD4088768-03\tDHI\tDeburr\t0\t7\tMilitary
+\t4700917312\tMD4131129-21\tHanwha\tTurn\t15\t35\tMilitary
+\t4700911826\t4089026-01\tLinde\tCoat / Grind\t1\t21\tMilitary
+\t4700910723\t4082602\tLinde\tCoat / Grind\t2\t21\tMilitary
+\t4700916250\t4326628\tMSC\tCoat\t1\t21\tMilitary
+\t4700913559\t4322743-01\tMSC\tCoat\t0\t21\tMilitary
+\t4700913282\t6W30P2594-01\tATL\tSonic\t1\t21\tCommercial
+\t4700913815\t30G5307\tBudney\tTurn\t6\t6\tCommercial
+4700907130\t4700915655\t2A4802\tBudney\tTurn\t5\t30\tCommercial
+\t4700917002\t31G1508\tBudney\tTurn\t2\t60\tCommercial
+\t4700917802\t31G1508\tBudney\tBalance\t0\t3\tCommercial
+4700912698\t4700917731\t30G7208\tCW\tAlox\t10\t6\tCommercial
+\t4700909289\t1B4237\tHanwha\tTurn\t0\t60\tCommercial
+\t4700916806\t50D497\tHanwha\tTurn\t1\t21\tCommercial
+\t4700915204\t30G4407\tLinde\tCBN\t10\t9\tCommercial
+\t4700912902\t30G5307\tLinde\tCBN\t10\t9\tCommercial
+\t4700915449\t30G8908\tLinde\tCBN / Alox\t31\t13\tCommercial
+\t4700917002\t31G1508\tLinde\tAlox\t0\t9\tCommercial
+\t4700917105\t31G0508\tLinde\tAlox\t0\t9\tCommercial
+4700911916\t4700916368\t30G8908\tMDS\tBlack Gold\t18\t7\tCommercial
+\t4700917429\t31G0508\tMDS\tBlack Gold\t0\t7\tCommercial
+4700913825\t4700910542\t1B6275-01\tNE Plasma\tPlasma\t1\t14\tCommercial
+\t4700916888\t2A5001\tTest Devices\tSpin\t0\t15\tCommercial
+4700906262\t4700916787\t2A4802\tTest Devices\tSpin\t0\t15\tCommercial
+\t4700915229\t52G158\tValence\tAnodize\t1\t30\tCommercial
+\t4700916685\t53D925\tValence\tAnodize\t2\t30\tCommercial`;
 
 window.dashboardDataset = emptyDataset;
 window.dashboardDataAnchor = emptyDataset;
@@ -264,6 +309,13 @@ if (storedAnchor) {
   } catch {
     localStorage.removeItem(anchorStorageKey);
   }
+} else {
+  const dataset = parseSpreadsheetData(defaultAnchorRaw);
+  window.dashboardDataAnchor = dataset;
+  if (dataAnchorInput) {
+    dataAnchorInput.value = defaultAnchorRaw;
+  }
+  renderAnchorPreview(dataset, "Template loaded");
 }
 
 parseDataButton?.addEventListener("click", () => {
