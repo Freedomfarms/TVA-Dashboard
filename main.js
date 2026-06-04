@@ -418,7 +418,7 @@ const refreshOutgoing = () => {
   renderOutgoingPreview(computed);
 };
 
-const OUTGOING_HEADERS = ["Serial Number", "REF_DOC / PO", "Ship Date", "LT Return"];
+const OUTGOING_HEADERS = ["Serial Number", "REF_DOC / PO", "Ship Date", "Qty", "LT Return"];
 
 const buildOutgoingDataset = (rows) => ({ headers: OUTGOING_HEADERS, rows });
 
@@ -428,7 +428,10 @@ const syncOutgoingFromWip = () => {
   }
 
   const wipRows = window.dashboardDataset?.rows || [];
-  const current = window.dashboardOutgoing?.rows || [];
+  const current = (window.dashboardOutgoing?.rows || []).map((row) => ({
+    ...row,
+    Qty: getRowValue(row, ["Qty", "Quantity"]) || "1",
+  }));
   const seen = new Set(
     current
       .map((row) => String(getRowValue(row, ["Serial Number", "SN"])).trim())
@@ -446,6 +449,7 @@ const syncOutgoingFromWip = () => {
       "Serial Number": serial,
       "REF_DOC / PO": getRowValue(row, ["PO", "Incoming PO", "REF_DOC / PO"]),
       "Ship Date": getRowValue(row, ["Ship Date", "Date"]),
+      Qty: getRowValue(row, ["Qty", "Quantity"]) || "1",
       "LT Return": "",
     });
   });
