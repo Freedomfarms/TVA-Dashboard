@@ -608,13 +608,13 @@ let escalationSelectedDate = todayIso();
 let escalationSort = "date-desc";
 
 const mockHistoryNotes = [
-  { id: "mock-0531-1", kind: "mock", date: "2026-05-31", severity: "critical", category: "WIP", title: "4326628 below minimum WIP", detail: "MSC \u00B7 Coat \u2014 0 clean vs 1 required.", metric: "-1" },
+  { id: "mock-0531-1", kind: "mock", date: "2026-05-31", severity: "critical", category: "WIP", vendor: "MSC", process: "Coat", title: "4326628 below minimum WIP", detail: "MSC \u00B7 Coat \u2014 0 clean vs 1 required.", metric: "-1" },
   { id: "mock-0531-2", kind: "mock", date: "2026-05-31", severity: "warning", category: "Performance", title: "70% WIP coverage across tracked parts", detail: "31 of 44 anchor parts meet or exceed minimum WIP.", metric: "70%" },
   { id: "mock-0531-3", kind: "mock", date: "2026-05-31", severity: "info", category: "Outgoing", title: "8 units delivered", detail: "8 delivery lines logged \u00B7 latest movement May 31.", metric: "8" },
-  { id: "mock-0601-1", kind: "mock", date: "2026-06-01", severity: "critical", category: "WIP", title: "30G8908 below minimum WIP", detail: "MDS \u00B7 Black Gold \u2014 14 clean vs 18 required.", metric: "-4" },
+  { id: "mock-0601-1", kind: "mock", date: "2026-06-01", severity: "critical", category: "WIP", vendor: "MDS", process: "Black Gold", title: "30G8908 below minimum WIP", detail: "MDS \u00B7 Black Gold \u2014 14 clean vs 18 required.", metric: "-4" },
   { id: "mock-0601-2", kind: "mock", date: "2026-06-01", severity: "positive", category: "Delivery", title: "On-time delivery rate at 94%", detail: "On-time performance held above target across active POs.", metric: "94%" },
   { id: "mock-0601-3", kind: "mock", date: "2026-06-01", severity: "info", category: "Outgoing", title: "21 units delivered", detail: "21 delivery lines logged \u00B7 latest movement Jun 1.", metric: "21" },
-  { id: "mock-0602-1", kind: "mock", date: "2026-06-02", severity: "warning", category: "WIP", title: "1B6275-01 approaching minimum WIP", detail: "NE Plasma \u00B7 Plasma \u2014 0 clean vs 1 required.", metric: "-1" },
+  { id: "mock-0602-1", kind: "mock", date: "2026-06-02", severity: "warning", category: "WIP", vendor: "NE Plasma", process: "Plasma", title: "1B6275-01 approaching minimum WIP", detail: "NE Plasma \u00B7 Plasma \u2014 0 clean vs 1 required.", metric: "-1" },
   { id: "mock-0602-2", kind: "mock", date: "2026-06-02", severity: "info", category: "Incoming", title: "Incoming PO 4700917312 received", detail: "4 units received against PO 4700917312 (MD4131129-21).", metric: "+4" },
   { id: "mock-0602-3", kind: "mock", date: "2026-06-02", severity: "info", category: "Outgoing", title: "8 units delivered", detail: "8 delivery lines logged \u00B7 latest movement Jun 2.", metric: "8" },
 ];
@@ -657,6 +657,8 @@ const buildEscalationNotes = () => {
       date,
       severity: "critical",
       category: "WIP",
+      vendor: row.vendor,
+      process: row.process,
       title: `${row.part} below minimum WIP`,
       detail: `${row.vendor} \u00B7 ${row.process} \u2014 ${row.cleanWip} clean vs ${row.minWip} required.`,
       metric: `-${gap}`,
@@ -767,6 +769,12 @@ const sortNotes = (notes, sort) => {
     case "title":
       copy.sort((a, b) => String(a.title).localeCompare(String(b.title)));
       break;
+    case "vendor":
+      copy.sort((a, b) => String(a.vendor || "").localeCompare(String(b.vendor || "")));
+      break;
+    case "process":
+      copy.sort((a, b) => String(a.process || "").localeCompare(String(b.process || "")));
+      break;
     case "date-desc":
     default:
       copy.sort((a, b) => String(b.date).localeCompare(String(a.date)));
@@ -831,6 +839,8 @@ const addEscalationNote = () => {
     kind: "user",
     severity: "info",
     category: "Note",
+    vendor: "",
+    process: "",
     title: "",
     detail: "",
     metric: "\u2014",
@@ -879,17 +889,30 @@ const buildNoteView = (note) => {
 
   const meta = document.createElement("div");
   meta.className = "note-meta";
-  const cat = document.createElement("span");
-  cat.className = "note-cat";
-  cat.textContent = note.category;
   const sev = document.createElement("span");
   sev.className = "note-sev";
   sev.textContent = severityLabels[note.severity] || "Note";
+  const cat = document.createElement("span");
+  cat.className = "note-cat";
+  cat.textContent = note.category;
+  meta.append(sev, cat);
+  if (note.vendor) {
+    const vendorTag = document.createElement("span");
+    vendorTag.className = "note-vp";
+    vendorTag.textContent = note.vendor;
+    meta.append(vendorTag);
+  }
+  if (note.process) {
+    const processTag = document.createElement("span");
+    processTag.className = "note-vp";
+    processTag.textContent = note.process;
+    meta.append(processTag);
+  }
   const date = document.createElement("span");
   date.className = "note-date";
   date.textContent = formatNoteDate(note.date);
   date.title = formatNoteDateFull(note.date);
-  meta.append(cat, sev, date);
+  meta.append(date);
 
   const title = document.createElement("strong");
   title.className = "note-title";
@@ -924,6 +947,43 @@ const buildNoteView = (note) => {
   });
 
   return item;
+};
+
+const getAnchorValues = (label) => {
+  const set = new Set();
+  (window.dashboardDataAnchor?.rows || []).forEach((row) => {
+    const value = String(getRowValue(row, label)).trim();
+    if (value) {
+      set.add(value);
+    }
+  });
+  return [...set].sort((a, b) => a.localeCompare(b));
+};
+
+const buildOptionSelect = (values, current, placeholder) => {
+  const select = document.createElement("select");
+  select.className = "note-input";
+  const blank = document.createElement("option");
+  blank.value = "";
+  blank.textContent = placeholder;
+  select.append(blank);
+  const options = [...values];
+  if (current && !options.includes(current)) {
+    options.push(current);
+  }
+  options.forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    if (value === current) {
+      option.selected = true;
+    }
+    select.append(option);
+  });
+  if (!current) {
+    blank.selected = true;
+  }
+  return select;
 };
 
 const buildNoteEditor = (note) => {
@@ -973,6 +1033,9 @@ const buildNoteEditor = (note) => {
   detailInput.value = note.detail || "";
   detailInput.placeholder = "Detail";
 
+  const vendorSelect = buildOptionSelect(getAnchorValues("Vendor"), note.vendor || "", "Vendor");
+  const processSelect = buildOptionSelect(getAnchorValues("Process"), note.process || "", "Process");
+
   const metricInput = document.createElement("input");
   metricInput.className = "note-input note-input-metric";
   metricInput.value = note.metric || "";
@@ -982,9 +1045,11 @@ const buildNoteEditor = (note) => {
   topRow.className = "note-edit-row";
   topRow.append(sevSelect, catInput, dateInput);
 
-  const bottomRow = document.createElement("div");
-  bottomRow.className = "note-edit-row";
-  bottomRow.append(metricInput);
+  const vpRow = document.createElement("div");
+  vpRow.className = "note-edit-row";
+  vpRow.append(vendorSelect, processSelect, metricInput);
+
+  const bottomRow = vpRow;
 
   grid.append(topRow, titleInput, detailInput, bottomRow);
 
@@ -1006,6 +1071,8 @@ const buildNoteEditor = (note) => {
       severity: sevSelect.value,
       category: catInput.value.trim() || "Note",
       date: dateInput.value || todayIso(),
+      vendor: vendorSelect.value.trim(),
+      process: processSelect.value.trim(),
       title: titleInput.value.trim() || "Untitled note",
       detail: detailInput.value.trim(),
       metric: metricInput.value.trim() || "\u2014",

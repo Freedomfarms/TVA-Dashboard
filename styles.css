@@ -2432,3 +2432,13 @@ body::before {
   outline: none;
   border-color: rgba(120, 160, 255, 0.5);
 }
+
+.note-vp {
+  font-size: 0.54rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(168, 184, 226, 0.7);
+  border: 1px solid rgba(120, 160, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.08rem 0.38rem;
+}
