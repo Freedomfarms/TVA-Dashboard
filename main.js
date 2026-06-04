@@ -327,7 +327,7 @@ const hasHeaders = (dataset, requiredHeaders) => {
 };
 
 const isWipDataset = (dataset) =>
-  hasHeaders(dataset, ["Incoming PO", "Ship Date", "Qty"]);
+  hasHeaders(dataset, ["SN", "PO", "Ship Date"]);
 
 const isAnchorDataset = (dataset) =>
   hasHeaders(dataset, ["PO 1", "Part Number", "Vendor", "Process", "Min WIP", "LT", "BU"]);
@@ -1124,8 +1124,17 @@ const saveDataset = ({ storageKey, dataset, status }) => {
   }
 };
 
+const withWipQty = (parsed) => {
+  if (!parsed || !parsed.headers) {
+    return parsed || emptyDataset;
+  }
+  const headers = [...parsed.headers.filter((header) => header !== "Qty"), "Qty"];
+  const rows = (parsed.rows || []).map((row) => ({ ...row, Qty: "1" }));
+  return { headers, rows, raw: parsed.raw };
+};
+
 const loadWipTemplate = () => {
-  const dataset = parseSpreadsheetData(defaultWipRaw);
+  const dataset = withWipQty(parseSpreadsheetData(defaultWipRaw));
   window.dashboardDataset = dataset;
 
   if (dataInput) {
@@ -1233,11 +1242,11 @@ if (storedDataset) {
   try {
     const dataset = JSON.parse(storedDataset);
     if (isWipDataset(dataset)) {
-      window.dashboardDataset = dataset;
+      window.dashboardDataset = withWipQty(dataset);
       if (dataInput && dataset.raw) {
         dataInput.value = dataset.raw;
       }
-      renderDataPreview(dataset, "Saved locally");
+      renderDataPreview(window.dashboardDataset, "Saved locally");
       renderProductionReadiness();
     } else {
       localStorage.removeItem(datasetStorageKey);
@@ -1315,14 +1324,14 @@ if (storedOutgoing) {
 }
 
 parseDataButton?.addEventListener("click", () => {
-  const dataset = parseSpreadsheetData(dataInput?.value || "");
+  const dataset = withWipQty(parseSpreadsheetData(dataInput?.value || ""));
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
   renderProductionReadiness();
 });
 
 saveDataButton?.addEventListener("click", () => {
-  const dataset = parseSpreadsheetData(dataInput?.value || "");
+  const dataset = withWipQty(parseSpreadsheetData(dataInput?.value || ""));
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
   renderProductionReadiness();
