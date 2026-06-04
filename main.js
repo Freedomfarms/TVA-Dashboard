@@ -1375,7 +1375,7 @@ clearAnchorButton?.addEventListener("click", () => {
 parseDeliveriesButton?.addEventListener("click", () => {
   const added = parseDeliveryPaste(deliveriesInput?.value || "", todaySlash());
   const current = window.dashboardDeliveries?.rows || [];
-  const preview = buildDeliveriesDataset([...current, ...added]);
+  const preview = buildDeliveriesDataset([...added, ...current]);
   renderDeliveriesPreview(
     preview,
     added.length
@@ -1392,9 +1392,9 @@ addDeliveriesButton?.addEventListener("click", () => {
   }
 
   const current = window.dashboardDeliveries?.rows || [];
-  const dataset = buildDeliveriesDataset([...current, ...added]);
+  const dataset = buildDeliveriesDataset([...added, ...current]);
   window.dashboardDeliveries = dataset;
-  renderDeliveriesPreview(dataset, `Added ${added.length} row${added.length === 1 ? "" : "s"}`);
+  renderDeliveriesPreview(dataset, `Added ${added.length} row${added.length === 1 ? "" : "s"} (newest on top)`);
   saveDataset({ storageKey: deliveriesStorageKey, dataset, status: deliveriesStorageStatus });
 
   if (deliveriesInput) {
