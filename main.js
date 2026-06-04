@@ -149,7 +149,7 @@ const setActiveView = (viewName) => {
 
   if (dashboardTitle) {
     dashboardTitle.textContent =
-      viewName === "data" ? "Data" : viewName === "escalation" ? "Escalation Notes" : "Mission Control";
+      viewName === "data" ? "Data" : viewName === "escalation" ? "Escalation" : "Pulse";
   }
 };
 
