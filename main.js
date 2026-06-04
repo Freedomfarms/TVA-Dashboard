@@ -608,13 +608,13 @@ let escalationSelectedDate = todayIso();
 let escalationSort = "date-desc";
 
 const mockHistoryNotes = [
-  { id: "mock-0531-1", kind: "mock", date: "2026-05-31", severity: "critical", category: "WIP", vendor: "MSC", process: "Coat", title: "4326628 below minimum WIP", detail: "MSC \u00B7 Coat \u2014 0 clean vs 1 required.", metric: "-1" },
+  { id: "mock-0531-1", kind: "mock", date: "2026-05-31", severity: "critical", category: "WIP", vendor: "MSC", process: "Coat", title: "4326628 below minimum WIP", detail: "0 clean vs 1 required.", metric: "-1" },
   { id: "mock-0531-2", kind: "mock", date: "2026-05-31", severity: "warning", category: "Performance", title: "70% WIP coverage across tracked parts", detail: "31 of 44 anchor parts meet or exceed minimum WIP.", metric: "70%" },
   { id: "mock-0531-3", kind: "mock", date: "2026-05-31", severity: "info", category: "Outgoing", title: "8 units delivered", detail: "8 delivery lines logged \u00B7 latest movement May 31.", metric: "8" },
-  { id: "mock-0601-1", kind: "mock", date: "2026-06-01", severity: "critical", category: "WIP", vendor: "MDS", process: "Black Gold", title: "30G8908 below minimum WIP", detail: "MDS \u00B7 Black Gold \u2014 14 clean vs 18 required.", metric: "-4" },
+  { id: "mock-0601-1", kind: "mock", date: "2026-06-01", severity: "critical", category: "WIP", vendor: "MDS", process: "Black Gold", title: "30G8908 below minimum WIP", detail: "14 clean vs 18 required.", metric: "-4" },
   { id: "mock-0601-2", kind: "mock", date: "2026-06-01", severity: "positive", category: "Delivery", title: "On-time delivery rate at 94%", detail: "On-time performance held above target across active POs.", metric: "94%" },
   { id: "mock-0601-3", kind: "mock", date: "2026-06-01", severity: "info", category: "Outgoing", title: "21 units delivered", detail: "21 delivery lines logged \u00B7 latest movement Jun 1.", metric: "21" },
-  { id: "mock-0602-1", kind: "mock", date: "2026-06-02", severity: "warning", category: "WIP", vendor: "NE Plasma", process: "Plasma", title: "1B6275-01 approaching minimum WIP", detail: "NE Plasma \u00B7 Plasma \u2014 0 clean vs 1 required.", metric: "-1" },
+  { id: "mock-0602-1", kind: "mock", date: "2026-06-02", severity: "warning", category: "WIP", vendor: "NE Plasma", process: "Plasma", title: "1B6275-01 approaching minimum WIP", detail: "0 clean vs 1 required.", metric: "-1" },
   { id: "mock-0602-2", kind: "mock", date: "2026-06-02", severity: "info", category: "Incoming", title: "Incoming PO 4700917312 received", detail: "4 units received against PO 4700917312 (MD4131129-21).", metric: "+4" },
   { id: "mock-0602-3", kind: "mock", date: "2026-06-02", severity: "info", category: "Outgoing", title: "8 units delivered", detail: "8 delivery lines logged \u00B7 latest movement Jun 2.", metric: "8" },
 ];
@@ -660,7 +660,7 @@ const buildEscalationNotes = () => {
       vendor: row.vendor,
       process: row.process,
       title: `${row.part} below minimum WIP`,
-      detail: `${row.vendor} \u00B7 ${row.process} \u2014 ${row.cleanWip} clean vs ${row.minWip} required.`,
+      detail: `${row.cleanWip} clean vs ${row.minWip} required.`,
       metric: `-${gap}`,
     });
   });
