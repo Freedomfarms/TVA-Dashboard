@@ -908,12 +908,6 @@ const buildNoteView = (note) => {
     processTag.textContent = note.process;
     meta.append(processTag);
   }
-  const date = document.createElement("span");
-  date.className = "note-date";
-  date.textContent = formatNoteDate(note.date);
-  date.title = formatNoteDateFull(note.date);
-  meta.append(date);
-
   const title = document.createElement("strong");
   title.className = "note-title";
   title.textContent = note.title || "Untitled note";
@@ -926,9 +920,6 @@ const buildNoteView = (note) => {
 
   const aside = document.createElement("div");
   aside.className = "note-aside";
-  const metric = document.createElement("div");
-  metric.className = "note-metric";
-  metric.textContent = note.metric;
   const actions = document.createElement("div");
   actions.className = "note-actions";
   actions.append(
@@ -938,7 +929,14 @@ const buildNoteView = (note) => {
     }),
     buildNoteActionButton("note-delete", "\u2715", "Delete note", () => deleteEscalationNote(note)),
   );
-  aside.append(metric, actions);
+  const metric = document.createElement("div");
+  metric.className = "note-metric";
+  metric.textContent = note.metric;
+  const date = document.createElement("span");
+  date.className = "note-date";
+  date.textContent = formatNoteDate(note.date);
+  date.title = formatNoteDateFull(note.date);
+  aside.append(actions, metric, date);
 
   item.append(rail, icon, body, aside);
   item.addEventListener("dblclick", () => {
