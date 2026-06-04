@@ -1,7 +1,6 @@
 import "./styles.css";
 import defaultWipRaw from "./wip-data.txt?raw";
 import defaultDeliveriesRaw from "./deliveries-data.txt?raw";
-import defaultOutgoingRaw from "./outgoing-data.txt?raw";
 
 const scenicPanel = document.querySelector(".scape-stars");
 const dashboardTitle = document.querySelector("#dashboard-title");
@@ -336,7 +335,7 @@ const isDeliveriesDataset = (dataset) =>
   hasHeaders(dataset, ["PO", "Qty", "Received"]);
 
 const isOutgoingDataset = (dataset) =>
-  hasHeaders(dataset, ["REF_DOC / PO", "Ship Date", "LT Return"]);
+  hasHeaders(dataset, ["Serial Number", "REF_DOC / PO", "Ship Date"]);
 
 const parseSlashDate = (value) => {
   const match = String(value).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
@@ -417,6 +416,49 @@ const refreshOutgoing = () => {
   const computed = computeOutgoing(window.dashboardOutgoing || emptyDataset);
   window.dashboardOutgoing = computed;
   renderOutgoingPreview(computed);
+};
+
+const OUTGOING_HEADERS = ["Serial Number", "REF_DOC / PO", "Ship Date", "LT Return"];
+
+const buildOutgoingDataset = (rows) => ({ headers: OUTGOING_HEADERS, rows });
+
+const syncOutgoingFromWip = () => {
+  if (!outgoingPreviewHead) {
+    return;
+  }
+
+  const wipRows = window.dashboardDataset?.rows || [];
+  const current = window.dashboardOutgoing?.rows || [];
+  const seen = new Set(
+    current
+      .map((row) => String(getRowValue(row, ["Serial Number", "SN"])).trim())
+      .filter(Boolean),
+  );
+
+  const additions = [];
+  wipRows.forEach((row) => {
+    const serial = String(getRowValue(row, ["SN", "Serial Number"])).trim();
+    if (!serial || seen.has(serial)) {
+      return;
+    }
+    seen.add(serial);
+    additions.push({
+      "Serial Number": serial,
+      "REF_DOC / PO": getRowValue(row, ["PO", "Incoming PO", "REF_DOC / PO"]),
+      "Ship Date": getRowValue(row, ["Ship Date", "Date"]),
+      "LT Return": "",
+    });
+  });
+
+  const merged = buildOutgoingDataset([...additions, ...current]);
+  window.dashboardOutgoing = computeOutgoing(merged);
+  renderOutgoingPreview(
+    window.dashboardOutgoing,
+    additions.length
+      ? `Synced ${additions.length} new serial${additions.length === 1 ? "" : "s"} from WIP`
+      : "Up to date with WIP",
+  );
+  saveDataset({ storageKey: outgoingStorageKey, dataset: window.dashboardOutgoing });
 };
 
 const getRowValue = (row, labels) => {
@@ -1205,14 +1247,8 @@ const loadDeliveriesTemplate = () => {
 };
 
 const loadOutgoingTemplate = () => {
-  const dataset = computeOutgoing(parseSpreadsheetData(defaultOutgoingRaw));
-  window.dashboardOutgoing = dataset;
-
-  if (outgoingInput) {
-    outgoingInput.value = defaultOutgoingRaw;
-  }
-
-  renderOutgoingPreview(dataset, "Template loaded");
+  window.dashboardOutgoing = buildOutgoingDataset([]);
+  syncOutgoingFromWip();
 };
 
 navItems.forEach((item) => {
@@ -1305,12 +1341,8 @@ if (storedOutgoing) {
   try {
     const dataset = JSON.parse(storedOutgoing);
     if (isOutgoingDataset(dataset)) {
-      const computed = computeOutgoing(dataset);
-      window.dashboardOutgoing = computed;
-      if (outgoingInput && dataset.raw) {
-        outgoingInput.value = dataset.raw;
-      }
-      renderOutgoingPreview(computed, "Saved locally");
+      window.dashboardOutgoing = computeOutgoing(buildOutgoingDataset(dataset.rows || []));
+      syncOutgoingFromWip();
     } else {
       localStorage.removeItem(outgoingStorageKey);
       loadOutgoingTemplate();
@@ -1328,6 +1360,7 @@ parseDataButton?.addEventListener("click", () => {
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
   renderProductionReadiness();
+  syncOutgoingFromWip();
 });
 
 saveDataButton?.addEventListener("click", () => {
@@ -1336,6 +1369,7 @@ saveDataButton?.addEventListener("click", () => {
   renderDataPreview(dataset);
   renderProductionReadiness();
   saveDataset({ storageKey: datasetStorageKey, dataset, status: dataStorageStatus });
+  syncOutgoingFromWip();
 });
 
 clearDataButton?.addEventListener("click", () => {
