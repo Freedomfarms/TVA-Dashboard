@@ -1267,6 +1267,8 @@ const perfDayRange = (startDate, endDate) => {
   return days;
 };
 
+const perfEndOfMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
 const renderPerfTable = (body, entries, labelFn) => {
   if (!body) {
     return;
@@ -1331,7 +1333,7 @@ const perfNiceMax = (value) => {
   return nice * pow;
 };
 
-const renderComboChart = (container, data) => {
+const renderComboChart = (container, data, options = {}) => {
   if (!container) {
     return;
   }
@@ -1348,12 +1350,19 @@ const renderComboChart = (container, data) => {
   const padB = 30;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
-  const rawMax = Math.max(1, ...data.map((d) => Math.max(d.bar, d.line)));
+  const rawMax = Math.max(
+    1,
+    ...data.map((d) => Math.max(Number.isFinite(d.bar) ? d.bar : 0, Number.isFinite(d.line) ? d.line : 0)),
+  );
   const maxV = perfNiceMax(rawMax);
   const slot = plotW / data.length;
   const cx = (i) => padL + slot * (i + 0.5);
   const cy = (v) => padT + plotH * (1 - v / maxV);
   const barW = Math.min(slot * 0.5, 30);
+  const labelMinSpacing = options.labelMinSpacing || 48;
+  const renderedWidth = container.clientWidth || W;
+  const maxLabels = Math.max(1, Math.floor((renderedWidth - padL - padR) / labelMinSpacing));
+  const labelStep = Math.max(1, Math.ceil(data.length / maxLabels));
 
   const grid = [0, 0.25, 0.5, 0.75, 1]
     .map((f) => {
@@ -1366,6 +1375,9 @@ const renderComboChart = (container, data) => {
 
   const bars = data
     .map((d, i) => {
+      if (!Number.isFinite(d.bar)) {
+        return "";
+      }
       const x = cx(i) - barW / 2;
       const yTop = cy(d.bar);
       const h = Math.max(0, padT + plotH - yTop);
@@ -1380,7 +1392,12 @@ const renderComboChart = (container, data) => {
     .join("");
 
   const xLabels = data
-    .map((d, i) => `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x">${d.label}</text>`)
+    .map((d, i) => {
+      if (i % labelStep !== 0) {
+        return "";
+      }
+      return `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x">${d.displayLabel || d.label}</text>`;
+    })
     .join("");
 
   const hovers = data
@@ -1398,8 +1415,8 @@ const renderComboChart = (container, data) => {
       const item = data[Number(rect.dataset.i)];
       tip.hidden = false;
       tip.innerHTML =
-        `<strong>${item.label}</strong>`
-        + `<span class="tt-bar">Deliveries: ${formatCount(item.bar)}</span>`
+        `<strong>${item.tooltipLabel || item.label}</strong>`
+        + `<span class="tt-bar">Deliveries: ${Number.isFinite(item.bar) ? formatCount(item.bar) : "\u2014"}</span>`
         + `<span class="tt-line">LT Return: ${formatCount(item.line)}</span>`;
       const rect2 = container.getBoundingClientRect();
       let x = event.clientX - rect2.left + 12;
@@ -1544,30 +1561,34 @@ const renderPerformance = () => {
   }
 
   const [selYear, selMonth] = perfSelectedMonth ? perfSelectedMonth.split("-").map(Number) : [null, null];
-  const monthDays = [...new Set([...daily.keys(), ...ltDaily.keys()])]
-    .map((key) => {
-      const [year, month, day] = key.split("-").map(Number);
-      return { year, month, date: new Date(year, month, day) };
-    })
-    .filter((dk) => dk.year === selYear && dk.month === selMonth)
-    .sort((a, b) => a.date - b.date);
-
+  const selectedMonthDate = Number.isFinite(selYear) && Number.isFinite(selMonth)
+    ? new Date(selYear, selMonth, 1)
+    : null;
   const monthlyChartData = [];
-  if (monthDays.length) {
+  if (selectedMonthDate) {
+    const today = new Date();
+    const monthStart = new Date(selYear, selMonth, 1);
+    const monthEnd = perfEndOfMonth(selectedMonthDate);
     let cumBar = 0;
     let cumLine = 0;
-    perfDayRange(monthDays[0].date, monthDays[monthDays.length - 1].date).forEach((date) => {
+    // Keep the full selected month on the x-axis, but only show delivery bars through today.
+    perfDayRange(monthStart, monthEnd).forEach((date) => {
       const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      cumBar += daily.get(key)?.units || 0;
+      const isPastOrToday = date <= today;
+      if (isPastOrToday) {
+        cumBar += daily.get(key)?.units || 0;
+      }
       cumLine += ltDaily.get(key)?.units || 0;
       monthlyChartData.push({
-        label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        bar: cumBar,
+        label: date.toLocaleDateString("en-US", { month: "numeric", day: "numeric" }),
+        tooltipLabel: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        displayLabel: date.toLocaleDateString("en-US", { month: "numeric", day: "numeric" }),
+        bar: isPastOrToday ? cumBar : null,
         line: cumLine,
       });
     });
   }
-  renderComboChart(perfChartMonthly, monthlyChartData);
+  renderComboChart(perfChartMonthly, monthlyChartData, { labelMinSpacing: 36 });
 
   const ytdYear = new Date().getFullYear();
   const yearMonths = monthKeys.filter((mk) => mk.year === ytdYear).map((mk) => mk.month);
