@@ -1332,9 +1332,6 @@ const perfRiskTone = {
 
 const perfDayStamp = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
-const perfDateDiffDays = (laterDate, earlierDate) =>
-  Math.max(0, Math.round((perfDayStamp(laterDate) - perfDayStamp(earlierDate)) / (24 * 60 * 60 * 1000)));
-
 const perfSumUnitsInRange = (entries, startDate, endDate) => {
   const start = perfDayStamp(startDate);
   const end = perfDayStamp(endDate);
@@ -1607,7 +1604,6 @@ const renderPerformance = () => {
   const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
   const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
   const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
-  const daysSinceLastDelivery = lastDate ? perfDateDiffDays(today, lastDate) : Number.POSITIVE_INFINITY;
   const riskItems = matchingRows.length
     ? [
       {
@@ -1617,32 +1613,24 @@ const renderPerformance = () => {
           ? `${formatCount(currentWip)} / ${formatCount(requiredWip)} min`
           : `${formatCount(currentWip)} on hand`,
         detail: requiredWip > 0
-          ? `AI review sees ${Math.round(wipCoverage * 100)}% of minimum WIP covered across the active PO set.`
-          : "AI review sees no minimum WIP target on the active anchor rows.",
+          ? `${Math.round(wipCoverage * 100)}% of minimum WIP covered across the active PO set.`
+          : "No minimum WIP target on the active anchor rows.",
       },
       {
         name: "Deliveries",
         level: ltDueThisMonth <= 0 ? "low" : deliveryPace >= 0.85 ? "low" : deliveryPace >= 0.55 ? "medium" : "high",
         metric: `${formatCount(deliveriesThisMonth)} / ${formatCount(ltDueThisMonth)} month`,
         detail: ltDueThisMonth > 0
-          ? `AI review compares this month's received units against LT returns due through today.`
-          : "AI review sees no LT-return demand posted for the current month.",
+          ? "Current-month receipts compared against LT returns due through today."
+          : "No LT-return demand posted for the current month.",
       },
       {
-        name: "LT Return",
+        name: "Commits",
         level: ltDueNext14Days <= 0 ? "low" : returnCoverage >= 1 ? "low" : returnCoverage >= 0.7 ? "medium" : "high",
         metric: `${formatCount(ltDueNext14Days)} due / 14d`,
         detail: ltDueNext14Days > 0
-          ? "AI review looks 14 days ahead to flag upcoming LT-return load against current WIP."
-          : "AI review sees a light LT-return horizon over the next two weeks.",
-      },
-      {
-        name: "Flow",
-        level: !lastDate ? "high" : daysSinceLastDelivery <= 3 ? "low" : daysSinceLastDelivery <= 7 ? "medium" : "high",
-        metric: lastDate ? `${daysSinceLastDelivery}d since move` : "No delivery",
-        detail: lastDate
-          ? `AI review tracks delivery recency and flags when material flow starts slowing down.`
-          : "AI review sees no delivery movement for the current PO set.",
+          ? "Upcoming committed return load over the next 14 days versus current WIP."
+          : "Light commit horizon over the next two weeks.",
       },
     ]
     : [];
