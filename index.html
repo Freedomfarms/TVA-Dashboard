@@ -26,20 +26,20 @@
         <nav class="nav-menu" aria-label="Main navigation">
           <a class="nav-item active" href="#" data-view="overview" aria-current="page">
             <span class="nav-icon nav-grid"></span>
-            <span>Mission Control</span>
+            <span>Pulse</span>
             <span class="nav-dot"></span>
+          </a>
+          <a class="nav-item" href="#" data-view="performance">
+            <span class="nav-icon nav-pulse"></span>
+            <span>Performance</span>
+          </a>
+          <a class="nav-item" href="#" data-view="escalation">
+            <span class="nav-icon nav-box"></span>
+            <span>Escalation</span>
           </a>
           <a class="nav-item" href="#" data-view="data">
             <span class="nav-icon nav-file"></span>
             <span>Data</span>
-          </a>
-          <a class="nav-item" href="#">
-            <span class="nav-icon nav-box"></span>
-            <span>Escalation Notes</span>
-          </a>
-          <a class="nav-item" href="#">
-            <span class="nav-icon nav-pulse"></span>
-            <span>Analytics</span>
           </a>
           <a class="nav-item" href="#">
             <span class="nav-icon nav-wallet"></span>
@@ -74,7 +74,7 @@
       <main class="dashboard">
         <header class="topbar">
           <div>
-            <h1 id="dashboard-title">Mission Control</h1>
+            <h1 id="dashboard-title">Pulse</h1>
           </div>
 
           <div class="topbar-actions">
@@ -304,100 +304,27 @@
             <div class="scape-river" aria-hidden="true"></div>
           </article>
 
-          <article class="panel products-panel">
+                    <article class="panel products-panel escalation-panel">
             <div class="panel-header">
               <h2>Escalation Notes</h2>
-            </div>
-
-            <div class="product-list">
-              <div class="product-item">
-                <div class="product-rank">01</div>
-                <div class="product-thumb cyan-frame"></div>
-                <div class="product-copy">
-                  <strong>QuantumDrive X1</strong>
-                  <span>SKU: QDX1-001</span>
+              <div class="escalation-header-actions">
+                <span class="ai-badge"><i></i>AI synthesized</span>
+                <div class="date-nav">
+                  <button type="button" class="date-nav-arrow" id="esc-date-prev" aria-label="Previous day">‹</button>
+                  <span class="date-nav-label" id="esc-date-label">Jun 3</span>
+                  <button type="button" class="date-nav-arrow" id="esc-date-next" aria-label="Next day">›</button>
                 </div>
-                <div class="product-stats">
-                  <strong>$24,680</strong>
-                  <span>812 units</span>
-                </div>
-              </div>
-
-              <div class="product-item">
-                <div class="product-rank">02</div>
-                <div class="product-thumb violet-frame"></div>
-                <div class="product-copy">
-                  <strong>Lumina Pro Display</strong>
-                  <span>SKU: LPD-002</span>
-                </div>
-                <div class="product-stats">
-                  <strong>$18,760</strong>
-                  <span>645 units</span>
-                </div>
-              </div>
-
-              <div class="product-item">
-                <div class="product-rank">03</div>
-                <div class="product-thumb pink-frame"></div>
-                <div class="product-copy">
-                  <strong>Nebula Wireless Earbuds</strong>
-                  <span>SKU: NWE-003</span>
-                </div>
-                <div class="product-stats">
-                  <strong>$12,490</strong>
-                  <span>521 units</span>
-                </div>
-              </div>
-
-              <div class="product-item">
-                <div class="product-rank">04</div>
-                <div class="product-thumb amber-frame"></div>
-                <div class="product-copy">
-                  <strong>AeroColt Pro Laptop Stand</strong>
-                  <span>SKU: ACPLS-004</span>
-                </div>
-                <div class="product-stats">
-                  <strong>$9,850</strong>
-                  <span>389 units</span>
-                </div>
+                <button type="button" class="escalation-add" id="escalation-add" aria-label="Add escalation note">+</button>
               </div>
             </div>
+            <p class="escalation-lede">Auto-generated from live WIP &amp; anchor data</p>
+            <div class="escalation-feed" id="escalation-feed"></div>
           </article>
 
           <article class="panel tva-wip-panel">
-            <div class="tva-wip-header">
-              <div>
-                <h2>June Production Readiness</h2>
-              </div>
-              <span class="tva-wip-badge">Excel snapshot</span>
-            </div>
-
-            <div class="tva-metrics" id="wip-shortage-cards">
-              <div class="tva-metric-card warning">
-                <span>MD4134613-91</span>
-                <strong>-5</strong>
-                <small>Budney Turn: 30 clean / 35 min</small>
-              </div>
-              <div class="tva-metric-card warning">
-                <span>4137321</span>
-                <strong>-12</strong>
-                <small>DHI Deburr: 9 clean / 21 min</small>
-              </div>
-              <div class="tva-metric-card warning">
-                <span>4326628</span>
-                <strong>-1</strong>
-                <small>MSC Coat: 0 clean / 1 min</small>
-              </div>
-              <div class="tva-metric-card warning">
-                <span>30G8908</span>
-                <strong>-4</strong>
-                <small>MDS Black Gold: 14 clean / 18 min</small>
-              </div>
-              <div class="tva-metric-card warning">
-                <span>1B6275-01</span>
-                <strong>-1</strong>
-                <small>NE Plasma: 0 clean / 1 min</small>
-              </div>
+            <div class="panel-header">
+              <h2>June Production Readiness</h2>
+              <span class="tva-wip-badge"><i></i>Anchor sync</span>
             </div>
 
             <div class="wip-table-grid">
@@ -415,35 +342,9 @@
                         <th>Process</th>
                         <th>Clean WIP</th>
                         <th>Min WIP</th>
-                        <th>MTD Del.</th>
                       </tr>
                     </thead>
-                    <tbody id="military-wip-body">
-                      <tr><td>4119904</td><td>ATA</td><td>CBN</td><td class="wip-good">7</td><td>0</td><td>0</td></tr>
-                      <tr><td>4119905</td><td>ATA</td><td>CBN</td><td class="wip-good">4</td><td>0</td><td>0</td></tr>
-                      <tr><td>4320806</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>4318207</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>4317508</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>4131129-01</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>4085004</td><td>ATA</td><td>CBN</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>4084105</td><td>ATA</td><td>CBN</td><td class="wip-good">100</td><td>0</td><td>0</td></tr>
-                      <tr><td>4084106</td><td>ATA</td><td>CBN</td><td class="wip-good">89</td><td>0</td><td>0</td></tr>
-                      <tr><td>4081507</td><td>ATA</td><td>CBN</td><td class="wip-good">234</td><td>0</td><td>0</td></tr>
-                      <tr><td>MD4134613-91</td><td>Budney</td><td>Turn</td><td class="wip-short">30</td><td>35</td><td>2</td></tr>
-                      <tr><td>4119904</td><td>CW</td><td>Plasma</td><td class="wip-good">4</td><td>0</td><td>4</td></tr>
-                      <tr><td>4119905</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>4318207</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>1</td></tr>
-                      <tr><td>4131129-01</td><td>CW</td><td>Plasma</td><td class="wip-good">1</td><td>0</td><td>1</td></tr>
-                      <tr><td>4138202</td><td>CW</td><td>Plasma</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>4137321</td><td>DHI</td><td>Deburr</td><td class="wip-short">9</td><td>21</td><td>2</td></tr>
-                      <tr><td>MD4088768-02</td><td>DHI</td><td>Deburr</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>MD4088768-03</td><td>DHI</td><td>Deburr</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>MD4131129-21</td><td>Hanwha</td><td>Turn</td><td class="wip-good">24</td><td>15</td><td>0</td></tr>
-                      <tr><td>4089026-01</td><td>Linde</td><td>Coat / Grind</td><td class="wip-good">26</td><td>1</td><td>0</td></tr>
-                      <tr><td>4082602</td><td>Linde</td><td>Coat / Grind</td><td class="wip-good">2</td><td>2</td><td>0</td></tr>
-                      <tr><td>4326628</td><td>MSC</td><td>Coat</td><td class="wip-short">0</td><td>1</td><td>0</td></tr>
-                      <tr><td>4322743-01</td><td>MSC</td><td>Coat</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                    </tbody>
+                    <tbody id="military-wip-body"></tbody>
                   </table>
                 </div>
               </div>
@@ -462,31 +363,9 @@
                         <th>Process</th>
                         <th>Clean WIP</th>
                         <th>Min WIP</th>
-                        <th>MTD Del.</th>
                       </tr>
                     </thead>
-                    <tbody id="commercial-wip-body">
-                      <tr><td>6W30P2594-01</td><td>ATL</td><td>Sonic</td><td class="wip-good">11</td><td>1</td><td>8</td></tr>
-                      <tr><td>30G5307</td><td>Budney</td><td>Turn</td><td class="wip-good">10</td><td>6</td><td>5</td></tr>
-                      <tr><td>2A4802</td><td>Budney</td><td>Turn</td><td class="wip-good">6</td><td>5</td><td>0</td></tr>
-                      <tr><td>31G1508</td><td>Budney</td><td>Turn</td><td class="wip-good">9</td><td>2</td><td>0</td></tr>
-                      <tr><td>31G1508</td><td>Budney</td><td>Balance</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>30G7208</td><td>CW</td><td>Alox</td><td class="wip-good">18</td><td>10</td><td>1</td></tr>
-                      <tr><td>1B4237</td><td>Hanwha</td><td>Turn</td><td class="wip-good">2</td><td>0</td><td>0</td></tr>
-                      <tr><td>50D497</td><td>Hanwha</td><td>Turn</td><td class="wip-good">2</td><td>1</td><td>0</td></tr>
-                      <tr><td>30G4407</td><td>Linde</td><td>CBN</td><td class="wip-good">19</td><td>10</td><td>6</td></tr>
-                      <tr><td>30G5307</td><td>Linde</td><td>CBN</td><td class="wip-good">11</td><td>10</td><td>6</td></tr>
-                      <tr><td>30G8908</td><td>Linde</td><td>CBN / Alox</td><td class="wip-good">52</td><td>31</td><td>0</td></tr>
-                      <tr><td>31G1508</td><td>Linde</td><td>Alox</td><td class="wip-good">9</td><td>0</td><td>0</td></tr>
-                      <tr><td>31G0508</td><td>Linde</td><td>Alox</td><td class="wip-good">10</td><td>0</td><td>0</td></tr>
-                      <tr><td>30G8908</td><td>MDS</td><td>Black Gold</td><td class="wip-short">14</td><td>18</td><td>0</td></tr>
-                      <tr><td>31G0508</td><td>MDS</td><td>Black Gold</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>1B6275-01</td><td>NE Plasma</td><td>Plasma</td><td class="wip-short">0</td><td>1</td><td>0</td></tr>
-                      <tr><td>2A5001</td><td>Test Devices</td><td>Spin</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>2A4802</td><td>Test Devices</td><td>Spin</td><td class="wip-good">0</td><td>0</td><td>0</td></tr>
-                      <tr><td>52G158</td><td>Valence</td><td>Anodize</td><td class="wip-good">2</td><td>1</td><td>0</td></tr>
-                      <tr><td>53D925</td><td>Valence</td><td>Anodize</td><td class="wip-good">4</td><td>2</td><td>0</td></tr>
-                    </tbody>
+                    <tbody id="commercial-wip-body"></tbody>
                   </table>
                 </div>
               </div>
@@ -500,7 +379,8 @@
             <div class="data-tab-bar" aria-label="Data section tabs">
               <button class="data-tab-button" type="button" data-data-tab="anchor">Data Anchor</button>
               <button class="data-tab-button active" type="button" data-data-tab="wip">WIP Data</button>
-              <button class="data-tab-button" type="button" data-data-tab="lt">LT Data</button>
+              <button class="data-tab-button" type="button" data-data-tab="deliveries">Deliveries</button>
+              <button class="data-tab-button" type="button" data-data-tab="outgoing">Outgoing</button>
             </div>
 
             <div class="data-subview" data-data-subview="anchor" hidden>
@@ -567,7 +447,7 @@
                 <div class="data-import-grid">
                   <div class="data-paste-card">
                     <label for="excel-data-input">Excel rows</label>
-                    <textarea id="excel-data-input" spellcheck="false" placeholder="Date&#9;Program&#9;Orders&#9;Revenue&#10;2026-06-01&#9;Aerospace&#9;42&#9;128500"></textarea>
+                    <textarea id="excel-data-input" spellcheck="false" placeholder="SN&#9;PO&#9;Ship Date&#10;LENCB41414&#9;4700911916&#9;06/02/2026"></textarea>
                     <div class="data-actions">
                       <button class="primary-action" id="parse-data-button" type="button">Preview Data</button>
                       <button class="primary-action save-action" id="save-data-button" type="button">Save WIP Data</button>
@@ -603,7 +483,207 @@
               </article>
             </div>
 
-            <div class="data-subview" data-data-subview="lt" hidden></div>
+                        <div class="data-subview" data-data-subview="deliveries" hidden>
+              <article class="panel data-entry-panel">
+                <div class="data-panel-heading">
+                  <div>
+                    <p class="eyebrow">Manual Excel Intake</p>
+                    <h2>Paste Deliveries spreadsheet data</h2>
+                    <p>Paste new delivery rows from Excel and click Add to Deliveries — new rows are appended to the existing data (not overwritten). A Date Entered column is stamped automatically.</p>
+                  </div>
+                  <span class="data-pill">Local draft</span>
+                </div>
+
+                <div class="data-import-grid">
+                  <div class="data-paste-card">
+                    <label for="deliveries-input">Excel rows</label>
+                    <textarea id="deliveries-input" spellcheck="false" placeholder="PO&#9;Qty&#9;Received&#10;4700915330&#9;141&#9;6/3/26 0:00"></textarea>
+                    <div class="data-actions">
+                      <button class="primary-action" id="parse-deliveries-button" type="button">Preview Data</button>
+                      <button class="primary-action save-action" id="add-deliveries-button" type="button">Add to Deliveries</button>
+                      <button class="secondary-action" id="clear-deliveries-button" type="button">Clear</button>
+                    </div>
+                  </div>
+
+                  <div class="data-summary-card">
+                    <span>Ready for dashboard mapping</span>
+                    <strong id="deliveries-row-count">0 rows</strong>
+                    <small id="deliveries-column-count">0 columns detected</small>
+                    <p>Delivery receipts are stored in this browser so charts, tables, and metrics can read from the same dataset next.</p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel data-preview-panel">
+                <div class="panel-header">
+                  <h2>Deliveries Preview</h2>
+                  <span class="data-status" id="deliveries-storage-status">Waiting for data</span>
+                </div>
+
+                <div class="data-table-shell">
+                  <table class="data-table" aria-label="Preview of pasted Deliveries data">
+                    <thead id="deliveries-preview-head"></thead>
+                    <tbody id="deliveries-preview-body">
+                      <tr class="empty-row">
+                        <td>Paste delivery rows from Excel and click Preview Data.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+
+            <div class="data-subview" data-data-subview="outgoing" hidden>
+              <article class="panel data-entry-panel">
+                <div class="data-panel-heading">
+                  <div>
+                    <p class="eyebrow">Manual Excel Intake</p>
+                    <h2>Paste Outgoing spreadsheet data</h2>
+                    <p>Outgoing auto-syncs from WIP Data by Serial Number — any new serial entered in WIP is added here automatically (LT Return is computed). You can still paste rows manually below as a fallback.</p>
+                  </div>
+                  <span class="data-pill">Local draft</span>
+                </div>
+
+                <div class="data-import-grid">
+                  <div class="data-paste-card">
+                    <label for="outgoing-input">Excel rows</label>
+                    <textarea id="outgoing-input" spellcheck="false" placeholder="Serial Number&#9;REF_DOC / PO&#9;Ship Date&#9;LT Return&#10;LENCB41414&#9;4700911916&#9;06/02/2026&#9;"></textarea>
+                    <div class="data-actions">
+                      <button class="primary-action" id="parse-outgoing-button" type="button">Preview Data</button>
+                      <button class="primary-action save-action" id="save-outgoing-button" type="button">Save Outgoing</button>
+                      <button class="secondary-action" id="clear-outgoing-button" type="button">Clear</button>
+                    </div>
+                  </div>
+
+                  <div class="data-summary-card">
+                    <span>Ready for dashboard mapping</span>
+                    <strong id="outgoing-row-count">0 rows</strong>
+                    <small id="outgoing-column-count">0 columns detected</small>
+                    <p>Outgoing shipments are stored in this browser so charts, tables, and metrics can read from the same dataset next.</p>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel data-preview-panel">
+                <div class="panel-header">
+                  <h2>Outgoing Preview</h2>
+                  <span class="data-status" id="outgoing-storage-status">Waiting for data</span>
+                </div>
+
+                <div class="data-table-shell">
+                  <table class="data-table" aria-label="Preview of pasted Outgoing data">
+                    <thead id="outgoing-preview-head"></thead>
+                    <tbody id="outgoing-preview-body">
+                      <tr class="empty-row">
+                        <td>Paste outgoing rows from Excel and click Preview Data.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+        <div class="dashboard-view" data-dashboard-view="escalation" hidden>
+          <section class="escalation-workspace">
+            <article class="panel escalation-archive-panel">
+              <div class="panel-header">
+                <h2>Escalation Notes</h2>
+                <div class="escalation-header-actions">
+                  <span class="ai-badge"><i></i>Running log</span>
+                  <label class="esc-sort">
+                    Sort
+                    <select id="escalation-sort">
+                      <option value="date-desc">Date (newest)</option>
+                      <option value="date-asc">Date (oldest)</option>
+                      <option value="severity">Severity</option>
+                      <option value="category">Category</option>
+                      <option value="vendor">Vendor</option>
+                      <option value="process">Process</option>
+                      <option value="title">Title</option>
+                    </select>
+                  </label>
+                  <button type="button" class="escalation-add" id="escalation-add-tab" aria-label="Add escalation note">+</button>
+                </div>
+              </div>
+              <p class="escalation-lede">Running history of every escalation note across all dates</p>
+              <div class="escalation-feed escalation-feed-archive" id="escalation-tab-feed"></div>
+            </article>
+          </section>
+        </div>
+        <div class="dashboard-view" data-dashboard-view="performance" hidden>
+          <section class="performance-workspace">
+            <article class="panel perf-panel">
+              <div class="panel-header">
+                <h2>Delivery Performance</h2>
+                <span class="perf-po-badge">PO:&nbsp;<span id="perf-po-label">—</span></span>
+              </div>
+              <p class="escalation-lede">Pick a part / vendor / process — deliveries are resolved through the anchor PO(s).</p>
+              <div class="perf-selectors">
+                <label class="perf-field"><span>Part Number</span><select id="perf-part"></select></label>
+                <label class="perf-field"><span>Vendor</span><select id="perf-vendor"></select></label>
+                <label class="perf-field"><span>Process</span><select id="perf-process"></select></label>
+              </div>
+              <div class="perf-kpis" id="perf-kpis"></div>
+            </article>
+
+            <div class="perf-main">
+              <div class="perf-tables">
+                <article class="panel perf-table-panel">
+                  <div class="panel-header"><h2>Daily Deliveries</h2></div>
+                  <div class="perf-table-shell">
+                    <table class="perf-table">
+                      <thead><tr><th>Date</th><th>Units</th></tr></thead>
+                      <tbody id="perf-daily-body"></tbody>
+                    </table>
+                  </div>
+                </article>
+                <article class="panel perf-table-panel">
+                  <div class="panel-header"><h2>Weekly</h2></div>
+                  <div class="perf-table-shell">
+                    <table class="perf-table">
+                      <thead><tr><th>Week</th><th>Units</th></tr></thead>
+                      <tbody id="perf-weekly-body"></tbody>
+                    </table>
+                  </div>
+                </article>
+                <article class="panel perf-table-panel">
+                  <div class="panel-header"><h2>Monthly</h2></div>
+                  <div class="perf-table-shell">
+                    <table class="perf-table">
+                      <thead><tr><th>Month</th><th>Units</th></tr></thead>
+                      <tbody id="perf-monthly-body"></tbody>
+                    </table>
+                  </div>
+                </article>
+              </div>
+
+              <div class="perf-charts">
+                <article class="panel perf-chart-panel">
+                  <div class="panel-header">
+                    <h2>Monthly — LT Return vs Deliveries</h2>
+                    <div class="perf-chart-head">
+                      <select id="perf-month" class="perf-month-select" aria-label="Select month"></select>
+                      <div class="perf-legend">
+                        <span class="perf-legend-item"><i class="perf-legend-bar"></i>Deliveries</span>
+                        <span class="perf-legend-item"><i class="perf-legend-line"></i>LT Return</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="perf-chart" id="perf-chart-monthly"></div>
+                </article>
+                <article class="panel perf-chart-panel">
+                  <div class="panel-header">
+                    <h2>YTD — LT Return vs Deliveries</h2>
+                    <div class="perf-legend">
+                      <span class="perf-legend-item"><i class="perf-legend-bar"></i>Deliveries</span>
+                      <span class="perf-legend-item"><i class="perf-legend-line"></i>LT Return</span>
+                    </div>
+                  </div>
+                  <div class="perf-chart" id="perf-chart-ytd"></div>
+                </article>
+              </div>
+            </div>
           </section>
         </div>
       </main>
