@@ -1,6 +1,7 @@
 import "./styles.css";
 import defaultWipRaw from "./wip-data.txt?raw";
 import defaultDeliveriesRaw from "./deliveries-data.txt?raw";
+import defaultOutgoingRaw from "./outgoing-data.txt?raw";
 
 const scenicPanel = document.querySelector(".scape-stars");
 const dashboardTitle = document.querySelector("#dashboard-title");
@@ -1844,9 +1845,21 @@ const loadDeliveriesTemplate = () => {
   renderDeliveriesPreview(dataset, "Template loaded");
 };
 
+const normalizeOutgoingRow = (row) => ({
+  "Serial Number": getRowValue(row, ["Serial Number", "SERNR", "SN"]),
+  "REF_DOC / PO": getRowValue(row, ["REF_DOC / PO", "REF_DOC", "PO"]),
+  "Ship Date": getRowValue(row, ["Ship Date", "Date"]),
+  Qty: getRowValue(row, ["Qty", "Quantity"]) || "1",
+  "LT Return": getRowValue(row, ["LT Return"]) || "",
+});
+
 const loadOutgoingTemplate = () => {
-  window.dashboardOutgoing = buildOutgoingDataset([]);
-  syncOutgoingFromWip();
+  const parsed = parseSpreadsheetData(defaultOutgoingRaw);
+  const dataset = computeOutgoing(buildOutgoingDataset(
+    parsed.rows.map((row) => normalizeOutgoingRow(row)),
+  ));
+  window.dashboardOutgoing = dataset;
+  renderOutgoingPreview(dataset, "Template loaded");
 };
 
 navItems.forEach((item) => {
@@ -1939,7 +1952,9 @@ if (storedOutgoing) {
   try {
     const dataset = JSON.parse(storedOutgoing);
     if (isOutgoingDataset(dataset)) {
-      window.dashboardOutgoing = computeOutgoing(buildOutgoingDataset(dataset.rows || []));
+      window.dashboardOutgoing = computeOutgoing(buildOutgoingDataset(
+        (dataset.rows || []).map((row) => normalizeOutgoingRow(row)),
+      ));
       syncOutgoingFromWip();
     } else {
       localStorage.removeItem(outgoingStorageKey);
@@ -2041,13 +2056,19 @@ clearDeliveriesButton?.addEventListener("click", () => {
 });
 
 parseOutgoingButton?.addEventListener("click", () => {
-  const dataset = computeOutgoing(parseSpreadsheetData(outgoingInput?.value || ""));
+  const parsed = parseSpreadsheetData(outgoingInput?.value || "");
+  const dataset = computeOutgoing(buildOutgoingDataset(
+    (parsed.rows || []).map((row) => normalizeOutgoingRow(row)),
+  ));
   window.dashboardOutgoing = dataset;
   renderOutgoingPreview(dataset);
 });
 
 saveOutgoingButton?.addEventListener("click", () => {
-  const dataset = computeOutgoing(parseSpreadsheetData(outgoingInput?.value || ""));
+  const parsed = parseSpreadsheetData(outgoingInput?.value || "");
+  const dataset = computeOutgoing(buildOutgoingDataset(
+    (parsed.rows || []).map((row) => normalizeOutgoingRow(row)),
+  ));
   window.dashboardOutgoing = dataset;
   renderOutgoingPreview(dataset);
   saveDataset({ storageKey: outgoingStorageKey, dataset, status: outgoingStorageStatus });
