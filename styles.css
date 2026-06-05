@@ -2844,8 +2844,17 @@ body::before {
   display: block;
 }
 
+.perf-svg-neon {
+  overflow: visible;
+}
+
 .perf-bar {
   fill: #2a64d6;
+}
+
+.perf-bar-neon {
+  stroke: rgba(173, 238, 255, 0.28);
+  stroke-width: 1;
 }
 
 .perf-line {
@@ -2862,9 +2871,53 @@ body::before {
   filter: drop-shadow(0 0 4px rgba(94, 224, 255, 0.7));
 }
 
+.perf-dot-halo {
+  fill: rgba(94, 224, 255, 0.14);
+}
+
+.perf-dot-neon {
+  fill: #c9fbff;
+  stroke: #5ee0ff;
+  stroke-width: 1.1;
+  filter: drop-shadow(0 0 8px rgba(94, 224, 255, 0.95));
+}
+
 .perf-grid-line {
   stroke: rgba(120, 160, 255, 0.1);
   stroke-width: 1;
+}
+
+.perf-plot-shell {
+  fill: rgba(5, 12, 30, 0.72);
+  stroke: rgba(94, 140, 255, 0.12);
+  stroke-width: 1;
+}
+
+.perf-plot-outline {
+  fill: none;
+  stroke: rgba(94, 224, 255, 0.16);
+  stroke-width: 1;
+}
+
+.perf-plot-orb {
+  opacity: 0.24;
+  filter: blur(18px);
+}
+
+.perf-plot-orb-left {
+  fill: rgba(94, 224, 255, 0.38);
+}
+
+.perf-plot-orb-right {
+  fill: rgba(138, 92, 255, 0.32);
+}
+
+.perf-line-area {
+  pointer-events: none;
+}
+
+.perf-line-neon {
+  stroke-width: 2.8;
 }
 
 .perf-axis-x,
@@ -2876,6 +2929,10 @@ body::before {
 
 .perf-axis-x {
   text-anchor: middle;
+}
+
+.perf-axis-x-neon {
+  fill: rgba(198, 220, 255, 0.78);
 }
 
 .perf-axis-y {
@@ -2987,4 +3044,12 @@ body::before {
 
 .perf-tooltip .tt-line {
   color: #5ee0ff;
+}
+
+.perf-svg-neon .perf-grid-line {
+  stroke: rgba(120, 160, 255, 0.06);
+}
+
+.perf-svg-neon .perf-axis-y {
+  fill: rgba(154, 176, 220, 0.42);
 }

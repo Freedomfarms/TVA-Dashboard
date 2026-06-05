@@ -1400,6 +1400,8 @@ const renderComboChart = (container, data, options = {}) => {
   const padB = 30;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
+  const isNeonVariant = options.variant === "neon-monthly";
+  const chartId = String(container.id || "perf-chart").replace(/[^a-z0-9_-]/gi, "-");
   const rawMax = Math.max(
     1,
     ...data.map((d) => Math.max(Number.isFinite(d.bar) ? d.bar : 0, Number.isFinite(d.line) ? d.line : 0)),
@@ -1413,6 +1415,32 @@ const renderComboChart = (container, data, options = {}) => {
   const renderedWidth = container.clientWidth || W;
   const maxLabels = Math.max(1, Math.floor((renderedWidth - padL - padR) / labelMinSpacing));
   const labelStep = Math.max(1, Math.ceil(data.length / maxLabels));
+  const defs = isNeonVariant
+    ? `<defs>`
+      + `<linearGradient id="${chartId}-bar-gradient" x1="0" y1="0" x2="0" y2="1">`
+      + `<stop offset="0%" stop-color="#63f6ff" stop-opacity="0.95"/>`
+      + `<stop offset="45%" stop-color="#4d8dff" stop-opacity="0.72"/>`
+      + `<stop offset="100%" stop-color="#4d8dff" stop-opacity="0.08"/>`
+      + `</linearGradient>`
+      + `<linearGradient id="${chartId}-line-gradient" x1="0" y1="0" x2="1" y2="0">`
+      + `<stop offset="0%" stop-color="#8a5cff"/>`
+      + `<stop offset="50%" stop-color="#5ee0ff"/>`
+      + `<stop offset="100%" stop-color="#39f0a5"/>`
+      + `</linearGradient>`
+      + `<linearGradient id="${chartId}-area-gradient" x1="0" y1="0" x2="0" y2="1">`
+      + `<stop offset="0%" stop-color="#5ee0ff" stop-opacity="0.18"/>`
+      + `<stop offset="100%" stop-color="#5ee0ff" stop-opacity="0"/>`
+      + `</linearGradient>`
+      + `<filter id="${chartId}-bar-glow" x="-40%" y="-20%" width="180%" height="180%">`
+      + `<feGaussianBlur stdDeviation="5" result="blur"/>`
+      + `<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`
+      + `</filter>`
+      + `<filter id="${chartId}-line-glow" x="-10%" y="-30%" width="140%" height="170%">`
+      + `<feGaussianBlur stdDeviation="3" result="blur"/>`
+      + `<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`
+      + `</filter>`
+      + `</defs>`
+    : "";
 
   const grid = [0, 0.25, 0.5, 0.75, 1]
     .map((f) => {
@@ -1422,6 +1450,12 @@ const renderComboChart = (container, data, options = {}) => {
         + `<text x="${padL - 6}" y="${(yy + 3).toFixed(1)}" class="perf-axis-y">${val}</text>`;
     })
     .join("");
+  const plotFrame = isNeonVariant
+    ? `<rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" rx="20" class="perf-plot-shell"/>`
+      + `<rect x="${padL + 1.5}" y="${padT + 1.5}" width="${plotW - 3}" height="${plotH - 3}" rx="18" class="perf-plot-outline"/>`
+      + `<circle cx="${padL + plotW * 0.28}" cy="${padT + plotH * 0.28}" r="${plotH * 0.22}" class="perf-plot-orb perf-plot-orb-left"/>`
+      + `<circle cx="${padL + plotW * 0.78}" cy="${padT + plotH * 0.18}" r="${plotH * 0.16}" class="perf-plot-orb perf-plot-orb-right"/>`
+    : "";
 
   const bars = data
     .map((d, i) => {
@@ -1431,14 +1465,28 @@ const renderComboChart = (container, data, options = {}) => {
       const x = cx(i) - barW / 2;
       const yTop = cy(d.bar);
       const h = Math.max(0, padT + plotH - yTop);
-      return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" class="perf-bar"/>`;
+      const fill = isNeonVariant ? ` fill="url(#${chartId}-bar-gradient)" filter="url(#${chartId}-bar-glow)"` : "";
+      const className = isNeonVariant ? "perf-bar perf-bar-neon" : "perf-bar";
+      return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="${isNeonVariant ? 8 : 3}" class="${className}"${fill}/>`;
     })
     .join("");
 
   const linePts = data.map((d, i) => `${cx(i).toFixed(1)},${cy(d.line).toFixed(1)}`).join(" ");
-  const line = `<polyline points="${linePts}" class="perf-line"/>`;
+  const lineArea = isNeonVariant
+    ? `<polygon points="${padL},${padT + plotH} ${linePts} ${W - padR},${padT + plotH}" class="perf-line-area" fill="url(#${chartId}-area-gradient)"/>`
+    : "";
+  const line = isNeonVariant
+    ? `<polyline points="${linePts}" class="perf-line perf-line-neon" stroke="url(#${chartId}-line-gradient)" filter="url(#${chartId}-line-glow)"/>`
+    : `<polyline points="${linePts}" class="perf-line"/>`;
   const dots = data
-    .map((d, i) => `<circle cx="${cx(i).toFixed(1)}" cy="${cy(d.line).toFixed(1)}" r="3.2" class="perf-dot"/>`)
+    .map((d, i) => {
+      const x = cx(i).toFixed(1);
+      const y = cy(d.line).toFixed(1);
+      return isNeonVariant
+        ? `<circle cx="${x}" cy="${y}" r="7.2" class="perf-dot-halo"/>`
+          + `<circle cx="${x}" cy="${y}" r="3.1" class="perf-dot perf-dot-neon"/>`
+        : `<circle cx="${x}" cy="${y}" r="3.2" class="perf-dot"/>`;
+    })
     .join("");
 
   const xLabels = data
@@ -1446,7 +1494,7 @@ const renderComboChart = (container, data, options = {}) => {
       if (i % labelStep !== 0) {
         return "";
       }
-      return `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x">${d.displayLabel || d.label}</text>`;
+      return `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x${isNeonVariant ? " perf-axis-x-neon" : ""}">${d.displayLabel || d.label}</text>`;
     })
     .join("");
 
@@ -1455,8 +1503,8 @@ const renderComboChart = (container, data, options = {}) => {
     .join("");
 
   container.innerHTML =
-    `<svg viewBox="0 0 ${W} ${H}" class="perf-svg" preserveAspectRatio="xMidYMid meet" role="img">`
-    + `${grid}${bars}${line}${dots}${xLabels}${hovers}</svg>`
+    `<svg viewBox="0 0 ${W} ${H}" class="perf-svg${isNeonVariant ? " perf-svg-neon" : ""}" preserveAspectRatio="xMidYMid meet" role="img">`
+    + `${defs}${plotFrame}${grid}${lineArea}${bars}${line}${dots}${xLabels}${hovers}</svg>`
     + '<div class="perf-tooltip" hidden></div>';
 
   const tip = container.querySelector(".perf-tooltip");
@@ -1684,7 +1732,7 @@ const renderPerformance = () => {
       });
     });
   }
-  renderComboChart(perfChartMonthly, monthlyChartData, { labelMinSpacing: 36 });
+  renderComboChart(perfChartMonthly, monthlyChartData, { labelMinSpacing: 36, variant: "neon-monthly" });
 
   const ytdYear = new Date().getFullYear();
   const yearMonths = monthKeys.filter((mk) => mk.year === ytdYear).map((mk) => mk.month);
