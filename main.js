@@ -56,6 +56,14 @@ const escalationSortSelect = document.querySelector("#escalation-sort");
 const escDatePrev = document.querySelector("#esc-date-prev");
 const escDateNext = document.querySelector("#esc-date-next");
 const escDateLabel = document.querySelector("#esc-date-label");
+const perfPartSelect = document.querySelector("#perf-part");
+const perfVendorSelect = document.querySelector("#perf-vendor");
+const perfProcessSelect = document.querySelector("#perf-process");
+const perfPoLabel = document.querySelector("#perf-po-label");
+const perfKpis = document.querySelector("#perf-kpis");
+const perfDailyBody = document.querySelector("#perf-daily-body");
+const perfWeeklyBody = document.querySelector("#perf-weekly-body");
+const perfMonthlyBody = document.querySelector("#perf-monthly-body");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -148,7 +156,7 @@ const setActiveView = (viewName) => {
 
   if (dashboardTitle) {
     dashboardTitle.textContent =
-      viewName === "data" ? "Data" : viewName === "escalation" ? "Escalation" : "Pulse";
+      viewName === "data" ? "Data" : viewName === "escalation" ? "Escalation" : viewName === "performance" ? "Performance" : "Pulse";
   }
 };
 
@@ -292,6 +300,7 @@ const renderAnchorPreview = (dataset, statusText) => {
   });
   renderProductionReadiness();
   refreshOutgoing();
+  populatePerformance();
 };
 
 const renderDeliveriesPreview = (dataset, statusText) => {
@@ -305,6 +314,7 @@ const renderDeliveriesPreview = (dataset, statusText) => {
     emptyMessage: "Paste delivery rows from Excel and click Preview Data.",
     statusText,
   });
+  renderPerformance();
 };
 
 const renderOutgoingPreview = (dataset, statusText) => {
@@ -1162,6 +1172,216 @@ const renderEscalation = () => {
 };
 
 
+const perfAnchorRows = () => window.dashboardDataAnchor?.rows || [];
+
+const perfUniqueValues = (rows, label) => {
+  const set = new Set();
+  rows.forEach((row) => {
+    const value = String(getRowValue(row, label)).trim();
+    if (value) {
+      set.add(value);
+    }
+  });
+  return [...set].sort((a, b) => a.localeCompare(b));
+};
+
+const perfFillSelect = (select, values, current) => {
+  if (!select) {
+    return;
+  }
+  select.replaceChildren();
+  values.forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.append(option);
+  });
+  if (current && values.includes(current)) {
+    select.value = current;
+  }
+};
+
+const refreshPerfVendors = () => {
+  const part = perfPartSelect?.value;
+  const vendors = perfUniqueValues(
+    perfAnchorRows().filter((row) => getRowValue(row, "Part Number") === part),
+    "Vendor",
+  );
+  perfFillSelect(perfVendorSelect, vendors, perfVendorSelect?.value);
+};
+
+const refreshPerfProcesses = () => {
+  const part = perfPartSelect?.value;
+  const vendor = perfVendorSelect?.value;
+  const processes = perfUniqueValues(
+    perfAnchorRows().filter(
+      (row) => getRowValue(row, "Part Number") === part && getRowValue(row, "Vendor") === vendor,
+    ),
+    "Process",
+  );
+  perfFillSelect(perfProcessSelect, processes, perfProcessSelect?.value);
+};
+
+const populatePerformance = () => {
+  if (!perfPartSelect) {
+    return;
+  }
+  const parts = perfUniqueValues(perfAnchorRows(), "Part Number");
+  perfFillSelect(perfPartSelect, parts, perfPartSelect.value || parts[0]);
+  refreshPerfVendors();
+  refreshPerfProcesses();
+  renderPerformance();
+};
+
+const perfParseDate = (value) => {
+  const match = String(value).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!match) {
+    return null;
+  }
+  let year = Number(match[3]);
+  if (year < 100) {
+    year += 2000;
+  }
+  return new Date(year, Number(match[1]) - 1, Number(match[2]));
+};
+
+const perfStartOfWeek = (date) => {
+  const result = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const offset = (result.getDay() + 6) % 7;
+  result.setDate(result.getDate() - offset);
+  return result;
+};
+
+const renderPerfTable = (body, entries, labelFn) => {
+  if (!body) {
+    return;
+  }
+  body.replaceChildren();
+  if (!entries.length) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 2;
+    cell.className = "perf-empty";
+    cell.textContent = "No deliveries for this selection.";
+    row.append(cell);
+    body.append(row);
+    return;
+  }
+  entries.forEach(({ date, units }) => {
+    const row = document.createElement("tr");
+    const label = document.createElement("td");
+    label.textContent = labelFn(date);
+    const value = document.createElement("td");
+    value.className = "perf-units";
+    value.textContent = formatCount(units);
+    row.append(label, value);
+    body.append(row);
+  });
+};
+
+const renderPerfKpis = (totalUnits, deliveryDays, lastDate) => {
+  if (!perfKpis) {
+    return;
+  }
+  const kpis = [
+    { label: "Total Units", value: formatCount(totalUnits) },
+    { label: "Delivery Days", value: formatCount(deliveryDays) },
+    {
+      label: "Last Delivery",
+      value: lastDate
+        ? lastDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : "\u2014",
+    },
+  ];
+  perfKpis.replaceChildren();
+  kpis.forEach((kpi) => {
+    const card = document.createElement("div");
+    card.className = "perf-kpi";
+    const value = document.createElement("strong");
+    value.textContent = kpi.value;
+    const label = document.createElement("span");
+    label.textContent = kpi.label;
+    card.append(value, label);
+    perfKpis.append(card);
+  });
+};
+
+const renderPerformance = () => {
+  if (!perfDailyBody) {
+    return;
+  }
+
+  const part = perfPartSelect?.value || "";
+  const vendor = perfVendorSelect?.value || "";
+  const process = perfProcessSelect?.value || "";
+
+  const matchingRows = perfAnchorRows().filter(
+    (row) =>
+      getRowValue(row, "Part Number") === part &&
+      getRowValue(row, "Vendor") === vendor &&
+      getRowValue(row, "Process") === process,
+  );
+
+  const poSet = new Set();
+  matchingRows.forEach((row) => {
+    [getRowValue(row, ["PO 1", "PO1"]), getRowValue(row, ["PO 2", "PO2"])]
+      .map((po) => String(po).trim())
+      .filter(Boolean)
+      .forEach((po) => poSet.add(po));
+  });
+
+  if (perfPoLabel) {
+    perfPoLabel.textContent = poSet.size ? [...poSet].join("  +  ") : "No PO on file";
+  }
+
+  const deliveries = (window.dashboardDeliveries?.rows || []).filter((row) =>
+    poSet.has(String(getRowValue(row, ["PO", "Incoming PO"])).trim()),
+  );
+
+  const daily = new Map();
+  const weekly = new Map();
+  const monthly = new Map();
+  let totalUnits = 0;
+  let lastDate = null;
+
+  deliveries.forEach((row) => {
+    const date = perfParseDate(getRowValue(row, ["Received", "Ship Date", "Date"]));
+    if (!date) {
+      return;
+    }
+    const qty = toNumber(getRowValue(row, ["Qty", "Quantity"]));
+    totalUnits += qty;
+    if (!lastDate || date > lastDate) {
+      lastDate = date;
+    }
+
+    const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    daily.set(dayKey, { date, units: (daily.get(dayKey)?.units || 0) + qty });
+
+    const weekStart = perfStartOfWeek(date);
+    const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`;
+    weekly.set(weekKey, { date: weekStart, units: (weekly.get(weekKey)?.units || 0) + qty });
+
+    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+    const monthDate = new Date(date.getFullYear(), date.getMonth(), 1);
+    monthly.set(monthKey, { date: monthDate, units: (monthly.get(monthKey)?.units || 0) + qty });
+  });
+
+  renderPerfKpis(totalUnits, daily.size, lastDate);
+
+  const byDateDesc = (a, b) => b.date - a.date;
+  renderPerfTable(perfDailyBody, [...daily.values()].sort(byDateDesc), (date) =>
+    date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+  );
+  renderPerfTable(perfWeeklyBody, [...weekly.values()].sort(byDateDesc), (date) =>
+    `Week of ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+  );
+  renderPerfTable(perfMonthlyBody, [...monthly.values()].sort(byDateDesc), (date) =>
+    date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+  );
+};
+
+
 const saveDataset = ({ storageKey, dataset, status }) => {
   localStorage.setItem(storageKey, JSON.stringify(dataset));
 
@@ -1477,3 +1697,14 @@ escalationSortSelect?.addEventListener("change", () => {
   escalationSort = escalationSortSelect.value;
   renderEscalation();
 });
+
+perfPartSelect?.addEventListener("change", () => {
+  refreshPerfVendors();
+  refreshPerfProcesses();
+  renderPerformance();
+});
+perfVendorSelect?.addEventListener("change", () => {
+  refreshPerfProcesses();
+  renderPerformance();
+});
+perfProcessSelect?.addEventListener("change", renderPerformance);

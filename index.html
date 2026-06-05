@@ -29,7 +29,7 @@
             <span>Pulse</span>
             <span class="nav-dot"></span>
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="#" data-view="performance">
             <span class="nav-icon nav-pulse"></span>
             <span>Performance</span>
           </a>
@@ -609,6 +609,54 @@
               <p class="escalation-lede">Running history of every escalation note across all dates</p>
               <div class="escalation-feed escalation-feed-archive" id="escalation-tab-feed"></div>
             </article>
+          </section>
+        </div>
+        <div class="dashboard-view" data-dashboard-view="performance" hidden>
+          <section class="performance-workspace">
+            <article class="panel perf-panel">
+              <div class="panel-header">
+                <h2>Delivery Performance</h2>
+                <span class="perf-po-badge">PO:&nbsp;<span id="perf-po-label">—</span></span>
+              </div>
+              <p class="escalation-lede">Pick a part / vendor / process — deliveries are resolved through the anchor PO(s).</p>
+              <div class="perf-selectors">
+                <label class="perf-field"><span>Part Number</span><select id="perf-part"></select></label>
+                <label class="perf-field"><span>Vendor</span><select id="perf-vendor"></select></label>
+                <label class="perf-field"><span>Process</span><select id="perf-process"></select></label>
+              </div>
+              <div class="perf-kpis" id="perf-kpis"></div>
+            </article>
+
+            <article class="panel perf-table-panel">
+              <div class="panel-header"><h2>Daily Deliveries</h2></div>
+              <div class="perf-table-shell">
+                <table class="perf-table">
+                  <thead><tr><th>Date</th><th>Units</th></tr></thead>
+                  <tbody id="perf-daily-body"></tbody>
+                </table>
+              </div>
+            </article>
+
+            <div class="perf-grid">
+              <article class="panel perf-table-panel">
+                <div class="panel-header"><h2>Weekly</h2></div>
+                <div class="perf-table-shell">
+                  <table class="perf-table">
+                    <thead><tr><th>Week</th><th>Units</th></tr></thead>
+                    <tbody id="perf-weekly-body"></tbody>
+                  </table>
+                </div>
+              </article>
+              <article class="panel perf-table-panel">
+                <div class="panel-header"><h2>Monthly</h2></div>
+                <div class="perf-table-shell">
+                  <table class="perf-table">
+                    <thead><tr><th>Month</th><th>Units</th></tr></thead>
+                    <tbody id="perf-monthly-body"></tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
           </section>
         </div>
       </main>

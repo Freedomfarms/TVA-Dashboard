@@ -2443,3 +2443,197 @@ body::before {
   border-radius: 999px;
   padding: 0.08rem 0.45rem;
 }
+
+/* ---------- Performance tab ---------- */
+.performance-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.perf-po-badge {
+  flex: 0 0 auto;
+  border: 1px solid rgba(94, 196, 255, 0.34);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  color: rgba(206, 236, 255, 0.92);
+  background: rgba(37, 141, 255, 0.12);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.perf-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 0.4rem;
+}
+
+.perf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+  min-width: 12rem;
+  flex: 1;
+}
+
+.perf-field span {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(180, 196, 244, 0.7);
+}
+
+.perf-field select {
+  background: rgba(6, 12, 30, 0.8);
+  border: 1px solid rgba(120, 160, 255, 0.24);
+  border-radius: 0.6rem;
+  color: rgba(232, 240, 255, 0.95);
+  font-size: 0.82rem;
+  padding: 0.55rem 0.65rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.perf-field select:focus {
+  outline: none;
+  border-color: rgba(120, 160, 255, 0.5);
+}
+
+.perf-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.95rem;
+}
+
+.perf-kpi {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(120, 160, 255, 0.14);
+  border-radius: 0.95rem;
+  padding: 0.85rem 0.95rem 0.9rem 1.05rem;
+  background: linear-gradient(160deg, rgba(18, 30, 72, 0.55), rgba(8, 14, 36, 0.72));
+}
+
+.perf-kpi::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #54c8ff, #7a5bff);
+}
+
+.perf-kpi strong {
+  display: block;
+  color: #f7faff;
+  font-size: 1.55rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.perf-kpi span {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(188, 201, 239, 0.72);
+}
+
+.perf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.perf-table-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.perf-table-shell {
+  margin-top: 0.6rem;
+  max-height: 24rem;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(94, 160, 255, 0.4) transparent;
+}
+
+.perf-table-shell::-webkit-scrollbar {
+  width: 6px;
+}
+
+.perf-table-shell::-webkit-scrollbar-thumb {
+  background: rgba(94, 160, 255, 0.32);
+  border-radius: 999px;
+}
+
+.perf-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.perf-table th,
+.perf-table td {
+  text-align: left;
+  padding: 0.5rem 0.72rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(120, 160, 255, 0.07);
+}
+
+.perf-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(8, 14, 35, 0.94);
+  backdrop-filter: blur(8px);
+  color: rgba(160, 186, 244, 0.72);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.57rem;
+  font-weight: 700;
+}
+
+.perf-table thead th:last-child,
+.perf-table .perf-units {
+  text-align: right;
+}
+
+.perf-table td {
+  color: rgba(222, 231, 255, 0.85);
+}
+
+.perf-table .perf-units {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #6cf0c0;
+}
+
+.perf-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.perf-table tbody tr:hover td {
+  background: rgba(86, 142, 255, 0.08);
+}
+
+.perf-empty {
+  text-align: center;
+  color: rgba(180, 196, 244, 0.6);
+}
+
+@media (max-width: 720px) {
+  .perf-grid,
+  .perf-kpis {
+    grid-template-columns: 1fr;
+  }
+}
