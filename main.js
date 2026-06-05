@@ -1256,6 +1256,17 @@ const perfStartOfWeek = (date) => {
   return result;
 };
 
+const perfDayRange = (startDate, endDate) => {
+  const days = [];
+  const cur = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+  while (cur <= end) {
+    days.push(new Date(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return days;
+};
+
 const renderPerfTable = (body, entries, labelFn) => {
   if (!body) {
     return;
@@ -1476,7 +1487,15 @@ const renderPerformance = () => {
   renderPerfKpis(totalUnits, daily.size, lastDate);
 
   const byDateDesc = (a, b) => b.date - a.date;
-  renderPerfTable(perfDailyBody, [...daily.values()].sort(byDateDesc), (date) =>
+  const dailyDates = [...daily.values()].map((entry) => entry.date.getTime());
+  let dailyRows = [];
+  if (dailyDates.length) {
+    dailyRows = perfDayRange(new Date(Math.min(...dailyDates)), new Date(Math.max(...dailyDates))).map((date) => ({
+      date,
+      units: daily.get(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`)?.units || 0,
+    }));
+  }
+  renderPerfTable(perfDailyBody, dailyRows.sort(byDateDesc), (date) =>
     date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
   );
   renderPerfTable(perfWeeklyBody, [...weekly.values()].sort(byDateDesc), (date) =>
@@ -1525,22 +1544,30 @@ const renderPerformance = () => {
   }
 
   const [selYear, selMonth] = perfSelectedMonth ? perfSelectedMonth.split("-").map(Number) : [null, null];
-  const dayKeys = [...new Set([...daily.keys(), ...ltDaily.keys()])]
+  const monthDays = [...new Set([...daily.keys(), ...ltDaily.keys()])]
     .map((key) => {
       const [year, month, day] = key.split("-").map(Number);
-      return { key, year, month, date: new Date(year, month, day) };
+      return { year, month, date: new Date(year, month, day) };
     })
     .filter((dk) => dk.year === selYear && dk.month === selMonth)
     .sort((a, b) => a.date - b.date);
 
-  renderComboChart(
-    perfChartMonthly,
-    dayKeys.map((dk) => ({
-      label: dk.date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      bar: daily.get(dk.key)?.units || 0,
-      line: ltDaily.get(dk.key)?.units || 0,
-    })),
-  );
+  const monthlyChartData = [];
+  if (monthDays.length) {
+    let cumBar = 0;
+    let cumLine = 0;
+    perfDayRange(monthDays[0].date, monthDays[monthDays.length - 1].date).forEach((date) => {
+      const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      cumBar += daily.get(key)?.units || 0;
+      cumLine += ltDaily.get(key)?.units || 0;
+      monthlyChartData.push({
+        label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        bar: cumBar,
+        line: cumLine,
+      });
+    });
+  }
+  renderComboChart(perfChartMonthly, monthlyChartData);
 
   const ytdYear = new Date().getFullYear();
   const yearMonths = monthKeys.filter((mk) => mk.year === ytdYear).map((mk) => mk.month);
