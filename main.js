@@ -66,6 +66,7 @@ const perfWeeklyBody = document.querySelector("#perf-weekly-body");
 const perfMonthlyBody = document.querySelector("#perf-monthly-body");
 const perfChartMonthly = document.querySelector("#perf-chart-monthly");
 const perfChartYtd = document.querySelector("#perf-chart-ytd");
+const perfMonthSelect = document.querySelector("#perf-month");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -662,6 +663,7 @@ const saveEscalationState = (state) => {
 };
 
 let escalationEditingId = null;
+let perfSelectedMonth = "";
 let escalationSelectedDate = todayIso();
 let escalationSort = "date-desc";
 
@@ -1370,10 +1372,45 @@ const renderComboChart = (container, data) => {
     .map((d, i) => `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x">${d.label}</text>`)
     .join("");
 
+  const hovers = data
+    .map((d, i) => `<rect class="perf-hover" data-i="${i}" x="${(padL + slot * i).toFixed(1)}" y="${padT}" width="${slot.toFixed(1)}" height="${plotH}"/>`)
+    .join("");
+
   container.innerHTML =
     `<svg viewBox="0 0 ${W} ${H}" class="perf-svg" preserveAspectRatio="xMidYMid meet" role="img">`
-    + `${grid}${bars}${line}${dots}${xLabels}</svg>`;
+    + `${grid}${bars}${line}${dots}${xLabels}${hovers}</svg>`
+    + '<div class="perf-tooltip" hidden></div>';
+
+  const tip = container.querySelector(".perf-tooltip");
+  container.querySelectorAll(".perf-hover").forEach((rect) => {
+    rect.addEventListener("mousemove", (event) => {
+      const item = data[Number(rect.dataset.i)];
+      tip.hidden = false;
+      tip.innerHTML =
+        `<strong>${item.label}</strong>`
+        + `<span class="tt-bar">Deliveries: ${formatCount(item.bar)}</span>`
+        + `<span class="tt-line">LT Return: ${formatCount(item.line)}</span>`;
+      const rect2 = container.getBoundingClientRect();
+      let x = event.clientX - rect2.left + 12;
+      let y = event.clientY - rect2.top - 10;
+      if (x + tip.offsetWidth > rect2.width) {
+        x = event.clientX - rect2.left - tip.offsetWidth - 12;
+      }
+      if (y < 0) {
+        y = 4;
+      }
+      if (y + tip.offsetHeight > rect2.height) {
+        y = rect2.height - tip.offsetHeight - 4;
+      }
+      tip.style.left = `${x}px`;
+      tip.style.top = `${y}px`;
+    });
+  });
+  container.onmouseleave = () => {
+    tip.hidden = true;
+  };
 };
+
 
 const renderPerformance = () => {
   if (!perfDailyBody) {
@@ -1453,14 +1490,17 @@ const renderPerformance = () => {
     poSet.has(String(getRowValue(row, ["REF_DOC / PO", "PO", "Incoming PO"])).trim()),
   );
   const ltMonthly = new Map();
+  const ltDaily = new Map();
   outgoingRows.forEach((row) => {
     const date = perfParseDate(getRowValue(row, ["LT Return"]));
     if (!date) {
       return;
     }
     const qty = toNumber(getRowValue(row, ["Qty", "Quantity"]));
-    const key = `${date.getFullYear()}-${date.getMonth()}`;
-    ltMonthly.set(key, (ltMonthly.get(key) || 0) + qty);
+    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+    ltMonthly.set(monthKey, (ltMonthly.get(monthKey) || 0) + qty);
+    const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    ltDaily.set(dayKey, { date, units: (ltDaily.get(dayKey)?.units || 0) + qty });
   });
 
   const monthKeys = [...new Set([...monthly.keys(), ...ltMonthly.keys()])]
@@ -1470,12 +1510,35 @@ const renderPerformance = () => {
     })
     .sort((a, b) => a.date - b.date);
 
+  if (perfMonthSelect) {
+    perfMonthSelect.replaceChildren();
+    monthKeys.forEach((mk) => {
+      const option = document.createElement("option");
+      option.value = mk.key;
+      option.textContent = mk.date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      perfMonthSelect.append(option);
+    });
+    if (!monthKeys.some((mk) => mk.key === perfSelectedMonth)) {
+      perfSelectedMonth = monthKeys.length ? monthKeys[monthKeys.length - 1].key : "";
+    }
+    perfMonthSelect.value = perfSelectedMonth;
+  }
+
+  const [selYear, selMonth] = perfSelectedMonth ? perfSelectedMonth.split("-").map(Number) : [null, null];
+  const dayKeys = [...new Set([...daily.keys(), ...ltDaily.keys()])]
+    .map((key) => {
+      const [year, month, day] = key.split("-").map(Number);
+      return { key, year, month, date: new Date(year, month, day) };
+    })
+    .filter((dk) => dk.year === selYear && dk.month === selMonth)
+    .sort((a, b) => a.date - b.date);
+
   renderComboChart(
     perfChartMonthly,
-    monthKeys.map((mk) => ({
-      label: mk.date.toLocaleDateString("en-US", { month: "short" }),
-      bar: monthly.get(mk.key)?.units || 0,
-      line: ltMonthly.get(mk.key) || 0,
+    dayKeys.map((dk) => ({
+      label: dk.date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      bar: daily.get(dk.key)?.units || 0,
+      line: ltDaily.get(dk.key)?.units || 0,
     })),
   );
 
@@ -1827,3 +1890,7 @@ perfVendorSelect?.addEventListener("change", () => {
   renderPerformance();
 });
 perfProcessSelect?.addEventListener("change", renderPerformance);
+perfMonthSelect?.addEventListener("change", () => {
+  perfSelectedMonth = perfMonthSelect.value;
+  renderPerformance();
+});
