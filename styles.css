@@ -2451,6 +2451,19 @@ body::before {
   gap: 0.95rem;
 }
 
+.perf-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.95rem;
+  align-items: stretch;
+}
+
+.perf-panel,
+.perf-risk-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .perf-po-badge {
   flex: 0 0 auto;
   border: 1px solid rgba(94, 196, 255, 0.34);
@@ -2508,6 +2521,166 @@ body::before {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
   margin-top: 0.95rem;
+}
+
+.perf-risk-subtitle {
+  margin: 0.28rem 0 0;
+  max-width: 36rem;
+  color: rgba(176, 190, 232, 0.68);
+  font-size: 0.64rem;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+}
+
+.perf-risk-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+}
+
+.perf-risk-tile {
+  --risk: #6cf0c0;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.28rem;
+  min-height: 15.6rem;
+  padding: 0.95rem 0.8rem 1rem;
+  border: 1px solid rgba(120, 160, 255, 0.12);
+  border-radius: 1.05rem;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(78, 128, 255, 0.08), transparent 38%),
+    linear-gradient(160deg, rgba(16, 26, 60, 0.54), rgba(8, 14, 34, 0.76));
+  overflow: hidden;
+}
+
+.perf-risk-tile::before {
+  content: "";
+  position: absolute;
+  inset: 20% 18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--risk), transparent 68%);
+  opacity: 0.85;
+  pointer-events: none;
+  filter: blur(12px);
+}
+
+.perf-risk-name,
+.perf-risk-state {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.perf-risk-name {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--risk);
+  text-shadow: 0 0 14px currentColor;
+}
+
+.perf-risk-radar {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 10.2rem);
+  aspect-ratio: 1;
+  color: var(--risk);
+}
+
+.perf-risk-ring,
+.perf-risk-ring-outer,
+.perf-risk-crosshair {
+  fill: none;
+  stroke: currentColor;
+}
+
+.perf-risk-ring {
+  stroke-width: 2;
+  stroke-opacity: 0.3;
+}
+
+.perf-risk-ring-outer {
+  stroke-width: 1.8;
+  stroke-dasharray: 3.5 6.5;
+  stroke-opacity: 0.18;
+}
+
+.perf-risk-crosshair {
+  stroke-width: 1.2;
+  stroke-opacity: 0.14;
+}
+
+.perf-risk-core {
+  fill: currentColor;
+  fill-opacity: 0.12;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-opacity: 0.34;
+  filter: drop-shadow(0 0 12px currentColor);
+}
+
+.perf-risk-wave {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 7px currentColor);
+}
+
+.perf-risk-state {
+  margin-top: -0.2rem;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--risk);
+}
+
+.perf-risk-metric,
+.perf-risk-detail {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.perf-risk-metric {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(232, 240, 255, 0.9);
+}
+
+.perf-risk-detail {
+  max-width: 14rem;
+  font-size: 0.64rem;
+  line-height: 1.42;
+  color: rgba(184, 197, 234, 0.72);
+}
+
+.perf-risk-low {
+  --risk: #39f0a5;
+}
+
+.perf-risk-medium {
+  --risk: #ffb347;
+}
+
+.perf-risk-high {
+  --risk: #ff5e63;
+}
+
+.perf-risk-empty {
+  grid-column: 1 / -1;
+  padding: 1.2rem;
+  border: 1px dashed rgba(120, 160, 255, 0.2);
+  border-radius: 0.9rem;
+  text-align: center;
+  color: rgba(180, 196, 244, 0.64);
+  font-size: 0.72rem;
 }
 
 .perf-kpi {
@@ -2632,8 +2805,10 @@ body::before {
 }
 
 @media (max-width: 720px) {
+  .perf-overview,
   .perf-grid,
-  .perf-kpis {
+  .perf-kpis,
+  .perf-risk-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -2741,6 +2916,7 @@ body::before {
 }
 
 @media (max-width: 1100px) {
+  .perf-overview,
   .perf-main {
     grid-template-columns: 1fr;
   }

@@ -67,6 +67,7 @@ const perfMonthlyBody = document.querySelector("#perf-monthly-body");
 const perfChartMonthly = document.querySelector("#perf-chart-monthly");
 const perfChartYtd = document.querySelector("#perf-chart-ytd");
 const perfMonthSelect = document.querySelector("#perf-month");
+const perfRiskGrid = document.querySelector("#perf-risk-grid");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -1323,6 +1324,58 @@ const renderPerfKpis = (totalUnits, deliveryDays, lastDate) => {
   });
 };
 
+const perfRiskTone = {
+  low: { label: "Low Risk", className: "perf-risk-low" },
+  medium: { label: "Medium Risk", className: "perf-risk-medium" },
+  high: { label: "High Risk", className: "perf-risk-high" },
+};
+
+const perfDayStamp = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+
+const perfDateDiffDays = (laterDate, earlierDate) =>
+  Math.max(0, Math.round((perfDayStamp(laterDate) - perfDayStamp(earlierDate)) / (24 * 60 * 60 * 1000)));
+
+const perfSumUnitsInRange = (entries, startDate, endDate) => {
+  const start = perfDayStamp(startDate);
+  const end = perfDayStamp(endDate);
+  return entries.reduce((sum, entry) => {
+    const stamp = perfDayStamp(entry.date);
+    return stamp >= start && stamp <= end ? sum + entry.units : sum;
+  }, 0);
+};
+
+const perfRadarMarkup = () =>
+  `<svg viewBox="0 0 120 120" class="perf-risk-radar" aria-hidden="true">`
+  + '<circle cx="60" cy="60" r="40" class="perf-risk-ring-outer"/>'
+  + '<circle cx="60" cy="60" r="31" class="perf-risk-ring"/>'
+  + '<circle cx="60" cy="60" r="22" class="perf-risk-ring"/>'
+  + '<circle cx="60" cy="60" r="13" class="perf-risk-core"/>'
+  + '<path d="M12 60H108" class="perf-risk-crosshair"/>'
+  + '<path d="M60 12V108" class="perf-risk-crosshair"/>'
+  + '<polyline points="24,60 42,60 48,46 54,74 61,50 67,60 76,60 82,54 88,66 96,60" class="perf-risk-wave"/>'
+  + "</svg>";
+
+const renderPerfRiskPanel = (items) => {
+  if (!perfRiskGrid) {
+    return;
+  }
+  if (!items.length) {
+    perfRiskGrid.innerHTML = '<div class="perf-risk-empty">Select a valid part, vendor, and process to generate the AI risk review.</div>';
+    return;
+  }
+
+  perfRiskGrid.innerHTML = items.map((item) => {
+    const tone = perfRiskTone[item.level] || perfRiskTone.medium;
+    return `<section class="perf-risk-tile ${tone.className}">`
+      + `<div class="perf-risk-name">${item.name}</div>`
+      + `${perfRadarMarkup()}`
+      + `<div class="perf-risk-state">${tone.label}</div>`
+      + `<div class="perf-risk-metric">${item.metric}</div>`
+      + `<div class="perf-risk-detail">${item.detail}</div>`
+      + "</section>";
+  }).join("");
+};
+
 const perfNiceMax = (value) => {
   if (value <= 0) {
     return 1;
@@ -1468,6 +1521,10 @@ const renderPerformance = () => {
     perfPoLabel.textContent = poSet.size ? [...poSet].join("  +  ") : "No PO on file";
   }
 
+  const wipIndex = buildWipQtyIndex(window.dashboardDataset);
+  const currentWip = [...poSet].reduce((sum, po) => sum + (wipIndex.get(po) || 0), 0);
+  const requiredWip = matchingRows.reduce((sum, row) => sum + toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"])), 0);
+
   const deliveries = (window.dashboardDeliveries?.rows || []).filter((row) =>
     poSet.has(String(getRowValue(row, ["PO", "Incoming PO"])).trim()),
   );
@@ -1539,6 +1596,58 @@ const renderPerformance = () => {
     ltDaily.set(dayKey, { date, units: (ltDaily.get(dayKey)?.units || 0) + qty });
   });
 
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const next14Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
+  const dailyEntries = [...daily.values()];
+  const ltDailyEntries = [...ltDaily.values()];
+  const deliveriesThisMonth = perfSumUnitsInRange(dailyEntries, monthStart, today);
+  const ltDueThisMonth = perfSumUnitsInRange(ltDailyEntries, monthStart, today);
+  const ltDueNext14Days = perfSumUnitsInRange(ltDailyEntries, today, next14Days);
+  const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
+  const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
+  const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
+  const daysSinceLastDelivery = lastDate ? perfDateDiffDays(today, lastDate) : Number.POSITIVE_INFINITY;
+  const riskItems = matchingRows.length
+    ? [
+      {
+        name: "WIP",
+        level: requiredWip <= 0 ? "low" : wipCoverage >= 1 ? "low" : wipCoverage >= 0.6 ? "medium" : "high",
+        metric: requiredWip > 0
+          ? `${formatCount(currentWip)} / ${formatCount(requiredWip)} min`
+          : `${formatCount(currentWip)} on hand`,
+        detail: requiredWip > 0
+          ? `AI review sees ${Math.round(wipCoverage * 100)}% of minimum WIP covered across the active PO set.`
+          : "AI review sees no minimum WIP target on the active anchor rows.",
+      },
+      {
+        name: "Deliveries",
+        level: ltDueThisMonth <= 0 ? "low" : deliveryPace >= 0.85 ? "low" : deliveryPace >= 0.55 ? "medium" : "high",
+        metric: `${formatCount(deliveriesThisMonth)} / ${formatCount(ltDueThisMonth)} month`,
+        detail: ltDueThisMonth > 0
+          ? `AI review compares this month's received units against LT returns due through today.`
+          : "AI review sees no LT-return demand posted for the current month.",
+      },
+      {
+        name: "LT Return",
+        level: ltDueNext14Days <= 0 ? "low" : returnCoverage >= 1 ? "low" : returnCoverage >= 0.7 ? "medium" : "high",
+        metric: `${formatCount(ltDueNext14Days)} due / 14d`,
+        detail: ltDueNext14Days > 0
+          ? "AI review looks 14 days ahead to flag upcoming LT-return load against current WIP."
+          : "AI review sees a light LT-return horizon over the next two weeks.",
+      },
+      {
+        name: "Flow",
+        level: !lastDate ? "high" : daysSinceLastDelivery <= 3 ? "low" : daysSinceLastDelivery <= 7 ? "medium" : "high",
+        metric: lastDate ? `${daysSinceLastDelivery}d since move` : "No delivery",
+        detail: lastDate
+          ? `AI review tracks delivery recency and flags when material flow starts slowing down.`
+          : "AI review sees no delivery movement for the current PO set.",
+      },
+    ]
+    : [];
+  renderPerfRiskPanel(riskItems);
+
   const monthKeys = [...new Set([...monthly.keys(), ...ltMonthly.keys()])]
     .map((key) => {
       const [year, month] = key.split("-").map(Number);
@@ -1566,7 +1675,6 @@ const renderPerformance = () => {
     : null;
   const monthlyChartData = [];
   if (selectedMonthDate) {
-    const today = new Date();
     const monthStart = new Date(selYear, selMonth, 1);
     const monthEnd = perfEndOfMonth(selectedMonthDate);
     let cumBar = 0;

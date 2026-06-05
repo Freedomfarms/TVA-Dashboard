@@ -613,19 +613,31 @@
         </div>
         <div class="dashboard-view" data-dashboard-view="performance" hidden>
           <section class="performance-workspace">
-            <article class="panel perf-panel">
-              <div class="panel-header">
-                <h2>Delivery Performance</h2>
-                <span class="perf-po-badge">PO:&nbsp;<span id="perf-po-label">—</span></span>
-              </div>
-              <p class="escalation-lede">Pick a part / vendor / process — deliveries are resolved through the anchor PO(s).</p>
-              <div class="perf-selectors">
-                <label class="perf-field"><span>Part Number</span><select id="perf-part"></select></label>
-                <label class="perf-field"><span>Vendor</span><select id="perf-vendor"></select></label>
-                <label class="perf-field"><span>Process</span><select id="perf-process"></select></label>
-              </div>
-              <div class="perf-kpis" id="perf-kpis"></div>
-            </article>
+            <div class="perf-overview">
+              <article class="panel perf-panel">
+                <div class="panel-header">
+                  <h2>Delivery Performance</h2>
+                  <span class="perf-po-badge">PO:&nbsp;<span id="perf-po-label">—</span></span>
+                </div>
+                <p class="escalation-lede">Pick a part / vendor / process — deliveries are resolved through the anchor PO(s).</p>
+                <div class="perf-selectors">
+                  <label class="perf-field"><span>Part Number</span><select id="perf-part"></select></label>
+                  <label class="perf-field"><span>Vendor</span><select id="perf-vendor"></select></label>
+                  <label class="perf-field"><span>Process</span><select id="perf-process"></select></label>
+                </div>
+                <div class="perf-kpis" id="perf-kpis"></div>
+              </article>
+              <article class="panel perf-risk-panel">
+                <div class="panel-header">
+                  <div>
+                    <h2>Risk Pulse Indicators</h2>
+                    <p class="perf-risk-subtitle">AI-style review of the current selection using WIP coverage, delivery pace, return load, and recent flow.</p>
+                  </div>
+                  <span class="ai-badge"><i></i>AI Review</span>
+                </div>
+                <div class="perf-risk-grid" id="perf-risk-grid"></div>
+              </article>
+            </div>
 
             <div class="perf-main">
               <div class="perf-tables">
