@@ -627,35 +627,59 @@
               <div class="perf-kpis" id="perf-kpis"></div>
             </article>
 
-            <article class="panel perf-table-panel">
-              <div class="panel-header"><h2>Daily Deliveries</h2></div>
-              <div class="perf-table-shell">
-                <table class="perf-table">
-                  <thead><tr><th>Date</th><th>Units</th></tr></thead>
-                  <tbody id="perf-daily-body"></tbody>
-                </table>
+            <div class="perf-main">
+              <div class="perf-tables">
+                <article class="panel perf-table-panel">
+                  <div class="panel-header"><h2>Daily Deliveries</h2></div>
+                  <div class="perf-table-shell">
+                    <table class="perf-table">
+                      <thead><tr><th>Date</th><th>Units</th></tr></thead>
+                      <tbody id="perf-daily-body"></tbody>
+                    </table>
+                  </div>
+                </article>
+                <article class="panel perf-table-panel">
+                  <div class="panel-header"><h2>Weekly</h2></div>
+                  <div class="perf-table-shell">
+                    <table class="perf-table">
+                      <thead><tr><th>Week</th><th>Units</th></tr></thead>
+                      <tbody id="perf-weekly-body"></tbody>
+                    </table>
+                  </div>
+                </article>
+                <article class="panel perf-table-panel">
+                  <div class="panel-header"><h2>Monthly</h2></div>
+                  <div class="perf-table-shell">
+                    <table class="perf-table">
+                      <thead><tr><th>Month</th><th>Units</th></tr></thead>
+                      <tbody id="perf-monthly-body"></tbody>
+                    </table>
+                  </div>
+                </article>
               </div>
-            </article>
 
-            <div class="perf-grid">
-              <article class="panel perf-table-panel">
-                <div class="panel-header"><h2>Weekly</h2></div>
-                <div class="perf-table-shell">
-                  <table class="perf-table">
-                    <thead><tr><th>Week</th><th>Units</th></tr></thead>
-                    <tbody id="perf-weekly-body"></tbody>
-                  </table>
-                </div>
-              </article>
-              <article class="panel perf-table-panel">
-                <div class="panel-header"><h2>Monthly</h2></div>
-                <div class="perf-table-shell">
-                  <table class="perf-table">
-                    <thead><tr><th>Month</th><th>Units</th></tr></thead>
-                    <tbody id="perf-monthly-body"></tbody>
-                  </table>
-                </div>
-              </article>
+              <div class="perf-charts">
+                <article class="panel perf-chart-panel">
+                  <div class="panel-header">
+                    <h2>Monthly — LT Return vs Deliveries</h2>
+                    <div class="perf-legend">
+                      <span class="perf-legend-item"><i class="perf-legend-bar"></i>Deliveries</span>
+                      <span class="perf-legend-item"><i class="perf-legend-line"></i>LT Return</span>
+                    </div>
+                  </div>
+                  <div class="perf-chart" id="perf-chart-monthly"></div>
+                </article>
+                <article class="panel perf-chart-panel">
+                  <div class="panel-header">
+                    <h2>YTD — LT Return vs Deliveries</h2>
+                    <div class="perf-legend">
+                      <span class="perf-legend-item"><i class="perf-legend-bar"></i>Deliveries</span>
+                      <span class="perf-legend-item"><i class="perf-legend-line"></i>LT Return</span>
+                    </div>
+                  </div>
+                  <div class="perf-chart" id="perf-chart-ytd"></div>
+                </article>
+              </div>
             </div>
           </section>
         </div>

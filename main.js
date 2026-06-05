@@ -64,6 +64,8 @@ const perfKpis = document.querySelector("#perf-kpis");
 const perfDailyBody = document.querySelector("#perf-daily-body");
 const perfWeeklyBody = document.querySelector("#perf-weekly-body");
 const perfMonthlyBody = document.querySelector("#perf-monthly-body");
+const perfChartMonthly = document.querySelector("#perf-chart-monthly");
+const perfChartYtd = document.querySelector("#perf-chart-ytd");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -1306,6 +1308,73 @@ const renderPerfKpis = (totalUnits, deliveryDays, lastDate) => {
   });
 };
 
+const perfNiceMax = (value) => {
+  if (value <= 0) {
+    return 1;
+  }
+  const pow = Math.pow(10, Math.floor(Math.log10(value)));
+  const n = value / pow;
+  const nice = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+  return nice * pow;
+};
+
+const renderComboChart = (container, data) => {
+  if (!container) {
+    return;
+  }
+  if (!data.length) {
+    container.innerHTML = '<p class="perf-empty perf-chart-empty">No data for this selection.</p>';
+    return;
+  }
+
+  const W = 640;
+  const H = 260;
+  const padL = 40;
+  const padR = 14;
+  const padT = 16;
+  const padB = 30;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const rawMax = Math.max(1, ...data.map((d) => Math.max(d.bar, d.line)));
+  const maxV = perfNiceMax(rawMax);
+  const slot = plotW / data.length;
+  const cx = (i) => padL + slot * (i + 0.5);
+  const cy = (v) => padT + plotH * (1 - v / maxV);
+  const barW = Math.min(slot * 0.5, 30);
+
+  const grid = [0, 0.25, 0.5, 0.75, 1]
+    .map((f) => {
+      const yy = padT + plotH * (1 - f);
+      const val = Math.round(maxV * f);
+      return `<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W - padR}" y2="${yy.toFixed(1)}" class="perf-grid-line"/>`
+        + `<text x="${padL - 6}" y="${(yy + 3).toFixed(1)}" class="perf-axis-y">${val}</text>`;
+    })
+    .join("");
+
+  const bars = data
+    .map((d, i) => {
+      const x = cx(i) - barW / 2;
+      const yTop = cy(d.bar);
+      const h = Math.max(0, padT + plotH - yTop);
+      return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" class="perf-bar"/>`;
+    })
+    .join("");
+
+  const linePts = data.map((d, i) => `${cx(i).toFixed(1)},${cy(d.line).toFixed(1)}`).join(" ");
+  const line = `<polyline points="${linePts}" class="perf-line"/>`;
+  const dots = data
+    .map((d, i) => `<circle cx="${cx(i).toFixed(1)}" cy="${cy(d.line).toFixed(1)}" r="3.2" class="perf-dot"/>`)
+    .join("");
+
+  const xLabels = data
+    .map((d, i) => `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x">${d.label}</text>`)
+    .join("");
+
+  container.innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" class="perf-svg" preserveAspectRatio="xMidYMid meet" role="img">`
+    + `${grid}${bars}${line}${dots}${xLabels}</svg>`;
+};
+
 const renderPerformance = () => {
   if (!perfDailyBody) {
     return;
@@ -1379,6 +1448,56 @@ const renderPerformance = () => {
   renderPerfTable(perfMonthlyBody, [...monthly.values()].sort(byDateDesc), (date) =>
     date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
   );
+
+  const outgoingRows = (window.dashboardOutgoing?.rows || []).filter((row) =>
+    poSet.has(String(getRowValue(row, ["REF_DOC / PO", "PO", "Incoming PO"])).trim()),
+  );
+  const ltMonthly = new Map();
+  outgoingRows.forEach((row) => {
+    const date = perfParseDate(getRowValue(row, ["LT Return"]));
+    if (!date) {
+      return;
+    }
+    const qty = toNumber(getRowValue(row, ["Qty", "Quantity"]));
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    ltMonthly.set(key, (ltMonthly.get(key) || 0) + qty);
+  });
+
+  const monthKeys = [...new Set([...monthly.keys(), ...ltMonthly.keys()])]
+    .map((key) => {
+      const [year, month] = key.split("-").map(Number);
+      return { key, year, month, date: new Date(year, month, 1) };
+    })
+    .sort((a, b) => a.date - b.date);
+
+  renderComboChart(
+    perfChartMonthly,
+    monthKeys.map((mk) => ({
+      label: mk.date.toLocaleDateString("en-US", { month: "short" }),
+      bar: monthly.get(mk.key)?.units || 0,
+      line: ltMonthly.get(mk.key) || 0,
+    })),
+  );
+
+  const ytdYear = new Date().getFullYear();
+  const yearMonths = monthKeys.filter((mk) => mk.year === ytdYear).map((mk) => mk.month);
+  const ytdData = [];
+  if (yearMonths.length) {
+    const maxMonth = Math.max(...yearMonths);
+    let cumBar = 0;
+    let cumLine = 0;
+    for (let m = 0; m <= maxMonth; m += 1) {
+      const key = `${ytdYear}-${m}`;
+      cumBar += monthly.get(key)?.units || 0;
+      cumLine += ltMonthly.get(key) || 0;
+      ytdData.push({
+        label: new Date(ytdYear, m, 1).toLocaleDateString("en-US", { month: "short" }),
+        bar: cumBar,
+        line: cumLine,
+      });
+    }
+  }
+  renderComboChart(perfChartYtd, ytdData);
 };
 
 
