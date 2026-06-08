@@ -2946,10 +2946,10 @@ body::before {
 
 .perf-mesh-line {
   fill: none;
-  stroke-width: 4;
+  stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 8px currentColor);
+  filter: drop-shadow(0 0 6px currentColor);
 }
 
 .perf-mesh-line-blue {
@@ -2958,11 +2958,6 @@ body::before {
 
 .perf-mesh-line-pink {
   color: rgba(255, 85, 219, 0.8);
-}
-
-.perf-mesh-dot-pink {
-  fill: #ff61d8;
-  filter: drop-shadow(0 0 6px rgba(255, 85, 219, 0.9));
 }
 
 .perf-grid-line {

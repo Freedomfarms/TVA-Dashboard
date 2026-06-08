@@ -1581,9 +1581,7 @@ const renderComboChart = (container, data, options = {}) => {
     const rLastX = returnPts[returnPts.length - 1][0].toFixed(1);
     lineArea = `<path d="${returnLine} L${rLastX} ${bottom} L${rFirstX} ${bottom} Z" class="perf-mesh-fill perf-mesh-fill-pink" fill="url(#${chartId}-pink)"/>`;
     line = `<path d="${returnLine}" class="perf-mesh-line perf-mesh-line-pink" stroke="url(#${chartId}-pink)"/>`;
-    dots = data
-      .map((d, i) => `<circle cx="${cx(i).toFixed(1)}" cy="${cy(d.line).toFixed(1)}" r="2.6" class="perf-mesh-dot perf-mesh-dot-pink"/>`)
-      .join("");
+    dots = "";
   } else {
     bars = data
       .map((d, i) => {
