@@ -1657,8 +1657,7 @@ const perfScoreGauge = (score) => {
     + `<circle class="perf-score-track" cx="60" cy="60" r="${radius}"/>`
     + `<circle class="perf-score-track-inner" cx="60" cy="60" r="${radius - 9}"/>`
     + `<circle class="perf-score-progress" cx="60" cy="60" r="${radius}" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 60 60)" filter="url(#perf-score-glow)"/>`
-    + `<text class="perf-score-value" x="60" y="56">${display}</text>`
-    + `<text class="perf-score-grade" x="60" y="78">${tier.grade}</text>`
+    + `<text class="perf-score-value" x="60" y="60" dominant-baseline="central">${display}</text>`
     + `</svg>`
     + `<span class="perf-score-tier">${tier.label}</span>`
     + `</div>`;
