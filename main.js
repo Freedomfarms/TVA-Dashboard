@@ -49,6 +49,7 @@ const militaryWipBody = document.querySelector("#military-wip-body");
 const commercialWipBody = document.querySelector("#commercial-wip-body");
 const militaryWipCount = document.querySelector("#military-wip-count");
 const commercialWipCount = document.querySelector("#commercial-wip-count");
+const wipLastUpdatedLabel = document.querySelector("#wip-last-updated");
 const escalationFeed = document.querySelector("#escalation-feed");
 const escalationAddButton = document.querySelector("#escalation-add");
 const escalationAddButtonTab = document.querySelector("#escalation-add-tab");
@@ -78,6 +79,8 @@ const deliveriesStorageKey = "dashboardDeliveries";
 const storedDeliveries = localStorage.getItem(deliveriesStorageKey);
 const outgoingStorageKey = "dashboardOutgoing";
 const storedOutgoing = localStorage.getItem(outgoingStorageKey);
+const wipUpdatedAtKey = "dashboardWipUpdatedAt";
+let wipLastUpdatedAt = localStorage.getItem(wipUpdatedAtKey) || "";
 const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
 \t4700912755\t4119904\tATA\tCBN\t0\t12\tMilitary
 \t4700912732\t4119905\tATA\tCBN\t0\t12\tMilitary
@@ -588,6 +591,7 @@ const renderReadinessTable = ({ rows, body, count }) => {
 const renderProductionReadiness = () => {
   const wipIndex = buildWipQtyIndex(window.dashboardDataset);
   const readinessRows = buildReadinessRows(window.dashboardDataAnchor, wipIndex);
+  renderWipLastUpdated();
 
   renderReadinessTable({
     rows: readinessRows.filter(({ bu }) => bu.toLowerCase() === "military"),
@@ -635,6 +639,40 @@ const toIsoDate = (date) => {
 };
 
 const todayIso = () => toIsoDate(new Date());
+
+const formatWipUpdatedAt = (iso) => {
+  if (!iso) {
+    return "Last Updated: -";
+  }
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "Last Updated: -";
+  }
+  return `Last Updated: ${date
+    .toLocaleString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "2-digit",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .replace(",", "")
+    .replace(" AM", "am")
+    .replace(" PM", "pm")}`;
+};
+
+const renderWipLastUpdated = () => {
+  if (wipLastUpdatedLabel) {
+    wipLastUpdatedLabel.textContent = formatWipUpdatedAt(wipLastUpdatedAt);
+  }
+};
+
+const updateWipLastUpdated = (date = new Date()) => {
+  wipLastUpdatedAt = date.toISOString();
+  localStorage.setItem(wipUpdatedAtKey, wipLastUpdatedAt);
+  renderWipLastUpdated();
+};
 
 const formatNoteDate = (iso) => {
   const date = iso ? new Date(`${iso}T00:00:00`) : new Date();
@@ -1420,7 +1458,7 @@ const renderComboChart = (container, data, options = {}) => {
   const labelMinSpacing = options.labelMinSpacing || 48;
   const renderedWidth = container.clientWidth || W;
   const maxLabels = Math.max(1, Math.floor((renderedWidth - padL - padR) / labelMinSpacing));
-  const labelStep = Math.max(1, Math.ceil(data.length / maxLabels));
+  const labelStep = Math.max(1, Math.ceil(data.length / maxLabels), options.minLabelStep || 1);
   const defs = isNeonVariant
     ? `<defs>`
       + `<linearGradient id="${chartId}-bar-gradient" x1="0" y1="0" x2="0" y2="1">`
@@ -1497,7 +1535,8 @@ const renderComboChart = (container, data, options = {}) => {
 
   const xLabels = data
     .map((d, i) => {
-      if (i % labelStep !== 0) {
+      const showLabel = i % labelStep === 0 || (options.forceLastLabel && i === data.length - 1);
+      if (!showLabel) {
         return "";
       }
       return `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x${isNeonVariant ? " perf-axis-x-neon" : ""}">${d.displayLabel || d.label}</text>`;
@@ -1738,7 +1777,12 @@ const renderPerformance = () => {
       });
     });
   }
-  renderComboChart(perfChartMonthly, monthlyChartData, { labelMinSpacing: 36, variant: "neon-monthly" });
+  renderComboChart(perfChartMonthly, monthlyChartData, {
+    labelMinSpacing: 72,
+    minLabelStep: 3,
+    forceLastLabel: true,
+    variant: "neon-monthly",
+  });
 
   const ytdYear = new Date().getFullYear();
   const yearMonths = monthKeys.filter((mk) => mk.year === ytdYear).map((mk) => mk.month);
@@ -2029,6 +2073,7 @@ parseDataButton?.addEventListener("click", () => {
   const dataset = withWipQty(parseSpreadsheetData(dataInput?.value || ""));
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
+  updateWipLastUpdated();
   renderProductionReadiness();
   syncOutgoingFromWip();
 });
@@ -2037,6 +2082,7 @@ saveDataButton?.addEventListener("click", () => {
   const dataset = withWipQty(parseSpreadsheetData(dataInput?.value || ""));
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
+  updateWipLastUpdated();
   renderProductionReadiness();
   saveDataset({ storageKey: datasetStorageKey, dataset, status: dataStorageStatus });
   syncOutgoingFromWip();
@@ -2050,6 +2096,7 @@ clearDataButton?.addEventListener("click", () => {
   localStorage.removeItem(datasetStorageKey);
   window.dashboardDataset = emptyDataset;
   renderDataPreview(emptyDataset);
+  updateWipLastUpdated();
   renderProductionReadiness();
 });
 
