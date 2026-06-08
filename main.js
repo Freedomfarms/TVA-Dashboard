@@ -2235,6 +2235,8 @@ const renderPerformance = () => {
   const deliveriesThisMonth = perfSumUnitsInRange(dailySeries, monthStart, today);
   const ltDueThisMonth = perfSumUnitsInRange(ltDailyEntries, monthStart, today);
   const ltDueNext14Days = perfSumUnitsInRange(ltDailyEntries, today, next14Days);
+  const ltDueMonthTotal = perfSumUnitsInRange(ltDailyEntries, monthStart, perfEndOfMonth(today));
+  const remainingDue = Math.max(0, ltDueMonthTotal - deliveriesThisMonth);
   const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
   const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
   const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
@@ -2247,7 +2249,7 @@ const renderPerformance = () => {
       tone: "cyan",
     },
     { label: "Current WIP", value: currentWip, tone: "violet", fill: Math.min(1, wipCoverage) * 100 },
-    { label: "Due This Month", value: ltDueThisMonth, tone: "amber" },
+    { label: "Remaining Due", value: remainingDue, tone: "amber" },
     { label: "Due / 14 Days", value: ltDueNext14Days, tone: "pink" },
   ]);
   const riskItems = matchingRows.length
