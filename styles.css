@@ -1137,7 +1137,12 @@ body::before {
   content: "";
 }
 
-.pn-flow-panel { grid-column: span 12; }
+.pn-flow-panel {
+  grid-column: span 12;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
+}
 .order-flow-panel { grid-column: span 5; }
 .sales-panel { grid-column: span 5; }
 .neon-scape-panel { grid-column: span 2; }
@@ -2938,6 +2943,15 @@ body::before {
   overflow-x: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(94, 160, 255, 0.4) transparent;
+}
+
+.pn-flow-table {
+  width: auto;
+}
+
+.pn-flow-table th,
+.pn-flow-table td {
+  padding: 0.4rem 0.6rem;
 }
 
 .pn-flow-table thead th {
