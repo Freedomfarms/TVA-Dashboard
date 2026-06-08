@@ -1619,12 +1619,63 @@ const renderPerfTable = (body, entries, labelFn) => {
   });
 };
 
-const renderPerfKpis = (totalUnits, deliveryDays, lastDate) => {
+const perfScoreTier = (score) => {
+  if (!Number.isFinite(score)) {
+    return { grade: "\u2014", label: "No data", toneClass: "perf-score-idle" };
+  }
+  if (score >= 85) {
+    return { grade: "A+", label: "Elite", toneClass: "perf-score-elite" };
+  }
+  if (score >= 70) {
+    return { grade: "A", label: "Strong", toneClass: "perf-score-strong" };
+  }
+  if (score >= 50) {
+    return { grade: "B", label: "Watch", toneClass: "perf-score-watch" };
+  }
+  return { grade: "C", label: "Critical", toneClass: "perf-score-critical" };
+};
+
+const perfScoreGauge = (score) => {
+  const tier = perfScoreTier(score);
+  const radius = 46;
+  const circ = 2 * Math.PI * radius;
+  const pct = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) / 100 : 0;
+  const dash = (circ * pct).toFixed(1);
+  const display = Number.isFinite(score) ? Math.round(score) : "\u2014";
+  return `<div class="perf-score-gauge ${tier.toneClass}">`
+    + `<svg viewBox="0 0 120 120" role="img" aria-label="Vendor score ${display}">`
+    + `<defs>`
+    + `<linearGradient id="perf-score-grad" x1="0" y1="0" x2="1" y2="1">`
+    + `<stop offset="0%" stop-color="#5ee0ff"/>`
+    + `<stop offset="55%" stop-color="#8a5cff"/>`
+    + `<stop offset="100%" stop-color="#ff61d8"/>`
+    + `</linearGradient>`
+    + `<filter id="perf-score-glow" x="-30%" y="-30%" width="160%" height="160%">`
+    + `<feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>`
+    + `</filter>`
+    + `</defs>`
+    + `<circle class="perf-score-track" cx="60" cy="60" r="${radius}"/>`
+    + `<circle class="perf-score-track-inner" cx="60" cy="60" r="${radius - 9}"/>`
+    + `<circle class="perf-score-progress" cx="60" cy="60" r="${radius}" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 60 60)" filter="url(#perf-score-glow)"/>`
+    + `<text class="perf-score-value" x="60" y="56">${display}</text>`
+    + `<text class="perf-score-grade" x="60" y="78">${tier.grade}</text>`
+    + `</svg>`
+    + `<span class="perf-score-tier">${tier.label}</span>`
+    + `</div>`;
+};
+
+const renderPerfKpis = (vendorScore, deliveryDays, lastDate) => {
   if (!perfKpis) {
     return;
   }
+  perfKpis.replaceChildren();
+
+  const scoreCard = document.createElement("div");
+  scoreCard.className = "perf-kpi perf-score-kpi";
+  scoreCard.innerHTML = perfScoreGauge(vendorScore) + "<span>Vendor Score</span>";
+  perfKpis.append(scoreCard);
+
   const kpis = [
-    { label: "Total Units", value: formatCount(totalUnits) },
     { label: "Delivery Days", value: formatCount(deliveryDays) },
     {
       label: "Last Delivery",
@@ -1633,7 +1684,6 @@ const renderPerfKpis = (totalUnits, deliveryDays, lastDate) => {
         : "\u2014",
     },
   ];
-  perfKpis.replaceChildren();
   kpis.forEach((kpi) => {
     const card = document.createElement("div");
     card.className = "perf-kpi";
@@ -1987,8 +2037,6 @@ const renderPerformance = () => {
     monthly.set(monthKey, { date: monthDate, units: (monthly.get(monthKey)?.units || 0) + qty });
   });
 
-  renderPerfKpis(totalUnits, daily.size, lastDate);
-
   const byDateDesc = (a, b) => b.date - a.date;
   const dailyDates = [...daily.values()].map((entry) => entry.date.getTime());
   let dailyRows = [];
@@ -2066,6 +2114,14 @@ const renderPerformance = () => {
   const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
   const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
   const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
+
+  const clamp01 = (value) => Math.max(0, Math.min(1, value));
+  const vendorScore = matchingRows.length
+    ? Math.round(
+      100 * (0.4 * clamp01(wipCoverage) + 0.35 * clamp01(deliveryPace) + 0.25 * clamp01(returnCoverage)),
+    )
+    : null;
+  renderPerfKpis(vendorScore, daily.size, lastDate);
   const riskItems = matchingRows.length
     ? [
       {

@@ -2735,6 +2735,103 @@ body::before {
   color: rgba(188, 201, 239, 0.72);
 }
 
+.perf-score-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.95rem 0.75rem;
+  text-align: center;
+}
+
+.perf-score-kpi > span {
+  margin-top: 0.4rem;
+}
+
+.perf-score-gauge {
+  --score: #5ee0ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.perf-score-gauge svg {
+  width: min(100%, 6.6rem);
+  aspect-ratio: 1;
+  overflow: visible;
+}
+
+.perf-score-track {
+  fill: none;
+  stroke: rgba(120, 160, 255, 0.14);
+  stroke-width: 8;
+}
+
+.perf-score-track-inner {
+  fill: none;
+  stroke: rgba(120, 160, 255, 0.1);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+
+.perf-score-progress {
+  fill: none;
+  stroke: url(#perf-score-grad);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.perf-score-value {
+  fill: #f7faff;
+  font-family: inherit;
+  font-size: 30px;
+  font-weight: 700;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+  filter: drop-shadow(0 0 10px var(--score));
+}
+
+.perf-score-grade {
+  fill: var(--score);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-anchor: middle;
+}
+
+.perf-score-kpi .perf-score-tier {
+  margin-top: 0;
+  color: var(--score);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px var(--score);
+}
+
+.perf-score-elite {
+  --score: #5cffc0;
+}
+
+.perf-score-strong {
+  --score: #5ee0ff;
+}
+
+.perf-score-watch {
+  --score: #ffc861;
+}
+
+.perf-score-critical {
+  --score: #ff6fae;
+}
+
+.perf-score-idle {
+  --score: rgba(168, 184, 226, 0.7);
+}
+
 .perf-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
