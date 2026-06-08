@@ -539,7 +539,7 @@
                   <div>
                     <p class="eyebrow">Manual Excel Intake</p>
                     <h2>Paste Outgoing spreadsheet data</h2>
-                    <p>Outgoing auto-syncs from WIP Data by Serial Number — any new serial entered in WIP is added here automatically (LT Return is computed). You can still paste rows manually below as a fallback.</p>
+                    <p>Outgoing auto-syncs from WIP Data by Serial Number and saves any new serial automatically. Manual intake only needs Serial Number, REF_DOC / PO, and Ship Date - Qty defaults to 1 and LT Return is computed.</p>
                   </div>
                   <span class="data-pill">Local draft</span>
                 </div>
@@ -547,7 +547,7 @@
                 <div class="data-import-grid">
                   <div class="data-paste-card">
                     <label for="outgoing-input">Excel rows</label>
-                    <textarea id="outgoing-input" spellcheck="false" placeholder="Serial Number&#9;REF_DOC / PO&#9;Ship Date&#9;LT Return&#10;LENCB41414&#9;4700911916&#9;06/02/2026&#9;"></textarea>
+                    <textarea id="outgoing-input" spellcheck="false" placeholder="Serial Number&#9;REF_DOC / PO&#9;Ship Date&#10;LENCB41414&#9;4700911916&#9;06/02/2026"></textarea>
                     <div class="data-actions">
                       <button class="primary-action" id="parse-outgoing-button" type="button">Preview Data</button>
                       <button class="primary-action save-action" id="save-outgoing-button" type="button">Save Outgoing</button>

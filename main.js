@@ -1853,6 +1853,58 @@ const normalizeOutgoingRow = (row) => ({
   "LT Return": getRowValue(row, ["LT Return"]) || "",
 });
 
+const parseOutgoingPaste = (text) => {
+  if (!text || !text.trim()) {
+    return [];
+  }
+
+  const parsed = parseSpreadsheetData(text);
+  const headerTokens = parsed.headers.map((header) => String(header).toLowerCase().trim());
+  const hasHeader = headerTokens.includes("sernr")
+    || headerTokens.includes("serial number")
+    || (headerTokens.includes("ref_doc / po") && headerTokens.includes("ship date"));
+
+  if (hasHeader) {
+    return parsed.rows.map((row) => ({
+      "Serial Number": getRowValue(row, ["Serial Number", "SERNR", "SN"]),
+      "REF_DOC / PO": getRowValue(row, ["REF_DOC / PO", "REF_DOC", "PO"]),
+      "Ship Date": getRowValue(row, ["Ship Date", "Date"]),
+      Qty: "1",
+      "LT Return": "",
+    }));
+  }
+
+  const lines = text.trim().split(/\r?\n/).filter((line) => line.trim().length > 0);
+  const delimiter = text.includes("\t") ? "\t" : ",";
+  return lines.map((line) => {
+    const cells = parseDelimitedLine(line, delimiter);
+    return {
+      "Serial Number": cells[0] || "",
+      "REF_DOC / PO": cells[1] || "",
+      "Ship Date": cells[2] || "",
+      Qty: "1",
+      "LT Return": "",
+    };
+  });
+};
+
+const mergeOutgoingRows = (incomingRows, existingRows) => {
+  const merged = new Map();
+  existingRows.forEach((row) => {
+    const serial = String(getRowValue(row, ["Serial Number", "SN"])).trim();
+    if (serial) {
+      merged.set(serial, { ...row });
+    }
+  });
+  incomingRows.forEach((row) => {
+    const serial = String(getRowValue(row, ["Serial Number", "SN"])).trim();
+    if (serial) {
+      merged.set(serial, row);
+    }
+  });
+  return [...merged.values()];
+};
+
 const loadOutgoingTemplate = () => {
   const parsed = parseSpreadsheetData(defaultOutgoingRaw);
   const dataset = computeOutgoing(buildOutgoingDataset(
@@ -2056,22 +2108,36 @@ clearDeliveriesButton?.addEventListener("click", () => {
 });
 
 parseOutgoingButton?.addEventListener("click", () => {
-  const parsed = parseSpreadsheetData(outgoingInput?.value || "");
-  const dataset = computeOutgoing(buildOutgoingDataset(
-    (parsed.rows || []).map((row) => normalizeOutgoingRow(row)),
-  ));
-  window.dashboardOutgoing = dataset;
-  renderOutgoingPreview(dataset);
+  const added = parseOutgoingPaste(outgoingInput?.value || "");
+  const current = window.dashboardOutgoing?.rows || [];
+  const mergedRows = mergeOutgoingRows(added, current);
+  const preview = computeOutgoing(buildOutgoingDataset(mergedRows));
+  renderOutgoingPreview(
+    preview,
+    added.length
+      ? `Preview - ${added.length} new row${added.length === 1 ? "" : "s"} to add (not saved)`
+      : undefined,
+  );
 });
 
 saveOutgoingButton?.addEventListener("click", () => {
-  const parsed = parseSpreadsheetData(outgoingInput?.value || "");
+  const added = parseOutgoingPaste(outgoingInput?.value || "");
+  const current = window.dashboardOutgoing?.rows || [];
   const dataset = computeOutgoing(buildOutgoingDataset(
-    (parsed.rows || []).map((row) => normalizeOutgoingRow(row)),
+    mergeOutgoingRows(added, current),
   ));
   window.dashboardOutgoing = dataset;
-  renderOutgoingPreview(dataset);
+  renderOutgoingPreview(
+    dataset,
+    added.length
+      ? `Added ${added.length} row${added.length === 1 ? "" : "s"}`
+      : undefined,
+  );
   saveDataset({ storageKey: outgoingStorageKey, dataset, status: outgoingStorageStatus });
+
+  if (outgoingInput) {
+    outgoingInput.value = "";
+  }
 });
 
 clearOutgoingButton?.addEventListener("click", () => {
