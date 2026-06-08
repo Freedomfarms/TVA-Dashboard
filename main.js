@@ -1789,11 +1789,12 @@ const renderPerfKpis = (vendorScore, metrics) => {
 
   const flowCard = document.createElement("div");
   flowCard.className = "perf-kpi perf-flow-kpi";
-  const max = Math.max(1, ...metrics.map((m) => m.value));
+  const autoMax = Math.max(1, ...metrics.filter((m) => m.fill == null).map((m) => m.value));
   flowCard.innerHTML = '<div class="status-list perf-flow-list">'
     + metrics
       .map((m) => {
-        const fill = Math.max(4, Math.round((m.value / max) * 100));
+        const raw = m.fill != null ? m.fill : (m.value / autoMax) * 100;
+        const fill = Math.max(4, Math.min(100, Math.round(raw)));
         return `<div class="status-item ${m.tone}">`
           + `<div class="status-top"><span>${m.label}</span><strong>${formatCount(m.value)}</strong></div>`
           + `<span class="status-bar"><i style="width:${fill}%"></i></span>`
@@ -2225,8 +2226,12 @@ const renderPerformance = () => {
 
   const vendorScore = computeVendorScore(part, vendor, process, wipIndex);
   renderPerfKpis(vendorScore, [
-    { label: "Total Delivered", value: totalUnits, tone: "cyan" },
-    { label: "Current WIP", value: currentWip, tone: "violet" },
+    {
+      label: `${today.toLocaleDateString("en-US", { month: "long" })} Deliveries`,
+      value: deliveriesThisMonth,
+      tone: "cyan",
+    },
+    { label: "Current WIP", value: currentWip, tone: "violet", fill: Math.min(1, wipCoverage) * 100 },
     { label: "Due This Month", value: ltDueThisMonth, tone: "amber" },
     { label: "Due / 14 Days", value: ltDueNext14Days, tone: "pink" },
   ]);
