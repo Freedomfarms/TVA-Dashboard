@@ -2742,41 +2742,18 @@ body::before {
 
 .perf-export-button {
   position: relative;
-  width: 1.9rem;
-  height: 1.9rem;
+  padding: 0.34rem 0.7rem;
   border: 1px solid rgba(120, 160, 255, 0.18);
   border-radius: 0.58rem;
   background: rgba(9, 16, 38, 0.82);
   color: rgba(222, 232, 255, 0.82);
+  font-family: inherit;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
-}
-
-.perf-export-button::before,
-.perf-export-button::after {
-  position: absolute;
-  left: 50%;
-  content: "";
-  transform: translateX(-50%);
-}
-
-.perf-export-button::before {
-  top: 0.42rem;
-  width: 0.52rem;
-  height: 0.62rem;
-  border-left: 1.8px solid currentColor;
-  border-right: 1.8px solid transparent;
-}
-
-.perf-export-button::after {
-  bottom: 0.42rem;
-  width: 0.8rem;
-  height: 0.28rem;
-  border: 1.8px solid currentColor;
-  border-top: 0;
-  border-radius: 0 0 0.22rem 0.22rem;
-  box-shadow: 0 -0.5rem 0 -0.16rem currentColor;
-  clip-path: polygon(0 100%, 100% 100%, 100% 0, 68% 0, 50% 42%, 32% 0, 0 0);
 }
 
 .perf-export-button:hover:not(:disabled) {
