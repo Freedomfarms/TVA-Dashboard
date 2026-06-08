@@ -66,6 +66,9 @@ const perfKpis = document.querySelector("#perf-kpis");
 const perfDailyBody = document.querySelector("#perf-daily-body");
 const perfWeeklyBody = document.querySelector("#perf-weekly-body");
 const perfMonthlyBody = document.querySelector("#perf-monthly-body");
+const perfExportDailyButton = document.querySelector("#perf-export-daily");
+const perfExportWeeklyButton = document.querySelector("#perf-export-weekly");
+const perfExportMonthlyButton = document.querySelector("#perf-export-monthly");
 const perfChartMonthly = document.querySelector("#perf-chart-monthly");
 const perfChartYtd = document.querySelector("#perf-chart-ytd");
 const perfMonthSelect = document.querySelector("#perf-month");
@@ -81,6 +84,11 @@ const outgoingStorageKey = "dashboardOutgoing";
 const storedOutgoing = localStorage.getItem(outgoingStorageKey);
 const wipUpdatedAtKey = "dashboardWipUpdatedAt";
 let wipLastUpdatedAt = localStorage.getItem(wipUpdatedAtKey) || "";
+const perfTableExportState = {
+  daily: { rows: [], columns: ["Date", "Units"] },
+  weekly: { rows: [], columns: ["Week", "Units"] },
+  monthly: { rows: [], columns: ["Month", "Units"] },
+};
 const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
 \t4700912755\t4119904\tATA\tCBN\t0\t12\tMilitary
 \t4700912732\t4119905\tATA\tCBN\t0\t12\tMilitary
@@ -1368,6 +1376,48 @@ const renderPerfKpis = (totalUnits, deliveryDays, lastDate) => {
   });
 };
 
+const updatePerfExportButton = (button, rows) => {
+  if (button) {
+    button.disabled = !rows.length;
+  }
+};
+
+const setPerfTableExportState = (key, rows, columns, button) => {
+  perfTableExportState[key] = { rows, columns };
+  updatePerfExportButton(button, rows);
+};
+
+const perfExportFileToken = (value, fallback) => String(value || fallback)
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, "-")
+  .replace(/^-+|-+$/g, "")
+  || fallback;
+
+const downloadPerfTableCsv = (key) => {
+  const config = perfTableExportState[key];
+  if (!config?.rows?.length) {
+    return;
+  }
+
+  const part = perfExportFileToken(perfPartSelect?.value, "part");
+  const vendor = perfExportFileToken(perfVendorSelect?.value, "vendor");
+  const process = perfExportFileToken(perfProcessSelect?.value, "process");
+  const escapeCsv = (value) => `"${String(value).replace(/"/g, "\"\"")}"`;
+  const csv = [
+    config.columns.map(escapeCsv).join(","),
+    ...config.rows.map((row) => row.map(escapeCsv).join(",")),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `performance-${key}-${part}-${vendor}-${process}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+};
+
 const perfRiskTone = {
   low: { label: "Low Risk", className: "perf-risk-low" },
   medium: { label: "Medium Risk", className: "perf-risk-medium" },
@@ -1659,13 +1709,43 @@ const renderPerformance = () => {
       units: daily.get(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`)?.units || 0,
     }));
   }
-  renderPerfTable(perfDailyBody, dailyRows.sort(byDateDesc), (date) =>
+  const dailyEntries = dailyRows.sort(byDateDesc);
+  setPerfTableExportState(
+    "daily",
+    dailyEntries.map(({ date, units }) => [
+      date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      formatCount(units),
+    ]),
+    ["Date", "Units"],
+    perfExportDailyButton,
+  );
+  renderPerfTable(perfDailyBody, dailyEntries, (date) =>
     date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
   );
-  renderPerfTable(perfWeeklyBody, [...weekly.values()].sort(byDateDesc), (date) =>
+  const weeklyEntries = [...weekly.values()].sort(byDateDesc);
+  setPerfTableExportState(
+    "weekly",
+    weeklyEntries.map(({ date, units }) => [
+      `Week of ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+      formatCount(units),
+    ]),
+    ["Week", "Units"],
+    perfExportWeeklyButton,
+  );
+  renderPerfTable(perfWeeklyBody, weeklyEntries, (date) =>
     `Week of ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
   );
-  renderPerfTable(perfMonthlyBody, [...monthly.values()].sort(byDateDesc), (date) =>
+  const monthlyEntries = [...monthly.values()].sort(byDateDesc);
+  setPerfTableExportState(
+    "monthly",
+    monthlyEntries.map(({ date, units }) => [
+      date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+      formatCount(units),
+    ]),
+    ["Month", "Units"],
+    perfExportMonthlyButton,
+  );
+  renderPerfTable(perfMonthlyBody, monthlyEntries, (date) =>
     date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
   );
 
@@ -2201,6 +2281,10 @@ clearOutgoingButton?.addEventListener("click", () => {
   window.dashboardOutgoing = emptyDataset;
   syncOutgoingFromWip();
 });
+
+perfExportDailyButton?.addEventListener("click", () => downloadPerfTableCsv("daily"));
+perfExportWeeklyButton?.addEventListener("click", () => downloadPerfTableCsv("weekly"));
+perfExportMonthlyButton?.addEventListener("click", () => downloadPerfTableCsv("monthly"));
 
 escalationAddButton?.addEventListener("click", addEscalationNote);
 escalationAddButtonTab?.addEventListener("click", addEscalationNote);
