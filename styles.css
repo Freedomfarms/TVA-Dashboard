@@ -1137,6 +1137,7 @@ body::before {
   content: "";
 }
 
+.pn-flow-panel { grid-column: span 12; }
 .order-flow-panel { grid-column: span 5; }
 .sales-panel { grid-column: span 5; }
 .neon-scape-panel { grid-column: span 2; }
@@ -2837,6 +2838,99 @@ body::before {
 .perf-empty {
   text-align: center;
   color: rgba(180, 196, 244, 0.6);
+}
+
+.pn-flow-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.pn-flow-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pn-flow-field span {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(180, 196, 244, 0.7);
+}
+
+.pn-flow-field select {
+  background: rgba(6, 12, 30, 0.8);
+  border: 1px solid rgba(120, 160, 255, 0.24);
+  border-radius: 0.5rem;
+  color: rgba(232, 240, 255, 0.95);
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 0.3rem 0.45rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.pn-flow-field select:focus {
+  outline: none;
+  border-color: rgba(120, 160, 255, 0.5);
+}
+
+.pn-flow-table-shell {
+  margin-top: 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(94, 160, 255, 0.4) transparent;
+}
+
+.pn-flow-table thead th {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.pn-flow-table thead th:last-child {
+  text-align: center;
+}
+
+.pn-flow-table .pn-flow-num {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: rgba(222, 231, 255, 0.85);
+}
+
+.pn-flow-table .pn-flow-total {
+  color: #6cf0c0;
+  font-weight: 700;
+}
+
+.pn-flow-table .pn-flow-wip {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #6cf0c0;
+}
+
+.pn-flow-table .pn-flow-pn {
+  text-align: left;
+  vertical-align: middle;
+  font-weight: 700;
+  color: rgba(232, 240, 255, 0.95);
+}
+
+.pn-flow-table .pn-flow-pn small {
+  display: block;
+  font-weight: 600;
+  font-size: 0.62rem;
+  color: rgba(180, 196, 244, 0.7);
+}
+
+.pn-flow-table .pn-flow-dir {
+  text-align: left;
+  font-weight: 600;
+  color: rgba(200, 212, 250, 0.85);
 }
 
 @media (max-width: 720px) {

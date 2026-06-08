@@ -61,6 +61,10 @@ const escDateLabel = document.querySelector("#esc-date-label");
 const perfPartSelect = document.querySelector("#perf-part");
 const perfVendorSelect = document.querySelector("#perf-vendor");
 const perfProcessSelect = document.querySelector("#perf-process");
+const pnFlowPart = document.querySelector("#pn-flow-part");
+const pnFlowVendor = document.querySelector("#pn-flow-vendor");
+const pnFlowProcess = document.querySelector("#pn-flow-process");
+const pnFlowTable = document.querySelector("#pn-flow-table");
 const perfPoLabel = document.querySelector("#perf-po-label");
 const perfKpis = document.querySelector("#perf-kpis");
 const perfDailyBody = document.querySelector("#perf-daily-body");
@@ -317,6 +321,7 @@ const renderAnchorPreview = (dataset, statusText) => {
   renderProductionReadiness();
   refreshOutgoing();
   populatePerformance();
+  populatePnFlow();
 };
 
 const renderDeliveriesPreview = (dataset, statusText) => {
@@ -1288,6 +1293,139 @@ const populatePerformance = () => {
   refreshPerfVendors();
   refreshPerfProcesses();
   renderPerformance();
+};
+
+const refreshPnFlowVendors = () => {
+  const part = pnFlowPart?.value;
+  const vendors = perfUniqueValues(
+    perfAnchorRows().filter((row) => getRowValue(row, "Part Number") === part),
+    "Vendor",
+  );
+  perfFillSelect(pnFlowVendor, vendors, pnFlowVendor?.value);
+};
+
+const refreshPnFlowProcesses = () => {
+  const part = pnFlowPart?.value;
+  const vendor = pnFlowVendor?.value;
+  const processes = perfUniqueValues(
+    perfAnchorRows().filter(
+      (row) => getRowValue(row, "Part Number") === part && getRowValue(row, "Vendor") === vendor,
+    ),
+    "Process",
+  );
+  perfFillSelect(pnFlowProcess, processes, pnFlowProcess?.value);
+};
+
+const populatePnFlow = () => {
+  if (!pnFlowPart) {
+    return;
+  }
+  const parts = perfUniqueValues(perfAnchorRows(), "Part Number");
+  perfFillSelect(pnFlowPart, parts, pnFlowPart.value || parts[0]);
+  refreshPnFlowVendors();
+  refreshPnFlowProcesses();
+  renderPnFlow();
+};
+
+const renderPnFlow = () => {
+  if (!pnFlowTable) {
+    return;
+  }
+
+  const part = pnFlowPart?.value || "";
+  const vendor = pnFlowVendor?.value || "";
+  const process = pnFlowProcess?.value || "";
+
+  const matchingRows = perfAnchorRows().filter(
+    (row) =>
+      getRowValue(row, "Part Number") === part &&
+      getRowValue(row, "Vendor") === vendor &&
+      getRowValue(row, "Process") === process,
+  );
+
+  const poSet = new Set();
+  matchingRows.forEach((row) => {
+    [getRowValue(row, ["PO 1", "PO1"]), getRowValue(row, ["PO 2", "PO2"])]
+      .map((po) => String(po).trim())
+      .filter(Boolean)
+      .forEach((po) => poSet.add(po));
+  });
+
+  const wipIndex = buildWipQtyIndex(window.dashboardDataset);
+  const currentWip = [...poSet].reduce((sum, po) => sum + (wipIndex.get(po) || 0), 0);
+
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const days = perfDayRange(monthStart, today);
+  const dayKey = (date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
+  const outByDay = new Map();
+  (window.dashboardOutgoing?.rows || []).forEach((row) => {
+    if (!poSet.has(String(getRowValue(row, ["REF_DOC / PO", "PO", "Incoming PO"])).trim())) {
+      return;
+    }
+    const date = perfParseDate(getRowValue(row, ["Ship Date", "Date"]));
+    if (!date) {
+      return;
+    }
+    const key = dayKey(date);
+    outByDay.set(key, (outByDay.get(key) || 0) + toNumber(getRowValue(row, ["Qty", "Quantity"])));
+  });
+
+  const inByDay = new Map();
+  (window.dashboardDeliveries?.rows || []).forEach((row) => {
+    if (!poSet.has(String(getRowValue(row, ["PO", "Incoming PO"])).trim())) {
+      return;
+    }
+    const date = perfParseDate(getRowValue(row, ["Received", "Ship Date", "Date"]));
+    if (!date) {
+      return;
+    }
+    const key = dayKey(date);
+    inByDay.set(key, (inByDay.get(key) || 0) + toNumber(getRowValue(row, ["Qty", "Quantity"])));
+  });
+
+  if (!part) {
+    const span = days.length + 5;
+    pnFlowTable.innerHTML = `<tbody><tr><td class="perf-empty" colspan="${span}">Select a part / vendor / process.</td></tr></tbody>`;
+    return;
+  }
+
+  const outVals = days.map((date) => outByDay.get(dayKey(date)) || 0);
+  const inVals = days.map((date) => inByDay.get(dayKey(date)) || 0);
+  const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+  const ave = (arr) => (arr.length ? sum(arr) / arr.length : 0);
+
+  const dayHeadTop = days
+    .map((date) => `<th>${date.toLocaleDateString("en-US", { weekday: "short" })}</th>`)
+    .join("");
+  const dayHeadBottom = days
+    .map((date) => `<th>${date.getDate()}-${date.toLocaleDateString("en-US", { month: "short" })}</th>`)
+    .join("");
+
+  const outCells = outVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
+  const inCells = inVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
+  const vendorLabel = vendor ? `<small>${vendor}</small>` : "";
+
+  pnFlowTable.innerHTML =
+    `<thead>`
+    + `<tr><th rowspan="2">WIP</th><th rowspan="2">Part Number</th><th rowspan="2">Flow</th>${dayHeadTop}<th rowspan="2">Total</th><th rowspan="2">Ave</th></tr>`
+    + `<tr>${dayHeadBottom}</tr>`
+    + `</thead>`
+    + `<tbody>`
+    + `<tr>`
+    + `<td rowspan="2" class="pn-flow-wip">${formatCount(currentWip)}</td>`
+    + `<td rowspan="2" class="pn-flow-pn">${part}${vendorLabel}</td>`
+    + `<td class="pn-flow-dir">Out to vendor</td>${outCells}`
+    + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(outVals))}</td>`
+    + `<td class="pn-flow-num">${ave(outVals).toFixed(1)}</td>`
+    + `</tr>`
+    + `<tr>`
+    + `<td class="pn-flow-dir">In from vendor</td>${inCells}`
+    + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(inVals))}</td>`
+    + `<td class="pn-flow-num">${ave(inVals).toFixed(1)}</td>`
+    + `</tr>`
+    + `</tbody>`;
 };
 
 const perfParseDate = (value) => {
@@ -2324,6 +2462,17 @@ perfVendorSelect?.addEventListener("change", () => {
   renderPerformance();
 });
 perfProcessSelect?.addEventListener("change", renderPerformance);
+
+pnFlowPart?.addEventListener("change", () => {
+  refreshPnFlowVendors();
+  refreshPnFlowProcesses();
+  renderPnFlow();
+});
+pnFlowVendor?.addEventListener("change", () => {
+  refreshPnFlowProcesses();
+  renderPnFlow();
+});
+pnFlowProcess?.addEventListener("change", renderPnFlow);
 perfMonthSelect?.addEventListener("change", () => {
   perfSelectedMonth = perfMonthSelect.value;
   renderPerformance();
