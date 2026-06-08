@@ -437,13 +437,9 @@ const OUTGOING_HEADERS = ["Serial Number", "REF_DOC / PO", "Ship Date", "Qty", "
 
 const buildOutgoingDataset = (rows) => ({ headers: OUTGOING_HEADERS, rows });
 
-const syncOutgoingFromWip = () => {
-  if (!outgoingPreviewHead) {
-    return;
-  }
-
+const buildOutgoingWithWipSync = (baseRows = []) => {
   const wipRows = window.dashboardDataset?.rows || [];
-  const current = (window.dashboardOutgoing?.rows || []).map((row) => ({
+  const current = (baseRows || []).map((row) => ({
     ...row,
     Qty: getRowValue(row, ["Qty", "Quantity"]) || "1",
   }));
@@ -470,14 +466,23 @@ const syncOutgoingFromWip = () => {
   });
 
   const merged = buildOutgoingDataset([...additions, ...current]);
-  window.dashboardOutgoing = computeOutgoing(merged);
+  return { dataset: computeOutgoing(merged), additionsCount: additions.length };
+};
+
+const syncOutgoingFromWip = () => {
+  if (!outgoingPreviewHead) {
+    return;
+  }
+
+  const { dataset, additionsCount } = buildOutgoingWithWipSync(window.dashboardOutgoing?.rows || []);
+  window.dashboardOutgoing = dataset;
   renderOutgoingPreview(
-    window.dashboardOutgoing,
-    additions.length
-      ? `Synced ${additions.length} new serial${additions.length === 1 ? "" : "s"} from WIP`
+    dataset,
+    additionsCount
+      ? `Synced ${additionsCount} new serial${additionsCount === 1 ? "" : "s"} from WIP`
       : "Up to date with WIP",
   );
-  saveDataset({ storageKey: outgoingStorageKey, dataset: window.dashboardOutgoing });
+  saveDataset({ storageKey: outgoingStorageKey, dataset });
 };
 
 const getRowValue = (row, labels) => {
@@ -2109,8 +2114,8 @@ clearDeliveriesButton?.addEventListener("click", () => {
 
 parseOutgoingButton?.addEventListener("click", () => {
   const added = parseOutgoingPaste(outgoingInput?.value || "");
-  const current = window.dashboardOutgoing?.rows || [];
-  const mergedRows = mergeOutgoingRows(added, current);
+  const { dataset: syncedBase } = buildOutgoingWithWipSync(window.dashboardOutgoing?.rows || []);
+  const mergedRows = mergeOutgoingRows(added, syncedBase.rows || []);
   const preview = computeOutgoing(buildOutgoingDataset(mergedRows));
   renderOutgoingPreview(
     preview,
@@ -2122,9 +2127,9 @@ parseOutgoingButton?.addEventListener("click", () => {
 
 saveOutgoingButton?.addEventListener("click", () => {
   const added = parseOutgoingPaste(outgoingInput?.value || "");
-  const current = window.dashboardOutgoing?.rows || [];
+  const { dataset: syncedBase } = buildOutgoingWithWipSync(window.dashboardOutgoing?.rows || []);
   const dataset = computeOutgoing(buildOutgoingDataset(
-    mergeOutgoingRows(added, current),
+    mergeOutgoingRows(added, syncedBase.rows || []),
   ));
   window.dashboardOutgoing = dataset;
   renderOutgoingPreview(
@@ -2147,7 +2152,7 @@ clearOutgoingButton?.addEventListener("click", () => {
 
   localStorage.removeItem(outgoingStorageKey);
   window.dashboardOutgoing = emptyDataset;
-  renderOutgoingPreview(emptyDataset);
+  syncOutgoingFromWip();
 });
 
 escalationAddButton?.addEventListener("click", addEscalationNote);
