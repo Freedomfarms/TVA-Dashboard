@@ -1769,9 +1769,9 @@ const renderPerformance = () => {
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const next14Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
-  const dailyEntries = [...daily.values()];
+  const dailySeries = [...daily.values()];
   const ltDailyEntries = [...ltDaily.values()];
-  const deliveriesThisMonth = perfSumUnitsInRange(dailyEntries, monthStart, today);
+  const deliveriesThisMonth = perfSumUnitsInRange(dailySeries, monthStart, today);
   const ltDueThisMonth = perfSumUnitsInRange(ltDailyEntries, monthStart, today);
   const ltDueNext14Days = perfSumUnitsInRange(ltDailyEntries, today, next14Days);
   const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
