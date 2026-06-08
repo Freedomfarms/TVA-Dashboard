@@ -43,15 +43,15 @@
           </a>
           <a class="nav-item" href="#">
             <span class="nav-icon nav-wallet"></span>
-            <span>Finance</span>
+            <span>Predictions</span>
           </a>
           <a class="nav-item" href="#">
             <span class="nav-icon nav-users"></span>
-            <span>Customers</span>
+            <span>Cost</span>
           </a>
           <a class="nav-item" href="#">
             <span class="nav-icon nav-message"></span>
-            <span>Messages</span>
+            <span>Holidays</span>
           </a>
           <a class="nav-item" href="#">
             <span class="nav-icon nav-cog"></span>
@@ -326,6 +326,7 @@
               <h2>June Production Readiness</h2>
               <span class="tva-wip-badge"><i></i>Anchor sync</span>
             </div>
+            <p class="tva-wip-updated" id="wip-last-updated">Last Updated: —</p>
 
             <div class="wip-table-grid">
               <div class="wip-table-card">
@@ -539,7 +540,7 @@
                   <div>
                     <p class="eyebrow">Manual Excel Intake</p>
                     <h2>Paste Outgoing spreadsheet data</h2>
-                    <p>Outgoing auto-syncs from WIP Data by Serial Number — any new serial entered in WIP is added here automatically (LT Return is computed). You can still paste rows manually below as a fallback.</p>
+                    <p>Outgoing auto-syncs from WIP Data by Serial Number and saves any new serial automatically. Manual intake only needs Serial Number, REF_DOC / PO, and Ship Date - Qty defaults to 1 and LT Return is computed.</p>
                   </div>
                   <span class="data-pill">Local draft</span>
                 </div>
@@ -547,7 +548,7 @@
                 <div class="data-import-grid">
                   <div class="data-paste-card">
                     <label for="outgoing-input">Excel rows</label>
-                    <textarea id="outgoing-input" spellcheck="false" placeholder="Serial Number&#9;REF_DOC / PO&#9;Ship Date&#9;LT Return&#10;LENCB41414&#9;4700911916&#9;06/02/2026&#9;"></textarea>
+                    <textarea id="outgoing-input" spellcheck="false" placeholder="Serial Number&#9;REF_DOC / PO&#9;Ship Date&#10;LENCB41414&#9;4700911916&#9;06/02/2026"></textarea>
                     <div class="data-actions">
                       <button class="primary-action" id="parse-outgoing-button" type="button">Preview Data</button>
                       <button class="primary-action save-action" id="save-outgoing-button" type="button">Save Outgoing</button>
@@ -613,24 +614,39 @@
         </div>
         <div class="dashboard-view" data-dashboard-view="performance" hidden>
           <section class="performance-workspace">
-            <article class="panel perf-panel">
-              <div class="panel-header">
-                <h2>Delivery Performance</h2>
-                <span class="perf-po-badge">PO:&nbsp;<span id="perf-po-label">—</span></span>
-              </div>
-              <p class="escalation-lede">Pick a part / vendor / process — deliveries are resolved through the anchor PO(s).</p>
-              <div class="perf-selectors">
-                <label class="perf-field"><span>Part Number</span><select id="perf-part"></select></label>
-                <label class="perf-field"><span>Vendor</span><select id="perf-vendor"></select></label>
-                <label class="perf-field"><span>Process</span><select id="perf-process"></select></label>
-              </div>
-              <div class="perf-kpis" id="perf-kpis"></div>
-            </article>
+            <div class="perf-overview">
+              <article class="panel perf-panel">
+                <div class="panel-header">
+                  <h2>Delivery Performance</h2>
+                  <span class="perf-po-badge">PO:&nbsp;<span id="perf-po-label">—</span></span>
+                </div>
+                <p class="escalation-lede">Pick a part / vendor / process — deliveries are resolved through the anchor PO(s).</p>
+                <div class="perf-selectors">
+                  <label class="perf-field"><span>Part Number</span><select id="perf-part"></select></label>
+                  <label class="perf-field"><span>Vendor</span><select id="perf-vendor"></select></label>
+                  <label class="perf-field"><span>Process</span><select id="perf-process"></select></label>
+                </div>
+                <div class="perf-kpis" id="perf-kpis"></div>
+              </article>
+              <article class="panel perf-risk-panel">
+                <div class="panel-header">
+                  <div>
+                    <h2>Risk Pulse Indicators</h2>
+                    <p class="perf-risk-subtitle">AI-style review of the current selection using WIP coverage, delivery pace, and committed returns.</p>
+                  </div>
+                  <span class="ai-badge"><i></i>AI Review</span>
+                </div>
+                <div class="perf-risk-grid" id="perf-risk-grid"></div>
+              </article>
+            </div>
 
             <div class="perf-main">
               <div class="perf-tables">
                 <article class="panel perf-table-panel">
-                  <div class="panel-header"><h2>Daily Deliveries</h2></div>
+                  <div class="panel-header">
+                    <h2>Daily Deliveries</h2>
+                    <button class="perf-export-button" id="perf-export-daily" type="button" aria-label="Export daily deliveries"></button>
+                  </div>
                   <div class="perf-table-shell">
                     <table class="perf-table">
                       <thead><tr><th>Date</th><th>Units</th></tr></thead>
@@ -639,7 +655,10 @@
                   </div>
                 </article>
                 <article class="panel perf-table-panel">
-                  <div class="panel-header"><h2>Weekly</h2></div>
+                  <div class="panel-header">
+                    <h2>Weekly</h2>
+                    <button class="perf-export-button" id="perf-export-weekly" type="button" aria-label="Export weekly deliveries"></button>
+                  </div>
                   <div class="perf-table-shell">
                     <table class="perf-table">
                       <thead><tr><th>Week</th><th>Units</th></tr></thead>
@@ -648,7 +667,10 @@
                   </div>
                 </article>
                 <article class="panel perf-table-panel">
-                  <div class="panel-header"><h2>Monthly</h2></div>
+                  <div class="panel-header">
+                    <h2>Monthly</h2>
+                    <button class="perf-export-button" id="perf-export-monthly" type="button" aria-label="Export monthly deliveries"></button>
+                  </div>
                   <div class="perf-table-shell">
                     <table class="perf-table">
                       <thead><tr><th>Month</th><th>Units</th></tr></thead>

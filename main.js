@@ -1,6 +1,7 @@
 import "./styles.css";
 import defaultWipRaw from "./wip-data.txt?raw";
 import defaultDeliveriesRaw from "./deliveries-data.txt?raw";
+import defaultOutgoingRaw from "./outgoing-data.txt?raw";
 
 const scenicPanel = document.querySelector(".scape-stars");
 const dashboardTitle = document.querySelector("#dashboard-title");
@@ -48,6 +49,7 @@ const militaryWipBody = document.querySelector("#military-wip-body");
 const commercialWipBody = document.querySelector("#commercial-wip-body");
 const militaryWipCount = document.querySelector("#military-wip-count");
 const commercialWipCount = document.querySelector("#commercial-wip-count");
+const wipLastUpdatedLabel = document.querySelector("#wip-last-updated");
 const escalationFeed = document.querySelector("#escalation-feed");
 const escalationAddButton = document.querySelector("#escalation-add");
 const escalationAddButtonTab = document.querySelector("#escalation-add-tab");
@@ -64,9 +66,13 @@ const perfKpis = document.querySelector("#perf-kpis");
 const perfDailyBody = document.querySelector("#perf-daily-body");
 const perfWeeklyBody = document.querySelector("#perf-weekly-body");
 const perfMonthlyBody = document.querySelector("#perf-monthly-body");
+const perfExportDailyButton = document.querySelector("#perf-export-daily");
+const perfExportWeeklyButton = document.querySelector("#perf-export-weekly");
+const perfExportMonthlyButton = document.querySelector("#perf-export-monthly");
 const perfChartMonthly = document.querySelector("#perf-chart-monthly");
 const perfChartYtd = document.querySelector("#perf-chart-ytd");
 const perfMonthSelect = document.querySelector("#perf-month");
+const perfRiskGrid = document.querySelector("#perf-risk-grid");
 const emptyDataset = { headers: [], rows: [] };
 const datasetStorageKey = "dashboardDataset";
 const anchorStorageKey = "dashboardDataAnchor";
@@ -76,6 +82,13 @@ const deliveriesStorageKey = "dashboardDeliveries";
 const storedDeliveries = localStorage.getItem(deliveriesStorageKey);
 const outgoingStorageKey = "dashboardOutgoing";
 const storedOutgoing = localStorage.getItem(outgoingStorageKey);
+const wipUpdatedAtKey = "dashboardWipUpdatedAt";
+let wipLastUpdatedAt = localStorage.getItem(wipUpdatedAtKey) || "";
+const perfTableExportState = {
+  daily: { rows: [], columns: ["Date", "Units"] },
+  weekly: { rows: [], columns: ["Week", "Units"] },
+  monthly: { rows: [], columns: ["Month", "Units"] },
+};
 const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
 \t4700912755\t4119904\tATA\tCBN\t0\t12\tMilitary
 \t4700912732\t4119905\tATA\tCBN\t0\t12\tMilitary
@@ -435,13 +448,9 @@ const OUTGOING_HEADERS = ["Serial Number", "REF_DOC / PO", "Ship Date", "Qty", "
 
 const buildOutgoingDataset = (rows) => ({ headers: OUTGOING_HEADERS, rows });
 
-const syncOutgoingFromWip = () => {
-  if (!outgoingPreviewHead) {
-    return;
-  }
-
+const buildOutgoingWithWipSync = (baseRows = []) => {
   const wipRows = window.dashboardDataset?.rows || [];
-  const current = (window.dashboardOutgoing?.rows || []).map((row) => ({
+  const current = (baseRows || []).map((row) => ({
     ...row,
     Qty: getRowValue(row, ["Qty", "Quantity"]) || "1",
   }));
@@ -468,14 +477,23 @@ const syncOutgoingFromWip = () => {
   });
 
   const merged = buildOutgoingDataset([...additions, ...current]);
-  window.dashboardOutgoing = computeOutgoing(merged);
+  return { dataset: computeOutgoing(merged), additionsCount: additions.length };
+};
+
+const syncOutgoingFromWip = () => {
+  if (!outgoingPreviewHead) {
+    return;
+  }
+
+  const { dataset, additionsCount } = buildOutgoingWithWipSync(window.dashboardOutgoing?.rows || []);
+  window.dashboardOutgoing = dataset;
   renderOutgoingPreview(
-    window.dashboardOutgoing,
-    additions.length
-      ? `Synced ${additions.length} new serial${additions.length === 1 ? "" : "s"} from WIP`
+    dataset,
+    additionsCount
+      ? `Synced ${additionsCount} new serial${additionsCount === 1 ? "" : "s"} from WIP`
       : "Up to date with WIP",
   );
-  saveDataset({ storageKey: outgoingStorageKey, dataset: window.dashboardOutgoing });
+  saveDataset({ storageKey: outgoingStorageKey, dataset });
 };
 
 const getRowValue = (row, labels) => {
@@ -581,6 +599,7 @@ const renderReadinessTable = ({ rows, body, count }) => {
 const renderProductionReadiness = () => {
   const wipIndex = buildWipQtyIndex(window.dashboardDataset);
   const readinessRows = buildReadinessRows(window.dashboardDataAnchor, wipIndex);
+  renderWipLastUpdated();
 
   renderReadinessTable({
     rows: readinessRows.filter(({ bu }) => bu.toLowerCase() === "military"),
@@ -628,6 +647,40 @@ const toIsoDate = (date) => {
 };
 
 const todayIso = () => toIsoDate(new Date());
+
+const formatWipUpdatedAt = (iso) => {
+  if (!iso) {
+    return "Last Updated: -";
+  }
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "Last Updated: -";
+  }
+  return `Last Updated: ${date
+    .toLocaleString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "2-digit",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .replace(",", "")
+    .replace(" AM", "am")
+    .replace(" PM", "pm")}`;
+};
+
+const renderWipLastUpdated = () => {
+  if (wipLastUpdatedLabel) {
+    wipLastUpdatedLabel.textContent = formatWipUpdatedAt(wipLastUpdatedAt);
+  }
+};
+
+const updateWipLastUpdated = (date = new Date()) => {
+  wipLastUpdatedAt = date.toISOString();
+  localStorage.setItem(wipUpdatedAtKey, wipLastUpdatedAt);
+  renderWipLastUpdated();
+};
 
 const formatNoteDate = (iso) => {
   const date = iso ? new Date(`${iso}T00:00:00`) : new Date();
@@ -1267,6 +1320,8 @@ const perfDayRange = (startDate, endDate) => {
   return days;
 };
 
+const perfEndOfMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
 const renderPerfTable = (body, entries, labelFn) => {
   if (!body) {
     return;
@@ -1321,6 +1376,97 @@ const renderPerfKpis = (totalUnits, deliveryDays, lastDate) => {
   });
 };
 
+const updatePerfExportButton = (button, rows) => {
+  if (button) {
+    button.disabled = !rows.length;
+  }
+};
+
+const setPerfTableExportState = (key, rows, columns, button) => {
+  perfTableExportState[key] = { rows, columns };
+  updatePerfExportButton(button, rows);
+};
+
+const perfExportFileToken = (value, fallback) => String(value || fallback)
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, "-")
+  .replace(/^-+|-+$/g, "")
+  || fallback;
+
+const downloadPerfTableCsv = (key) => {
+  const config = perfTableExportState[key];
+  if (!config?.rows?.length) {
+    return;
+  }
+
+  const part = perfExportFileToken(perfPartSelect?.value, "part");
+  const vendor = perfExportFileToken(perfVendorSelect?.value, "vendor");
+  const process = perfExportFileToken(perfProcessSelect?.value, "process");
+  const escapeCsv = (value) => `"${String(value).replace(/"/g, "\"\"")}"`;
+  const csv = [
+    config.columns.map(escapeCsv).join(","),
+    ...config.rows.map((row) => row.map(escapeCsv).join(",")),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `performance-${key}-${part}-${vendor}-${process}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+};
+
+const perfRiskTone = {
+  low: { label: "Low Risk", className: "perf-risk-low" },
+  medium: { label: "Medium Risk", className: "perf-risk-medium" },
+  high: { label: "High Risk", className: "perf-risk-high" },
+};
+
+const perfDayStamp = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+
+const perfSumUnitsInRange = (entries, startDate, endDate) => {
+  const start = perfDayStamp(startDate);
+  const end = perfDayStamp(endDate);
+  return entries.reduce((sum, entry) => {
+    const stamp = perfDayStamp(entry.date);
+    return stamp >= start && stamp <= end ? sum + entry.units : sum;
+  }, 0);
+};
+
+const perfRadarMarkup = () =>
+  `<svg viewBox="0 0 120 120" class="perf-risk-radar" aria-hidden="true">`
+  + '<circle cx="60" cy="60" r="40" class="perf-risk-ring-outer"/>'
+  + '<circle cx="60" cy="60" r="31" class="perf-risk-ring"/>'
+  + '<circle cx="60" cy="60" r="22" class="perf-risk-ring"/>'
+  + '<circle cx="60" cy="60" r="13" class="perf-risk-core"/>'
+  + '<path d="M12 60H108" class="perf-risk-crosshair"/>'
+  + '<path d="M60 12V108" class="perf-risk-crosshair"/>'
+  + '<polyline points="24,60 42,60 48,46 54,74 61,50 67,60 76,60 82,54 88,66 96,60" class="perf-risk-wave"/>'
+  + "</svg>";
+
+const renderPerfRiskPanel = (items) => {
+  if (!perfRiskGrid) {
+    return;
+  }
+  if (!items.length) {
+    perfRiskGrid.innerHTML = '<div class="perf-risk-empty">Select a valid part, vendor, and process to generate the AI risk review.</div>';
+    return;
+  }
+
+  perfRiskGrid.innerHTML = items.map((item) => {
+    const tone = perfRiskTone[item.level] || perfRiskTone.medium;
+    return `<section class="perf-risk-tile ${tone.className}">`
+      + `<div class="perf-risk-name">${item.name}</div>`
+      + `${perfRadarMarkup()}`
+      + `<div class="perf-risk-state">${tone.label}</div>`
+      + `<div class="perf-risk-metric">${item.metric}</div>`
+      + `<div class="perf-risk-detail">${item.detail}</div>`
+      + "</section>";
+  }).join("");
+};
+
 const perfNiceMax = (value) => {
   if (value <= 0) {
     return 1;
@@ -1331,7 +1477,7 @@ const perfNiceMax = (value) => {
   return nice * pow;
 };
 
-const renderComboChart = (container, data) => {
+const renderComboChart = (container, data, options = {}) => {
   if (!container) {
     return;
   }
@@ -1348,12 +1494,47 @@ const renderComboChart = (container, data) => {
   const padB = 30;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
-  const rawMax = Math.max(1, ...data.map((d) => Math.max(d.bar, d.line)));
+  const isNeonVariant = options.variant === "neon-monthly";
+  const chartId = String(container.id || "perf-chart").replace(/[^a-z0-9_-]/gi, "-");
+  const rawMax = Math.max(
+    1,
+    ...data.map((d) => Math.max(Number.isFinite(d.bar) ? d.bar : 0, Number.isFinite(d.line) ? d.line : 0)),
+  );
   const maxV = perfNiceMax(rawMax);
   const slot = plotW / data.length;
   const cx = (i) => padL + slot * (i + 0.5);
   const cy = (v) => padT + plotH * (1 - v / maxV);
   const barW = Math.min(slot * 0.5, 30);
+  const labelMinSpacing = options.labelMinSpacing || 48;
+  const renderedWidth = container.clientWidth || W;
+  const maxLabels = Math.max(1, Math.floor((renderedWidth - padL - padR) / labelMinSpacing));
+  const labelStep = Math.max(1, Math.ceil(data.length / maxLabels), options.minLabelStep || 1);
+  const defs = isNeonVariant
+    ? `<defs>`
+      + `<linearGradient id="${chartId}-bar-gradient" x1="0" y1="0" x2="0" y2="1">`
+      + `<stop offset="0%" stop-color="#63f6ff" stop-opacity="0.95"/>`
+      + `<stop offset="45%" stop-color="#4d8dff" stop-opacity="0.72"/>`
+      + `<stop offset="100%" stop-color="#4d8dff" stop-opacity="0.08"/>`
+      + `</linearGradient>`
+      + `<linearGradient id="${chartId}-line-gradient" x1="0" y1="0" x2="1" y2="0">`
+      + `<stop offset="0%" stop-color="#8a5cff"/>`
+      + `<stop offset="50%" stop-color="#5ee0ff"/>`
+      + `<stop offset="100%" stop-color="#39f0a5"/>`
+      + `</linearGradient>`
+      + `<linearGradient id="${chartId}-area-gradient" x1="0" y1="0" x2="0" y2="1">`
+      + `<stop offset="0%" stop-color="#5ee0ff" stop-opacity="0.18"/>`
+      + `<stop offset="100%" stop-color="#5ee0ff" stop-opacity="0"/>`
+      + `</linearGradient>`
+      + `<filter id="${chartId}-bar-glow" x="-40%" y="-20%" width="180%" height="180%">`
+      + `<feGaussianBlur stdDeviation="5" result="blur"/>`
+      + `<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`
+      + `</filter>`
+      + `<filter id="${chartId}-line-glow" x="-10%" y="-30%" width="140%" height="170%">`
+      + `<feGaussianBlur stdDeviation="3" result="blur"/>`
+      + `<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`
+      + `</filter>`
+      + `</defs>`
+    : "";
 
   const grid = [0, 0.25, 0.5, 0.75, 1]
     .map((f) => {
@@ -1363,24 +1544,53 @@ const renderComboChart = (container, data) => {
         + `<text x="${padL - 6}" y="${(yy + 3).toFixed(1)}" class="perf-axis-y">${val}</text>`;
     })
     .join("");
+  const plotFrame = isNeonVariant
+    ? `<rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" rx="20" class="perf-plot-shell"/>`
+      + `<rect x="${padL + 1.5}" y="${padT + 1.5}" width="${plotW - 3}" height="${plotH - 3}" rx="18" class="perf-plot-outline"/>`
+      + `<circle cx="${padL + plotW * 0.28}" cy="${padT + plotH * 0.28}" r="${plotH * 0.22}" class="perf-plot-orb perf-plot-orb-left"/>`
+      + `<circle cx="${padL + plotW * 0.78}" cy="${padT + plotH * 0.18}" r="${plotH * 0.16}" class="perf-plot-orb perf-plot-orb-right"/>`
+    : "";
 
   const bars = data
     .map((d, i) => {
+      if (!Number.isFinite(d.bar)) {
+        return "";
+      }
       const x = cx(i) - barW / 2;
       const yTop = cy(d.bar);
       const h = Math.max(0, padT + plotH - yTop);
-      return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" class="perf-bar"/>`;
+      const fill = isNeonVariant ? ` fill="url(#${chartId}-bar-gradient)" filter="url(#${chartId}-bar-glow)"` : "";
+      const className = isNeonVariant ? "perf-bar perf-bar-neon" : "perf-bar";
+      return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="${isNeonVariant ? 8 : 3}" class="${className}"${fill}/>`;
     })
     .join("");
 
   const linePts = data.map((d, i) => `${cx(i).toFixed(1)},${cy(d.line).toFixed(1)}`).join(" ");
-  const line = `<polyline points="${linePts}" class="perf-line"/>`;
+  const lineArea = isNeonVariant
+    ? `<polygon points="${padL},${padT + plotH} ${linePts} ${W - padR},${padT + plotH}" class="perf-line-area" fill="url(#${chartId}-area-gradient)"/>`
+    : "";
+  const line = isNeonVariant
+    ? `<polyline points="${linePts}" class="perf-line perf-line-neon" stroke="url(#${chartId}-line-gradient)" filter="url(#${chartId}-line-glow)"/>`
+    : `<polyline points="${linePts}" class="perf-line"/>`;
   const dots = data
-    .map((d, i) => `<circle cx="${cx(i).toFixed(1)}" cy="${cy(d.line).toFixed(1)}" r="3.2" class="perf-dot"/>`)
+    .map((d, i) => {
+      const x = cx(i).toFixed(1);
+      const y = cy(d.line).toFixed(1);
+      return isNeonVariant
+        ? `<circle cx="${x}" cy="${y}" r="7.2" class="perf-dot-halo"/>`
+          + `<circle cx="${x}" cy="${y}" r="3.1" class="perf-dot perf-dot-neon"/>`
+        : `<circle cx="${x}" cy="${y}" r="3.2" class="perf-dot"/>`;
+    })
     .join("");
 
   const xLabels = data
-    .map((d, i) => `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x">${d.label}</text>`)
+    .map((d, i) => {
+      const showLabel = i % labelStep === 0 || (options.forceLastLabel && i === data.length - 1);
+      if (!showLabel) {
+        return "";
+      }
+      return `<text x="${cx(i).toFixed(1)}" y="${H - 9}" class="perf-axis-x${isNeonVariant ? " perf-axis-x-neon" : ""}">${d.displayLabel || d.label}</text>`;
+    })
     .join("");
 
   const hovers = data
@@ -1388,8 +1598,8 @@ const renderComboChart = (container, data) => {
     .join("");
 
   container.innerHTML =
-    `<svg viewBox="0 0 ${W} ${H}" class="perf-svg" preserveAspectRatio="xMidYMid meet" role="img">`
-    + `${grid}${bars}${line}${dots}${xLabels}${hovers}</svg>`
+    `<svg viewBox="0 0 ${W} ${H}" class="perf-svg${isNeonVariant ? " perf-svg-neon" : ""}" preserveAspectRatio="xMidYMid meet" role="img">`
+    + `${defs}${plotFrame}${grid}${lineArea}${bars}${line}${dots}${xLabels}${hovers}</svg>`
     + '<div class="perf-tooltip" hidden></div>';
 
   const tip = container.querySelector(".perf-tooltip");
@@ -1398,8 +1608,8 @@ const renderComboChart = (container, data) => {
       const item = data[Number(rect.dataset.i)];
       tip.hidden = false;
       tip.innerHTML =
-        `<strong>${item.label}</strong>`
-        + `<span class="tt-bar">Deliveries: ${formatCount(item.bar)}</span>`
+        `<strong>${item.tooltipLabel || item.label}</strong>`
+        + `<span class="tt-bar">Deliveries: ${Number.isFinite(item.bar) ? formatCount(item.bar) : "\u2014"}</span>`
         + `<span class="tt-line">LT Return: ${formatCount(item.line)}</span>`;
       const rect2 = container.getBoundingClientRect();
       let x = event.clientX - rect2.left + 12;
@@ -1451,6 +1661,10 @@ const renderPerformance = () => {
     perfPoLabel.textContent = poSet.size ? [...poSet].join("  +  ") : "No PO on file";
   }
 
+  const wipIndex = buildWipQtyIndex(window.dashboardDataset);
+  const currentWip = [...poSet].reduce((sum, po) => sum + (wipIndex.get(po) || 0), 0);
+  const requiredWip = matchingRows.reduce((sum, row) => sum + toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"])), 0);
+
   const deliveries = (window.dashboardDeliveries?.rows || []).filter((row) =>
     poSet.has(String(getRowValue(row, ["PO", "Incoming PO"])).trim()),
   );
@@ -1495,13 +1709,43 @@ const renderPerformance = () => {
       units: daily.get(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`)?.units || 0,
     }));
   }
-  renderPerfTable(perfDailyBody, dailyRows.sort(byDateDesc), (date) =>
+  const dailyEntries = dailyRows.sort(byDateDesc);
+  setPerfTableExportState(
+    "daily",
+    dailyEntries.map(({ date, units }) => [
+      date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      formatCount(units),
+    ]),
+    ["Date", "Units"],
+    perfExportDailyButton,
+  );
+  renderPerfTable(perfDailyBody, dailyEntries, (date) =>
     date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
   );
-  renderPerfTable(perfWeeklyBody, [...weekly.values()].sort(byDateDesc), (date) =>
+  const weeklyEntries = [...weekly.values()].sort(byDateDesc);
+  setPerfTableExportState(
+    "weekly",
+    weeklyEntries.map(({ date, units }) => [
+      `Week of ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+      formatCount(units),
+    ]),
+    ["Week", "Units"],
+    perfExportWeeklyButton,
+  );
+  renderPerfTable(perfWeeklyBody, weeklyEntries, (date) =>
     `Week of ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
   );
-  renderPerfTable(perfMonthlyBody, [...monthly.values()].sort(byDateDesc), (date) =>
+  const monthlyEntries = [...monthly.values()].sort(byDateDesc);
+  setPerfTableExportState(
+    "monthly",
+    monthlyEntries.map(({ date, units }) => [
+      date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+      formatCount(units),
+    ]),
+    ["Month", "Units"],
+    perfExportMonthlyButton,
+  );
+  renderPerfTable(perfMonthlyBody, monthlyEntries, (date) =>
     date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
   );
 
@@ -1521,6 +1765,49 @@ const renderPerformance = () => {
     const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
     ltDaily.set(dayKey, { date, units: (ltDaily.get(dayKey)?.units || 0) + qty });
   });
+
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const next14Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
+  const dailySeries = [...daily.values()];
+  const ltDailyEntries = [...ltDaily.values()];
+  const deliveriesThisMonth = perfSumUnitsInRange(dailySeries, monthStart, today);
+  const ltDueThisMonth = perfSumUnitsInRange(ltDailyEntries, monthStart, today);
+  const ltDueNext14Days = perfSumUnitsInRange(ltDailyEntries, today, next14Days);
+  const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
+  const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
+  const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
+  const riskItems = matchingRows.length
+    ? [
+      {
+        name: "WIP",
+        level: requiredWip <= 0 ? "low" : wipCoverage >= 1 ? "low" : wipCoverage >= 0.6 ? "medium" : "high",
+        metric: requiredWip > 0
+          ? `${formatCount(currentWip)} / ${formatCount(requiredWip)} min`
+          : `${formatCount(currentWip)} on hand`,
+        detail: requiredWip > 0
+          ? `${Math.round(wipCoverage * 100)}% of minimum WIP covered across the active PO set.`
+          : "No minimum WIP target on the active anchor rows.",
+      },
+      {
+        name: "Deliveries",
+        level: ltDueThisMonth <= 0 ? "low" : deliveryPace >= 0.85 ? "low" : deliveryPace >= 0.55 ? "medium" : "high",
+        metric: `${formatCount(deliveriesThisMonth)} / ${formatCount(ltDueThisMonth)} month`,
+        detail: ltDueThisMonth > 0
+          ? "Current-month receipts compared against LT returns due through today."
+          : "No LT-return demand posted for the current month.",
+      },
+      {
+        name: "Commits",
+        level: ltDueNext14Days <= 0 ? "low" : returnCoverage >= 1 ? "low" : returnCoverage >= 0.7 ? "medium" : "high",
+        metric: `${formatCount(ltDueNext14Days)} due / 14d`,
+        detail: ltDueNext14Days > 0
+          ? "Upcoming committed return load over the next 14 days versus current WIP."
+          : "Light commit horizon over the next two weeks.",
+      },
+    ]
+    : [];
+  renderPerfRiskPanel(riskItems);
 
   const monthKeys = [...new Set([...monthly.keys(), ...ltMonthly.keys()])]
     .map((key) => {
@@ -1544,30 +1831,38 @@ const renderPerformance = () => {
   }
 
   const [selYear, selMonth] = perfSelectedMonth ? perfSelectedMonth.split("-").map(Number) : [null, null];
-  const monthDays = [...new Set([...daily.keys(), ...ltDaily.keys()])]
-    .map((key) => {
-      const [year, month, day] = key.split("-").map(Number);
-      return { year, month, date: new Date(year, month, day) };
-    })
-    .filter((dk) => dk.year === selYear && dk.month === selMonth)
-    .sort((a, b) => a.date - b.date);
-
+  const selectedMonthDate = Number.isFinite(selYear) && Number.isFinite(selMonth)
+    ? new Date(selYear, selMonth, 1)
+    : null;
   const monthlyChartData = [];
-  if (monthDays.length) {
+  if (selectedMonthDate) {
+    const monthStart = new Date(selYear, selMonth, 1);
+    const monthEnd = perfEndOfMonth(selectedMonthDate);
     let cumBar = 0;
     let cumLine = 0;
-    perfDayRange(monthDays[0].date, monthDays[monthDays.length - 1].date).forEach((date) => {
+    // Keep the full selected month on the x-axis, but only show delivery bars through today.
+    perfDayRange(monthStart, monthEnd).forEach((date) => {
       const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      cumBar += daily.get(key)?.units || 0;
+      const isPastOrToday = date <= today;
+      if (isPastOrToday) {
+        cumBar += daily.get(key)?.units || 0;
+      }
       cumLine += ltDaily.get(key)?.units || 0;
       monthlyChartData.push({
-        label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        bar: cumBar,
+        label: date.toLocaleDateString("en-US", { month: "numeric", day: "numeric" }),
+        tooltipLabel: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        displayLabel: date.toLocaleDateString("en-US", { month: "numeric", day: "numeric" }),
+        bar: isPastOrToday ? cumBar : null,
         line: cumLine,
       });
     });
   }
-  renderComboChart(perfChartMonthly, monthlyChartData);
+  renderComboChart(perfChartMonthly, monthlyChartData, {
+    labelMinSpacing: 72,
+    minLabelStep: 3,
+    forceLastLabel: true,
+    variant: "neon-monthly",
+  });
 
   const ytdYear = new Date().getFullYear();
   const yearMonths = monthKeys.filter((mk) => mk.year === ytdYear).map((mk) => mk.month);
@@ -1679,9 +1974,73 @@ const loadDeliveriesTemplate = () => {
   renderDeliveriesPreview(dataset, "Template loaded");
 };
 
+const normalizeOutgoingRow = (row) => ({
+  "Serial Number": getRowValue(row, ["Serial Number", "SERNR", "SN"]),
+  "REF_DOC / PO": getRowValue(row, ["REF_DOC / PO", "REF_DOC", "PO"]),
+  "Ship Date": getRowValue(row, ["Ship Date", "Date"]),
+  Qty: getRowValue(row, ["Qty", "Quantity"]) || "1",
+  "LT Return": getRowValue(row, ["LT Return"]) || "",
+});
+
+const parseOutgoingPaste = (text) => {
+  if (!text || !text.trim()) {
+    return [];
+  }
+
+  const parsed = parseSpreadsheetData(text);
+  const headerTokens = parsed.headers.map((header) => String(header).toLowerCase().trim());
+  const hasHeader = headerTokens.includes("sernr")
+    || headerTokens.includes("serial number")
+    || (headerTokens.includes("ref_doc / po") && headerTokens.includes("ship date"));
+
+  if (hasHeader) {
+    return parsed.rows.map((row) => ({
+      "Serial Number": getRowValue(row, ["Serial Number", "SERNR", "SN"]),
+      "REF_DOC / PO": getRowValue(row, ["REF_DOC / PO", "REF_DOC", "PO"]),
+      "Ship Date": getRowValue(row, ["Ship Date", "Date"]),
+      Qty: "1",
+      "LT Return": "",
+    }));
+  }
+
+  const lines = text.trim().split(/\r?\n/).filter((line) => line.trim().length > 0);
+  const delimiter = text.includes("\t") ? "\t" : ",";
+  return lines.map((line) => {
+    const cells = parseDelimitedLine(line, delimiter);
+    return {
+      "Serial Number": cells[0] || "",
+      "REF_DOC / PO": cells[1] || "",
+      "Ship Date": cells[2] || "",
+      Qty: "1",
+      "LT Return": "",
+    };
+  });
+};
+
+const mergeOutgoingRows = (incomingRows, existingRows) => {
+  const merged = new Map();
+  existingRows.forEach((row) => {
+    const serial = String(getRowValue(row, ["Serial Number", "SN"])).trim();
+    if (serial) {
+      merged.set(serial, { ...row });
+    }
+  });
+  incomingRows.forEach((row) => {
+    const serial = String(getRowValue(row, ["Serial Number", "SN"])).trim();
+    if (serial) {
+      merged.set(serial, row);
+    }
+  });
+  return [...merged.values()];
+};
+
 const loadOutgoingTemplate = () => {
-  window.dashboardOutgoing = buildOutgoingDataset([]);
-  syncOutgoingFromWip();
+  const parsed = parseSpreadsheetData(defaultOutgoingRaw);
+  const dataset = computeOutgoing(buildOutgoingDataset(
+    parsed.rows.map((row) => normalizeOutgoingRow(row)),
+  ));
+  window.dashboardOutgoing = dataset;
+  renderOutgoingPreview(dataset, "Template loaded");
 };
 
 navItems.forEach((item) => {
@@ -1774,7 +2133,9 @@ if (storedOutgoing) {
   try {
     const dataset = JSON.parse(storedOutgoing);
     if (isOutgoingDataset(dataset)) {
-      window.dashboardOutgoing = computeOutgoing(buildOutgoingDataset(dataset.rows || []));
+      window.dashboardOutgoing = computeOutgoing(buildOutgoingDataset(
+        (dataset.rows || []).map((row) => normalizeOutgoingRow(row)),
+      ));
       syncOutgoingFromWip();
     } else {
       localStorage.removeItem(outgoingStorageKey);
@@ -1792,6 +2153,7 @@ parseDataButton?.addEventListener("click", () => {
   const dataset = withWipQty(parseSpreadsheetData(dataInput?.value || ""));
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
+  updateWipLastUpdated();
   renderProductionReadiness();
   syncOutgoingFromWip();
 });
@@ -1800,6 +2162,7 @@ saveDataButton?.addEventListener("click", () => {
   const dataset = withWipQty(parseSpreadsheetData(dataInput?.value || ""));
   window.dashboardDataset = dataset;
   renderDataPreview(dataset);
+  updateWipLastUpdated();
   renderProductionReadiness();
   saveDataset({ storageKey: datasetStorageKey, dataset, status: dataStorageStatus });
   syncOutgoingFromWip();
@@ -1813,6 +2176,7 @@ clearDataButton?.addEventListener("click", () => {
   localStorage.removeItem(datasetStorageKey);
   window.dashboardDataset = emptyDataset;
   renderDataPreview(emptyDataset);
+  updateWipLastUpdated();
   renderProductionReadiness();
 });
 
@@ -1876,16 +2240,36 @@ clearDeliveriesButton?.addEventListener("click", () => {
 });
 
 parseOutgoingButton?.addEventListener("click", () => {
-  const dataset = computeOutgoing(parseSpreadsheetData(outgoingInput?.value || ""));
-  window.dashboardOutgoing = dataset;
-  renderOutgoingPreview(dataset);
+  const added = parseOutgoingPaste(outgoingInput?.value || "");
+  const { dataset: syncedBase } = buildOutgoingWithWipSync(window.dashboardOutgoing?.rows || []);
+  const mergedRows = mergeOutgoingRows(added, syncedBase.rows || []);
+  const preview = computeOutgoing(buildOutgoingDataset(mergedRows));
+  renderOutgoingPreview(
+    preview,
+    added.length
+      ? `Preview - ${added.length} new row${added.length === 1 ? "" : "s"} to add (not saved)`
+      : undefined,
+  );
 });
 
 saveOutgoingButton?.addEventListener("click", () => {
-  const dataset = computeOutgoing(parseSpreadsheetData(outgoingInput?.value || ""));
+  const added = parseOutgoingPaste(outgoingInput?.value || "");
+  const { dataset: syncedBase } = buildOutgoingWithWipSync(window.dashboardOutgoing?.rows || []);
+  const dataset = computeOutgoing(buildOutgoingDataset(
+    mergeOutgoingRows(added, syncedBase.rows || []),
+  ));
   window.dashboardOutgoing = dataset;
-  renderOutgoingPreview(dataset);
+  renderOutgoingPreview(
+    dataset,
+    added.length
+      ? `Added ${added.length} row${added.length === 1 ? "" : "s"}`
+      : undefined,
+  );
   saveDataset({ storageKey: outgoingStorageKey, dataset, status: outgoingStorageStatus });
+
+  if (outgoingInput) {
+    outgoingInput.value = "";
+  }
 });
 
 clearOutgoingButton?.addEventListener("click", () => {
@@ -1895,8 +2279,12 @@ clearOutgoingButton?.addEventListener("click", () => {
 
   localStorage.removeItem(outgoingStorageKey);
   window.dashboardOutgoing = emptyDataset;
-  renderOutgoingPreview(emptyDataset);
+  syncOutgoingFromWip();
 });
+
+perfExportDailyButton?.addEventListener("click", () => downloadPerfTableCsv("daily"));
+perfExportWeeklyButton?.addEventListener("click", () => downloadPerfTableCsv("weekly"));
+perfExportMonthlyButton?.addEventListener("click", () => downloadPerfTableCsv("monthly"));
 
 escalationAddButton?.addEventListener("click", addEscalationNote);
 escalationAddButtonTab?.addEventListener("click", addEscalationNote);

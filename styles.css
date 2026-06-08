@@ -1604,6 +1604,14 @@ body::before {
   animation: wip-pulse 2.4s ease-in-out infinite;
 }
 
+.tva-wip-updated {
+  margin: -0.45rem 0 0;
+  color: rgba(180, 196, 244, 0.68);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
 @keyframes wip-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }
@@ -2451,6 +2459,19 @@ body::before {
   gap: 0.95rem;
 }
 
+.perf-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.95rem;
+  align-items: stretch;
+}
+
+.perf-panel,
+.perf-risk-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .perf-po-badge {
   flex: 0 0 auto;
   border: 1px solid rgba(94, 196, 255, 0.34);
@@ -2510,6 +2531,166 @@ body::before {
   margin-top: 0.95rem;
 }
 
+.perf-risk-subtitle {
+  margin: 0.28rem 0 0;
+  max-width: 32rem;
+  color: rgba(176, 190, 232, 0.68);
+  font-size: 0.6rem;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+}
+
+.perf-risk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+
+.perf-risk-tile {
+  --risk: #6cf0c0;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  min-height: 12.4rem;
+  padding: 0.72rem 0.6rem 0.78rem;
+  border: 1px solid rgba(120, 160, 255, 0.12);
+  border-radius: 1.05rem;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(78, 128, 255, 0.08), transparent 38%),
+    linear-gradient(160deg, rgba(16, 26, 60, 0.54), rgba(8, 14, 34, 0.76));
+  overflow: hidden;
+}
+
+.perf-risk-tile::before {
+  content: "";
+  position: absolute;
+  inset: 20% 18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--risk), transparent 68%);
+  opacity: 0.85;
+  pointer-events: none;
+  filter: blur(12px);
+}
+
+.perf-risk-name,
+.perf-risk-state {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.perf-risk-name {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--risk);
+  text-shadow: 0 0 14px currentColor;
+}
+
+.perf-risk-radar {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 7rem);
+  aspect-ratio: 1;
+  color: var(--risk);
+}
+
+.perf-risk-ring,
+.perf-risk-ring-outer,
+.perf-risk-crosshair {
+  fill: none;
+  stroke: currentColor;
+}
+
+.perf-risk-ring {
+  stroke-width: 2;
+  stroke-opacity: 0.3;
+}
+
+.perf-risk-ring-outer {
+  stroke-width: 1.8;
+  stroke-dasharray: 3.5 6.5;
+  stroke-opacity: 0.18;
+}
+
+.perf-risk-crosshair {
+  stroke-width: 1.2;
+  stroke-opacity: 0.14;
+}
+
+.perf-risk-core {
+  fill: currentColor;
+  fill-opacity: 0.12;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-opacity: 0.34;
+  filter: drop-shadow(0 0 12px currentColor);
+}
+
+.perf-risk-wave {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 7px currentColor);
+}
+
+.perf-risk-state {
+  margin-top: -0.1rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--risk);
+}
+
+.perf-risk-metric,
+.perf-risk-detail {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.perf-risk-metric {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(232, 240, 255, 0.9);
+}
+
+.perf-risk-detail {
+  max-width: 9rem;
+  font-size: 0.56rem;
+  line-height: 1.28;
+  color: rgba(184, 197, 234, 0.72);
+}
+
+.perf-risk-low {
+  --risk: #39f0a5;
+}
+
+.perf-risk-medium {
+  --risk: #ffb347;
+}
+
+.perf-risk-high {
+  --risk: #ff5e63;
+}
+
+.perf-risk-empty {
+  grid-column: 1 / -1;
+  padding: 1.2rem;
+  border: 1px dashed rgba(120, 160, 255, 0.2);
+  border-radius: 0.9rem;
+  text-align: center;
+  color: rgba(180, 196, 244, 0.64);
+  font-size: 0.72rem;
+}
+
 .perf-kpi {
   position: relative;
   overflow: hidden;
@@ -2557,6 +2738,56 @@ body::before {
 .perf-table-panel {
   display: flex;
   flex-direction: column;
+}
+
+.perf-export-button {
+  position: relative;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid rgba(120, 160, 255, 0.18);
+  border-radius: 0.58rem;
+  background: rgba(9, 16, 38, 0.82);
+  color: rgba(222, 232, 255, 0.82);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.perf-export-button::before,
+.perf-export-button::after {
+  position: absolute;
+  left: 50%;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.perf-export-button::before {
+  top: 0.42rem;
+  width: 0.52rem;
+  height: 0.62rem;
+  border-left: 1.8px solid currentColor;
+  border-right: 1.8px solid transparent;
+}
+
+.perf-export-button::after {
+  bottom: 0.42rem;
+  width: 0.8rem;
+  height: 0.28rem;
+  border: 1.8px solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 0.22rem 0.22rem;
+  box-shadow: 0 -0.5rem 0 -0.16rem currentColor;
+  clip-path: polygon(0 100%, 100% 100%, 100% 0, 68% 0, 50% 42%, 32% 0, 0 0);
+}
+
+.perf-export-button:hover:not(:disabled) {
+  border-color: rgba(94, 224, 255, 0.42);
+  background: rgba(14, 24, 54, 0.96);
+  transform: translateY(-1px);
+}
+
+.perf-export-button:disabled {
+  opacity: 0.38;
+  cursor: default;
 }
 
 .perf-table-shell {
@@ -2632,8 +2863,10 @@ body::before {
 }
 
 @media (max-width: 720px) {
+  .perf-overview,
   .perf-grid,
-  .perf-kpis {
+  .perf-kpis,
+  .perf-risk-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -2669,8 +2902,17 @@ body::before {
   display: block;
 }
 
+.perf-svg-neon {
+  overflow: visible;
+}
+
 .perf-bar {
   fill: #2a64d6;
+}
+
+.perf-bar-neon {
+  stroke: rgba(173, 238, 255, 0.28);
+  stroke-width: 1;
 }
 
 .perf-line {
@@ -2687,9 +2929,53 @@ body::before {
   filter: drop-shadow(0 0 4px rgba(94, 224, 255, 0.7));
 }
 
+.perf-dot-halo {
+  fill: rgba(94, 224, 255, 0.14);
+}
+
+.perf-dot-neon {
+  fill: #c9fbff;
+  stroke: #5ee0ff;
+  stroke-width: 1.1;
+  filter: drop-shadow(0 0 8px rgba(94, 224, 255, 0.95));
+}
+
 .perf-grid-line {
   stroke: rgba(120, 160, 255, 0.1);
   stroke-width: 1;
+}
+
+.perf-plot-shell {
+  fill: rgba(5, 12, 30, 0.72);
+  stroke: rgba(94, 140, 255, 0.12);
+  stroke-width: 1;
+}
+
+.perf-plot-outline {
+  fill: none;
+  stroke: rgba(94, 224, 255, 0.16);
+  stroke-width: 1;
+}
+
+.perf-plot-orb {
+  opacity: 0.24;
+  filter: blur(18px);
+}
+
+.perf-plot-orb-left {
+  fill: rgba(94, 224, 255, 0.38);
+}
+
+.perf-plot-orb-right {
+  fill: rgba(138, 92, 255, 0.32);
+}
+
+.perf-line-area {
+  pointer-events: none;
+}
+
+.perf-line-neon {
+  stroke-width: 2.8;
 }
 
 .perf-axis-x,
@@ -2701,6 +2987,10 @@ body::before {
 
 .perf-axis-x {
   text-anchor: middle;
+}
+
+.perf-axis-x-neon {
+  fill: rgba(198, 220, 255, 0.78);
 }
 
 .perf-axis-y {
@@ -2741,6 +3031,7 @@ body::before {
 }
 
 @media (max-width: 1100px) {
+  .perf-overview,
   .perf-main {
     grid-template-columns: 1fr;
   }
@@ -2811,4 +3102,12 @@ body::before {
 
 .perf-tooltip .tt-line {
   color: #5ee0ff;
+}
+
+.perf-svg-neon .perf-grid-line {
+  stroke: rgba(120, 160, 255, 0.06);
+}
+
+.perf-svg-neon .perf-axis-y {
+  fill: rgba(154, 176, 220, 0.42);
 }
