@@ -1621,18 +1621,18 @@ const renderPerfTable = (body, entries, labelFn) => {
 
 const perfScoreTier = (score) => {
   if (!Number.isFinite(score)) {
-    return { grade: "\u2014", label: "No data", toneClass: "perf-score-idle" };
+    return { label: "No data", toneClass: "perf-score-idle" };
+  }
+  if (score >= 95) {
+    return { label: "Elite", toneClass: "perf-score-elite" };
   }
   if (score >= 85) {
-    return { grade: "A+", label: "Elite", toneClass: "perf-score-elite" };
+    return { label: "Strong", toneClass: "perf-score-strong" };
   }
   if (score >= 70) {
-    return { grade: "A", label: "Strong", toneClass: "perf-score-strong" };
+    return { label: "Watch", toneClass: "perf-score-watch" };
   }
-  if (score >= 50) {
-    return { grade: "B", label: "Watch", toneClass: "perf-score-watch" };
-  }
-  return { grade: "C", label: "Critical", toneClass: "perf-score-critical" };
+  return { label: "Critical", toneClass: "perf-score-critical" };
 };
 
 const perfScoreGauge = (score) => {
