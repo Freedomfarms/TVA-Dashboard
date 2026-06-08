@@ -337,6 +337,7 @@ const renderDeliveriesPreview = (dataset, statusText) => {
     statusText,
   });
   renderPerformance();
+  renderVendorWatch();
 };
 
 const renderOutgoingPreview = (dataset, statusText) => {
@@ -350,6 +351,8 @@ const renderOutgoingPreview = (dataset, statusText) => {
     emptyMessage: "Paste outgoing rows from Excel and click Preview Data.",
     statusText,
   });
+  renderPerformance();
+  renderVendorWatch();
 };
 
 const hasHeaders = (dataset, requiredHeaders) => {
@@ -619,6 +622,7 @@ const renderProductionReadiness = () => {
   });
 
   renderEscalation();
+  renderVendorWatch();
 };
 
 const formatCount = (value) => Number(value).toLocaleString("en-US");
@@ -1663,6 +1667,130 @@ const perfScoreGauge = (score) => {
     + `</div>`;
 };
 
+const computeVendorScore = (part, vendor, process, wipIndex) => {
+  const matchingRows = perfAnchorRows().filter(
+    (row) =>
+      getRowValue(row, "Part Number") === part &&
+      getRowValue(row, "Vendor") === vendor &&
+      getRowValue(row, "Process") === process,
+  );
+  if (!matchingRows.length) {
+    return null;
+  }
+
+  const poSet = new Set();
+  matchingRows.forEach((row) => {
+    [getRowValue(row, ["PO 1", "PO1"]), getRowValue(row, ["PO 2", "PO2"])]
+      .map((po) => String(po).trim())
+      .filter(Boolean)
+      .forEach((po) => poSet.add(po));
+  });
+
+  const index = wipIndex || buildWipQtyIndex(window.dashboardDataset);
+  const currentWip = [...poSet].reduce((sum, po) => sum + (index.get(po) || 0), 0);
+  const requiredWip = matchingRows.reduce((sum, row) => sum + toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"])), 0);
+
+  const deliveryEntries = [];
+  (window.dashboardDeliveries?.rows || []).forEach((row) => {
+    if (!poSet.has(String(getRowValue(row, ["PO", "Incoming PO"])).trim())) {
+      return;
+    }
+    const date = perfParseDate(getRowValue(row, ["Received", "Ship Date", "Date"]));
+    if (date) {
+      deliveryEntries.push({ date, units: toNumber(getRowValue(row, ["Qty", "Quantity"])) });
+    }
+  });
+
+  const ltEntries = [];
+  (window.dashboardOutgoing?.rows || []).forEach((row) => {
+    if (!poSet.has(String(getRowValue(row, ["REF_DOC / PO", "PO", "Incoming PO"])).trim())) {
+      return;
+    }
+    const date = perfParseDate(getRowValue(row, ["LT Return"]));
+    if (date) {
+      ltEntries.push({ date, units: toNumber(getRowValue(row, ["Qty", "Quantity"])) });
+    }
+  });
+
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const next14Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
+  const deliveriesThisMonth = perfSumUnitsInRange(deliveryEntries, monthStart, today);
+  const ltDueThisMonth = perfSumUnitsInRange(ltEntries, monthStart, today);
+  const ltDueNext14Days = perfSumUnitsInRange(ltEntries, today, next14Days);
+
+  const clamp01 = (value) => Math.max(0, Math.min(1, value));
+  const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
+  const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
+  const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
+
+  return Math.round(
+    100 * (0.4 * clamp01(wipCoverage) + 0.35 * clamp01(deliveryPace) + 0.25 * clamp01(returnCoverage)),
+  );
+};
+
+const vendorWatchRing = (score) => {
+  const radius = 18;
+  const circ = 2 * Math.PI * radius;
+  const dash = (circ * (Math.max(0, Math.min(100, score)) / 100)).toFixed(1);
+  return `<svg class="vendor-watch-ring" viewBox="0 0 44 44" aria-hidden="true">`
+    + `<circle class="vendor-watch-ring-track" cx="22" cy="22" r="${radius}"/>`
+    + `<circle class="vendor-watch-ring-fill" cx="22" cy="22" r="${radius}" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 22 22)"/>`
+    + `</svg>`;
+};
+
+const renderVendorWatch = () => {
+  const grid = document.querySelector("#vendor-watch-grid");
+  if (!grid) {
+    return;
+  }
+
+  const wipIndex = buildWipQtyIndex(window.dashboardDataset);
+  const seen = new Set();
+  const items = [];
+  perfAnchorRows().forEach((row) => {
+    const part = String(getRowValue(row, "Part Number")).trim();
+    const vendor = String(getRowValue(row, "Vendor")).trim();
+    const process = String(getRowValue(row, "Process")).trim();
+    if (!part || !vendor || !process) {
+      return;
+    }
+    const key = `${part}\u0000${vendor}\u0000${process}`;
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    const score = computeVendorScore(part, vendor, process, wipIndex);
+    if (Number.isFinite(score) && score < 70) {
+      items.push({ part, vendor, process, score });
+    }
+  });
+
+  items.sort((a, b) => a.score - b.score);
+
+  if (!items.length) {
+    grid.innerHTML = `<article class="stat-card vendor-watch-card vendor-watch-empty">`
+      + `<div class="card-heading"><span>Vendor Watch</span></div>`
+      + `<div class="vendor-watch-empty-body"><strong>All clear</strong><span>No critical vendor scores</span></div>`
+      + `</article>`;
+    return;
+  }
+
+  grid.innerHTML = items
+    .map((item) => `<article class="stat-card vendor-watch-card">`
+      + `<div class="card-heading"><span>${item.vendor}</span><span class="vendor-watch-pill">Critical</span></div>`
+      + `<div class="metric-row">`
+      + `<div class="vendor-watch-info">`
+      + `<div class="metric-value vendor-watch-score">${item.score}</div>`
+      + `<div class="vendor-watch-part">${item.part}</div>`
+      + `<div class="vendor-watch-proc">${item.process}</div>`
+      + `</div>`
+      + vendorWatchRing(item.score)
+      + `</div>`
+      + `</article>`)
+    .join("");
+};
+
 const renderPerfKpis = (vendorScore, deliveryDays, lastDate) => {
   if (!perfKpis) {
     return;
@@ -2114,12 +2242,7 @@ const renderPerformance = () => {
   const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
   const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
 
-  const clamp01 = (value) => Math.max(0, Math.min(1, value));
-  const vendorScore = matchingRows.length
-    ? Math.round(
-      100 * (0.4 * clamp01(wipCoverage) + 0.35 * clamp01(deliveryPace) + 0.25 * clamp01(returnCoverage)),
-    )
-    : null;
+  const vendorScore = computeVendorScore(part, vendor, process, wipIndex);
   renderPerfKpis(vendorScore, daily.size, lastDate);
   const riskItems = matchingRows.length
     ? [

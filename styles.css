@@ -2823,6 +2823,118 @@ body::before {
   --score: rgba(168, 184, 226, 0.7);
 }
 
+.vendor-watch-grid {
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+}
+
+.vendor-watch-card {
+  --watch: #ff6fae;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 7.4rem;
+  padding: 0.95rem 0.9rem 0.85rem;
+}
+
+.vendor-watch-card .card-heading span:first-child {
+  min-width: 0;
+  color: rgba(232, 240, 255, 0.92);
+  font-size: 0.66rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vendor-watch-pill {
+  flex: 0 0 auto;
+  padding: 0.16rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 111, 174, 0.42);
+  background: rgba(70, 18, 40, 0.5);
+  color: #ff9bc2;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.vendor-watch-info {
+  min-width: 0;
+}
+
+.vendor-watch-score {
+  color: var(--watch);
+  font-size: 1.9rem;
+  text-shadow: 0 0 16px rgba(255, 111, 174, 0.55);
+}
+
+.vendor-watch-part {
+  margin-top: 0.16rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(226, 233, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vendor-watch-proc {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(180, 196, 244, 0.66);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vendor-watch-ring {
+  flex: 0 0 auto;
+  width: 2.9rem;
+  height: 2.9rem;
+  overflow: visible;
+}
+
+.vendor-watch-ring-track {
+  fill: none;
+  stroke: rgba(120, 160, 255, 0.16);
+  stroke-width: 4;
+}
+
+.vendor-watch-ring-fill {
+  fill: none;
+  stroke: var(--watch);
+  stroke-width: 4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgba(255, 111, 174, 0.8));
+}
+
+.vendor-watch-empty {
+  --watch: #5cffc0;
+  justify-content: flex-start;
+}
+
+.vendor-watch-empty-body {
+  margin-top: 0.6rem;
+}
+
+.vendor-watch-empty-body strong {
+  display: block;
+  font-size: 1.4rem;
+  color: #6cf0c0;
+}
+
+.vendor-watch-empty-body span {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(180, 196, 244, 0.7);
+}
+
 .perf-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
