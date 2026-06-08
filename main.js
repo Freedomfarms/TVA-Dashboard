@@ -61,13 +61,10 @@ const escDateLabel = document.querySelector("#esc-date-label");
 const perfPartSelect = document.querySelector("#perf-part");
 const perfVendorSelect = document.querySelector("#perf-vendor");
 const perfProcessSelect = document.querySelector("#perf-process");
-const pnFlowPart = document.querySelector("#pn-flow-part");
-const pnFlowVendor = document.querySelector("#pn-flow-vendor");
-const pnFlowProcess = document.querySelector("#pn-flow-process");
+const pnFlowSelectors = document.querySelector("#pn-flow-selectors");
 const pnFlowTable = document.querySelector("#pn-flow-table");
-const pnFlowAddButton = document.querySelector("#pn-flow-add");
 const pnFlowExportButton = document.querySelector("#pn-flow-export");
-const pnFlowPinned = [];
+const pnFlowParts = [];
 let pnFlowExportState = { rows: [], columns: [] };
 const perfPoLabel = document.querySelector("#perf-po-label");
 const perfKpis = document.querySelector("#perf-kpis");
@@ -1299,35 +1296,73 @@ const populatePerformance = () => {
   renderPerformance();
 };
 
-const refreshPnFlowVendors = () => {
-  const part = pnFlowPart?.value;
-  const vendors = perfUniqueValues(
+const pnFlowPartOptions = () => perfUniqueValues(perfAnchorRows(), "Part Number");
+
+const pnFlowVendorOptions = (part) =>
+  perfUniqueValues(
     perfAnchorRows().filter((row) => getRowValue(row, "Part Number") === part),
     "Vendor",
   );
-  perfFillSelect(pnFlowVendor, vendors, pnFlowVendor?.value);
-};
 
-const refreshPnFlowProcesses = () => {
-  const part = pnFlowPart?.value;
-  const vendor = pnFlowVendor?.value;
-  const processes = perfUniqueValues(
+const pnFlowProcessOptions = (part, vendor) =>
+  perfUniqueValues(
     perfAnchorRows().filter(
       (row) => getRowValue(row, "Part Number") === part && getRowValue(row, "Vendor") === vendor,
     ),
     "Process",
   );
-  perfFillSelect(pnFlowProcess, processes, pnFlowProcess?.value);
+
+const normalizePnFlowEntry = (entry) => {
+  const parts = pnFlowPartOptions();
+  if (!parts.includes(entry.part)) {
+    entry.part = parts[0] || "";
+  }
+  const vendors = pnFlowVendorOptions(entry.part);
+  if (!vendors.includes(entry.vendor)) {
+    entry.vendor = vendors[0] || "";
+  }
+  const processes = pnFlowProcessOptions(entry.part, entry.vendor);
+  if (!processes.includes(entry.process)) {
+    entry.process = processes[0] || "";
+  }
+};
+
+const pnFlowOptionTags = (options, selected) =>
+  options
+    .map((value) => `<option value="${value}"${value === selected ? " selected" : ""}>${value}</option>`)
+    .join("");
+
+const renderPnFlowSelectors = () => {
+  if (!pnFlowSelectors) {
+    return;
+  }
+  const groups = pnFlowParts
+    .map((entry, index) => {
+      const showLabels = index === 0;
+      const partTag = (text) => (showLabels ? `<span>${text}</span>` : "");
+      const partOpts = pnFlowOptionTags(pnFlowPartOptions(), entry.part);
+      const vendorOpts = pnFlowOptionTags(pnFlowVendorOptions(entry.part), entry.vendor);
+      const processOpts = pnFlowOptionTags(pnFlowProcessOptions(entry.part, entry.vendor), entry.process);
+      return `<div class="pn-flow-group-selectors" data-index="${index}">`
+        + `<label class="pn-flow-field">${partTag("Part Number")}<select data-index="${index}" data-field="part" aria-label="Part number">${partOpts}</select></label>`
+        + `<label class="pn-flow-field">${partTag("Vendor")}<select data-index="${index}" data-field="vendor" aria-label="Vendor">${vendorOpts}</select></label>`
+        + `<label class="pn-flow-field">${partTag("Process")}<select data-index="${index}" data-field="process" aria-label="Process">${processOpts}</select></label>`
+        + `</div>`;
+    })
+    .join("");
+  pnFlowSelectors.innerHTML = groups
+    + `<button class="pn-flow-add" id="pn-flow-add" type="button" aria-label="Add another part">+ Add part</button>`;
 };
 
 const populatePnFlow = () => {
-  if (!pnFlowPart) {
+  if (!pnFlowSelectors) {
     return;
   }
-  const parts = perfUniqueValues(perfAnchorRows(), "Part Number");
-  perfFillSelect(pnFlowPart, parts, pnFlowPart.value || parts[0]);
-  refreshPnFlowVendors();
-  refreshPnFlowProcesses();
+  if (!pnFlowParts.length) {
+    pnFlowParts.push({ part: "", vendor: "", process: "" });
+  }
+  pnFlowParts.forEach((entry) => normalizePnFlowEntry(entry));
+  renderPnFlowSelectors();
   renderPnFlow();
 };
 
@@ -1391,23 +1426,9 @@ const pnFlowCompute = (selection, days) => {
   };
 };
 
-const pnFlowSelectionKey = (sel) => `${sel.part}\u0000${sel.vendor}\u0000${sel.process}`;
-
 const renderPnFlow = () => {
   if (!pnFlowTable) {
     return;
-  }
-
-  const live = {
-    part: pnFlowPart?.value || "",
-    vendor: pnFlowVendor?.value || "",
-    process: pnFlowProcess?.value || "",
-  };
-
-  const blocks = pnFlowPinned.map((sel, index) => ({ sel, pinnedIndex: index }));
-  const liveIsPinned = pnFlowPinned.some((sel) => pnFlowSelectionKey(sel) === pnFlowSelectionKey(live));
-  if (live.part && !liveIsPinned) {
-    blocks.push({ sel: live, pinnedIndex: -1 });
   }
 
   const days = pnFlowDays();
@@ -1419,6 +1440,8 @@ const renderPnFlow = () => {
     .join("");
   const sum = (arr) => arr.reduce((a, b) => a + b, 0);
   const ave = (arr) => (arr.length ? sum(arr) / arr.length : 0);
+
+  const blocks = pnFlowParts.filter((entry) => entry.part);
 
   if (!blocks.length) {
     const span = days.length + 5;
@@ -1440,17 +1463,16 @@ const renderPnFlow = () => {
   ];
   const exportRows = [];
 
-  const bodies = blocks
-    .map((block, position) => {
-      const { sel, pinnedIndex } = block;
+  const bodies = pnFlowParts
+    .map((sel, index) => {
+      if (!sel.part) {
+        return "";
+      }
       const { currentWip, outVals, inVals } = pnFlowCompute(sel, days);
       const outCells = outVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
       const inCells = inVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
       const vendorLabel = sel.vendor ? `<small>${sel.vendor}</small>` : "";
-      const removeBtn = pinnedIndex >= 0
-        ? `<button type="button" class="pn-flow-remove" data-remove="${pinnedIndex}" aria-label="Remove ${sel.part}">\u00d7</button>`
-        : "";
-      const groupClass = position === 0 ? "pn-flow-group" : "pn-flow-group pn-flow-group-sep";
+      const sepClass = exportRows.length ? " pn-flow-group-sep" : "";
 
       exportRows.push([
         currentWip,
@@ -1473,10 +1495,10 @@ const renderPnFlow = () => {
         ave(inVals).toFixed(1),
       ]);
 
-      return `<tbody class="${groupClass}">`
+      return `<tbody class="pn-flow-group${sepClass}">`
         + `<tr>`
         + `<td rowspan="2" class="pn-flow-wip">${formatCount(currentWip)}</td>`
-        + `<td rowspan="2" class="pn-flow-pn">${removeBtn}<span>${sel.part}</span>${vendorLabel}</td>`
+        + `<td rowspan="2" class="pn-flow-pn" data-index="${index}" title="Double-click to remove"><span>${sel.part}</span>${vendorLabel}</td>`
         + `<td class="pn-flow-dir">Out to vendor</td>${outCells}`
         + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(outVals))}</td>`
         + `<td class="pn-flow-num">${ave(outVals).toFixed(1)}</td>`
@@ -1502,24 +1524,18 @@ const renderPnFlow = () => {
 };
 
 const addPnFlowPart = () => {
-  const live = {
-    part: pnFlowPart?.value || "",
-    vendor: pnFlowVendor?.value || "",
-    process: pnFlowProcess?.value || "",
-  };
-  if (!live.part) {
-    return;
-  }
-  if (pnFlowPinned.some((sel) => pnFlowSelectionKey(sel) === pnFlowSelectionKey(live))) {
-    return;
-  }
-  pnFlowPinned.push(live);
+  const seed = pnFlowParts[pnFlowParts.length - 1] || { part: "", vendor: "", process: "" };
+  const entry = { part: seed.part, vendor: seed.vendor, process: seed.process };
+  normalizePnFlowEntry(entry);
+  pnFlowParts.push(entry);
+  renderPnFlowSelectors();
   renderPnFlow();
 };
 
 const removePnFlowPart = (index) => {
-  if (index >= 0 && index < pnFlowPinned.length) {
-    pnFlowPinned.splice(index, 1);
+  if (index >= 0 && index < pnFlowParts.length) {
+    pnFlowParts.splice(index, 1);
+    renderPnFlowSelectors();
     renderPnFlow();
   }
 };
@@ -2579,22 +2595,37 @@ perfVendorSelect?.addEventListener("change", () => {
 });
 perfProcessSelect?.addEventListener("change", renderPerformance);
 
-pnFlowPart?.addEventListener("change", () => {
-  refreshPnFlowVendors();
-  refreshPnFlowProcesses();
+pnFlowSelectors?.addEventListener("change", (event) => {
+  const select = event.target.closest("select[data-field]");
+  if (!select) {
+    return;
+  }
+  const entry = pnFlowParts[Number(select.dataset.index)];
+  if (!entry) {
+    return;
+  }
+  const field = select.dataset.field;
+  entry[field] = select.value;
+  if (field === "part") {
+    entry.vendor = "";
+    entry.process = "";
+  } else if (field === "vendor") {
+    entry.process = "";
+  }
+  normalizePnFlowEntry(entry);
+  renderPnFlowSelectors();
   renderPnFlow();
 });
-pnFlowVendor?.addEventListener("change", () => {
-  refreshPnFlowProcesses();
-  renderPnFlow();
+pnFlowSelectors?.addEventListener("click", (event) => {
+  if (event.target.closest("#pn-flow-add")) {
+    addPnFlowPart();
+  }
 });
-pnFlowProcess?.addEventListener("change", renderPnFlow);
-pnFlowAddButton?.addEventListener("click", addPnFlowPart);
 pnFlowExportButton?.addEventListener("click", downloadPnFlowCsv);
-pnFlowTable?.addEventListener("click", (event) => {
-  const removeButton = event.target.closest(".pn-flow-remove");
-  if (removeButton) {
-    removePnFlowPart(Number(removeButton.dataset.remove));
+pnFlowTable?.addEventListener("dblclick", (event) => {
+  const cell = event.target.closest(".pn-flow-pn");
+  if (cell && cell.dataset.index !== undefined) {
+    removePnFlowPart(Number(cell.dataset.index));
   }
 });
 perfMonthSelect?.addEventListener("change", () => {

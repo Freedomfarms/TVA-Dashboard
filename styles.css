@@ -2885,7 +2885,21 @@ body::before {
 .pn-flow-selectors {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.7rem;
+  align-items: flex-end;
+  gap: 0.55rem;
+}
+
+.pn-flow-group-selectors {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  padding-right: 0.55rem;
+  border-right: 1px solid rgba(120, 160, 255, 0.16);
+}
+
+.pn-flow-group-selectors:last-of-type {
+  border-right: 0;
+  padding-right: 0;
 }
 
 .pn-flow-field {
@@ -2961,6 +2975,12 @@ body::before {
   vertical-align: middle;
   font-weight: 700;
   color: rgba(232, 240, 255, 0.95);
+  cursor: pointer;
+  user-select: none;
+}
+
+.pn-flow-table .pn-flow-pn:hover {
+  background: rgba(255, 122, 162, 0.08);
 }
 
 .pn-flow-table .pn-flow-pn small {
@@ -2968,27 +2988,6 @@ body::before {
   font-weight: 600;
   font-size: 0.62rem;
   color: rgba(180, 196, 244, 0.7);
-}
-
-.pn-flow-remove {
-  margin-right: 0.4rem;
-  width: 1.1rem;
-  height: 1.1rem;
-  padding: 0;
-  border: 1px solid rgba(255, 122, 162, 0.4);
-  border-radius: 50%;
-  background: rgba(60, 18, 30, 0.5);
-  color: #ff9bb5;
-  font-size: 0.78rem;
-  line-height: 1;
-  cursor: pointer;
-  vertical-align: middle;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.pn-flow-remove:hover {
-  border-color: rgba(255, 122, 162, 0.8);
-  background: rgba(90, 24, 42, 0.8);
 }
 
 .pn-flow-table tbody.pn-flow-group-sep tr:first-child td {
