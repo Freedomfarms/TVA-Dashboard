@@ -65,6 +65,10 @@ const pnFlowPart = document.querySelector("#pn-flow-part");
 const pnFlowVendor = document.querySelector("#pn-flow-vendor");
 const pnFlowProcess = document.querySelector("#pn-flow-process");
 const pnFlowTable = document.querySelector("#pn-flow-table");
+const pnFlowAddButton = document.querySelector("#pn-flow-add");
+const pnFlowExportButton = document.querySelector("#pn-flow-export");
+const pnFlowPinned = [];
+let pnFlowExportState = { rows: [], columns: [] };
 const perfPoLabel = document.querySelector("#perf-po-label");
 const perfKpis = document.querySelector("#perf-kpis");
 const perfDailyBody = document.querySelector("#perf-daily-body");
@@ -1327,15 +1331,15 @@ const populatePnFlow = () => {
   renderPnFlow();
 };
 
-const renderPnFlow = () => {
-  if (!pnFlowTable) {
-    return;
-  }
+const pnFlowDays = () => {
+  const today = new Date();
+  return perfDayRange(new Date(today.getFullYear(), today.getMonth(), 1), today);
+};
 
-  const part = pnFlowPart?.value || "";
-  const vendor = pnFlowVendor?.value || "";
-  const process = pnFlowProcess?.value || "";
+const pnFlowDayKey = (date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
+const pnFlowCompute = (selection, days) => {
+  const { part, vendor, process } = selection;
   const matchingRows = perfAnchorRows().filter(
     (row) =>
       getRowValue(row, "Part Number") === part &&
@@ -1354,11 +1358,6 @@ const renderPnFlow = () => {
   const wipIndex = buildWipQtyIndex(window.dashboardDataset);
   const currentWip = [...poSet].reduce((sum, po) => sum + (wipIndex.get(po) || 0), 0);
 
-  const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const days = perfDayRange(monthStart, today);
-  const dayKey = (date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-
   const outByDay = new Map();
   (window.dashboardOutgoing?.rows || []).forEach((row) => {
     if (!poSet.has(String(getRowValue(row, ["REF_DOC / PO", "PO", "Incoming PO"])).trim())) {
@@ -1368,7 +1367,7 @@ const renderPnFlow = () => {
     if (!date) {
       return;
     }
-    const key = dayKey(date);
+    const key = pnFlowDayKey(date);
     outByDay.set(key, (outByDay.get(key) || 0) + toNumber(getRowValue(row, ["Qty", "Quantity"])));
   });
 
@@ -1381,51 +1380,168 @@ const renderPnFlow = () => {
     if (!date) {
       return;
     }
-    const key = dayKey(date);
+    const key = pnFlowDayKey(date);
     inByDay.set(key, (inByDay.get(key) || 0) + toNumber(getRowValue(row, ["Qty", "Quantity"])));
   });
 
-  if (!part) {
-    const span = days.length + 5;
-    pnFlowTable.innerHTML = `<tbody><tr><td class="perf-empty" colspan="${span}">Select a part / vendor / process.</td></tr></tbody>`;
+  return {
+    currentWip,
+    outVals: days.map((date) => outByDay.get(pnFlowDayKey(date)) || 0),
+    inVals: days.map((date) => inByDay.get(pnFlowDayKey(date)) || 0),
+  };
+};
+
+const pnFlowSelectionKey = (sel) => `${sel.part}\u0000${sel.vendor}\u0000${sel.process}`;
+
+const renderPnFlow = () => {
+  if (!pnFlowTable) {
     return;
   }
 
-  const outVals = days.map((date) => outByDay.get(dayKey(date)) || 0);
-  const inVals = days.map((date) => inByDay.get(dayKey(date)) || 0);
-  const sum = (arr) => arr.reduce((a, b) => a + b, 0);
-  const ave = (arr) => (arr.length ? sum(arr) / arr.length : 0);
+  const live = {
+    part: pnFlowPart?.value || "",
+    vendor: pnFlowVendor?.value || "",
+    process: pnFlowProcess?.value || "",
+  };
 
+  const blocks = pnFlowPinned.map((sel, index) => ({ sel, pinnedIndex: index }));
+  const liveIsPinned = pnFlowPinned.some((sel) => pnFlowSelectionKey(sel) === pnFlowSelectionKey(live));
+  if (live.part && !liveIsPinned) {
+    blocks.push({ sel: live, pinnedIndex: -1 });
+  }
+
+  const days = pnFlowDays();
   const dayHeadTop = days
     .map((date) => `<th>${date.toLocaleDateString("en-US", { weekday: "short" })}</th>`)
     .join("");
   const dayHeadBottom = days
     .map((date) => `<th>${date.getDate()}-${date.toLocaleDateString("en-US", { month: "short" })}</th>`)
     .join("");
+  const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+  const ave = (arr) => (arr.length ? sum(arr) / arr.length : 0);
 
-  const outCells = outVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
-  const inCells = inVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
-  const vendorLabel = vendor ? `<small>${vendor}</small>` : "";
+  if (!blocks.length) {
+    const span = days.length + 5;
+    pnFlowTable.innerHTML = `<tbody><tr><td class="perf-empty" colspan="${span}">Select a part / vendor / process.</td></tr></tbody>`;
+    pnFlowExportState = { rows: [], columns: [] };
+    updatePerfExportButton(pnFlowExportButton, pnFlowExportState.rows);
+    return;
+  }
+
+  const exportColumns = [
+    "WIP",
+    "Part Number",
+    "Vendor",
+    "Process",
+    "Flow",
+    ...days.map((date) => `${date.getDate()}-${date.toLocaleDateString("en-US", { month: "short" })}`),
+    "Total",
+    "Ave",
+  ];
+  const exportRows = [];
+
+  const bodies = blocks
+    .map((block, position) => {
+      const { sel, pinnedIndex } = block;
+      const { currentWip, outVals, inVals } = pnFlowCompute(sel, days);
+      const outCells = outVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
+      const inCells = inVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
+      const vendorLabel = sel.vendor ? `<small>${sel.vendor}</small>` : "";
+      const removeBtn = pinnedIndex >= 0
+        ? `<button type="button" class="pn-flow-remove" data-remove="${pinnedIndex}" aria-label="Remove ${sel.part}">\u00d7</button>`
+        : "";
+      const groupClass = position === 0 ? "pn-flow-group" : "pn-flow-group pn-flow-group-sep";
+
+      exportRows.push([
+        currentWip,
+        sel.part,
+        sel.vendor,
+        sel.process,
+        "Out to vendor",
+        ...outVals,
+        sum(outVals),
+        ave(outVals).toFixed(1),
+      ]);
+      exportRows.push([
+        "",
+        sel.part,
+        sel.vendor,
+        sel.process,
+        "In from vendor",
+        ...inVals,
+        sum(inVals),
+        ave(inVals).toFixed(1),
+      ]);
+
+      return `<tbody class="${groupClass}">`
+        + `<tr>`
+        + `<td rowspan="2" class="pn-flow-wip">${formatCount(currentWip)}</td>`
+        + `<td rowspan="2" class="pn-flow-pn">${removeBtn}<span>${sel.part}</span>${vendorLabel}</td>`
+        + `<td class="pn-flow-dir">Out to vendor</td>${outCells}`
+        + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(outVals))}</td>`
+        + `<td class="pn-flow-num">${ave(outVals).toFixed(1)}</td>`
+        + `</tr>`
+        + `<tr>`
+        + `<td class="pn-flow-dir">In from vendor</td>${inCells}`
+        + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(inVals))}</td>`
+        + `<td class="pn-flow-num">${ave(inVals).toFixed(1)}</td>`
+        + `</tr>`
+        + `</tbody>`;
+    })
+    .join("");
 
   pnFlowTable.innerHTML =
     `<thead>`
     + `<tr><th rowspan="2">WIP</th><th rowspan="2">Part Number</th><th rowspan="2">Flow</th>${dayHeadTop}<th rowspan="2">Total</th><th rowspan="2">Ave</th></tr>`
     + `<tr>${dayHeadBottom}</tr>`
     + `</thead>`
-    + `<tbody>`
-    + `<tr>`
-    + `<td rowspan="2" class="pn-flow-wip">${formatCount(currentWip)}</td>`
-    + `<td rowspan="2" class="pn-flow-pn">${part}${vendorLabel}</td>`
-    + `<td class="pn-flow-dir">Out to vendor</td>${outCells}`
-    + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(outVals))}</td>`
-    + `<td class="pn-flow-num">${ave(outVals).toFixed(1)}</td>`
-    + `</tr>`
-    + `<tr>`
-    + `<td class="pn-flow-dir">In from vendor</td>${inCells}`
-    + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(inVals))}</td>`
-    + `<td class="pn-flow-num">${ave(inVals).toFixed(1)}</td>`
-    + `</tr>`
-    + `</tbody>`;
+    + bodies;
+
+  pnFlowExportState = { rows: exportRows, columns: exportColumns };
+  updatePerfExportButton(pnFlowExportButton, exportRows);
+};
+
+const addPnFlowPart = () => {
+  const live = {
+    part: pnFlowPart?.value || "",
+    vendor: pnFlowVendor?.value || "",
+    process: pnFlowProcess?.value || "",
+  };
+  if (!live.part) {
+    return;
+  }
+  if (pnFlowPinned.some((sel) => pnFlowSelectionKey(sel) === pnFlowSelectionKey(live))) {
+    return;
+  }
+  pnFlowPinned.push(live);
+  renderPnFlow();
+};
+
+const removePnFlowPart = (index) => {
+  if (index >= 0 && index < pnFlowPinned.length) {
+    pnFlowPinned.splice(index, 1);
+    renderPnFlow();
+  }
+};
+
+const downloadPnFlowCsv = () => {
+  if (!pnFlowExportState.rows.length) {
+    return;
+  }
+  const escapeCsv = (value) => `"${String(value).replace(/"/g, "\"\"")}"`;
+  const csv = [
+    pnFlowExportState.columns.map(escapeCsv).join(","),
+    ...pnFlowExportState.rows.map((row) => row.map(escapeCsv).join(",")),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `part-number-flow-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 };
 
 const perfParseDate = (value) => {
@@ -2473,6 +2589,14 @@ pnFlowVendor?.addEventListener("change", () => {
   renderPnFlow();
 });
 pnFlowProcess?.addEventListener("change", renderPnFlow);
+pnFlowAddButton?.addEventListener("click", addPnFlowPart);
+pnFlowExportButton?.addEventListener("click", downloadPnFlowCsv);
+pnFlowTable?.addEventListener("click", (event) => {
+  const removeButton = event.target.closest(".pn-flow-remove");
+  if (removeButton) {
+    removePnFlowPart(Number(removeButton.dataset.remove));
+  }
+});
 perfMonthSelect?.addEventListener("change", () => {
   perfSelectedMonth = perfMonthSelect.value;
   renderPerformance();
