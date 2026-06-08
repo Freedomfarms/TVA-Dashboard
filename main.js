@@ -1641,29 +1641,14 @@ const perfScoreTier = (score) => {
 
 const perfScoreGauge = (score) => {
   const tier = perfScoreTier(score);
-  const radius = 46;
-  const circ = 2 * Math.PI * radius;
-  const pct = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) / 100 : 0;
-  const dash = (circ * pct).toFixed(1);
   const display = Number.isFinite(score) ? Math.round(score) : "\u2014";
-  return `<div class="perf-score-gauge ${tier.toneClass}">`
-    + `<svg viewBox="0 0 120 120" role="img" aria-label="Vendor score ${display}">`
-    + `<defs>`
-    + `<linearGradient id="perf-score-grad" x1="0" y1="0" x2="1" y2="1">`
-    + `<stop offset="0%" stop-color="#5ee0ff"/>`
-    + `<stop offset="55%" stop-color="#8a5cff"/>`
-    + `<stop offset="100%" stop-color="#ff61d8"/>`
-    + `</linearGradient>`
-    + `<filter id="perf-score-glow" x="-30%" y="-30%" width="160%" height="160%">`
-    + `<feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>`
-    + `</filter>`
-    + `</defs>`
-    + `<circle class="perf-score-track" cx="60" cy="60" r="${radius}"/>`
-    + `<circle class="perf-score-track-inner" cx="60" cy="60" r="${radius - 9}"/>`
-    + `<circle class="perf-score-progress" cx="60" cy="60" r="${radius}" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 60 60)" filter="url(#perf-score-glow)"/>`
-    + `<text class="perf-score-value" x="60" y="60" dominant-baseline="central">${display}</text>`
-    + `</svg>`
-    + `<span class="perf-score-tier">${tier.label}</span>`
+  return `<div class="perf-score-portal ${tier.toneClass}" role="img" aria-label="Vendor score ${display}">`
+    + `<div class="perf-portal-shadow"></div>`
+    + `<div class="perf-portal-ring perf-portal-ring-1"></div>`
+    + `<div class="perf-portal-ring perf-portal-ring-2"></div>`
+    + `<div class="perf-portal-ring perf-portal-ring-3"></div>`
+    + `<div class="perf-portal-core"><strong>${display}</strong><small>${tier.label}</small></div>`
+    + `<div class="perf-portal-base"></div>`
     + `</div>`;
 };
 

@@ -2758,59 +2758,98 @@ body::before {
   margin-top: 0.4rem;
 }
 
-.perf-score-gauge {
+.perf-score-portal {
   --score: #5ee0ff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
+  position: relative;
+  width: 7.4rem;
+  height: 7.4rem;
+  display: grid;
+  place-items: center;
 }
 
-.perf-score-gauge svg {
-  width: min(100%, 6.6rem);
-  aspect-ratio: 1;
-  overflow: visible;
+.perf-portal-shadow {
+  position: absolute;
+  bottom: 0.5rem;
+  width: 5.4rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(45, 219, 255, 0.5), rgba(55, 106, 255, 0.12) 62%, transparent 74%);
+  filter: blur(8px);
 }
 
-.perf-score-track {
-  fill: none;
-  stroke: rgba(120, 160, 255, 0.14);
-  stroke-width: 8;
+.perf-portal-ring {
+  position: absolute;
+  border-radius: 50%;
+  animation: orbit 12s linear infinite;
 }
 
-.perf-score-track-inner {
-  fill: none;
-  stroke: rgba(120, 160, 255, 0.1);
-  stroke-width: 1;
-  stroke-dasharray: 2 5;
+.perf-portal-ring-1 {
+  width: 7.2rem;
+  height: 7.2rem;
+  background:
+    radial-gradient(circle, transparent 58%, rgba(7, 12, 28, 0.9) 59%),
+    conic-gradient(from 10deg, rgba(55, 208, 255, 0.05), rgba(55, 208, 255, 0.95), rgba(132, 84, 255, 0.95), rgba(255, 79, 216, 0.85), rgba(55, 208, 255, 0.05));
+  box-shadow: 0 0 24px rgba(60, 205, 255, 0.24);
 }
 
-.perf-score-progress {
-  fill: none;
-  stroke: url(#perf-score-grad);
-  stroke-width: 8;
-  stroke-linecap: round;
-  transition: stroke-dasharray 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+.perf-portal-ring-2 {
+  width: 5.7rem;
+  height: 5.7rem;
+  transform: rotate(-18deg);
+  background:
+    radial-gradient(circle, transparent 58%, rgba(7, 12, 28, 0.9) 59%),
+    conic-gradient(from 200deg, rgba(47, 211, 255, 0.08), rgba(99, 93, 255, 0.88), rgba(255, 76, 202, 0.84), rgba(77, 243, 255, 0.9), rgba(47, 211, 255, 0.08));
+  box-shadow: 0 0 28px rgba(169, 78, 255, 0.18);
+  animation-duration: 9s;
 }
 
-.perf-score-value {
-  fill: #f7faff;
-  font-family: inherit;
-  font-size: 30px;
-  font-weight: 700;
-  text-anchor: middle;
+.perf-portal-ring-3 {
+  width: 4.1rem;
+  height: 4.1rem;
+  background:
+    radial-gradient(circle, transparent 52%, rgba(7, 12, 28, 0.9) 53%),
+    conic-gradient(from 90deg, rgba(36, 197, 255, 0.1), rgba(87, 223, 255, 0.88), rgba(150, 93, 255, 0.75), rgba(36, 197, 255, 0.1));
+  animation-duration: 7s;
+}
+
+.perf-portal-core {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  text-align: center;
+  background: radial-gradient(circle at 50% 28%, rgba(46, 197, 255, 0.28), rgba(10, 14, 38, 0.94) 62%);
+}
+
+.perf-portal-core strong {
+  font-size: 1.45rem;
+  line-height: 1;
+  color: #f7faff;
   font-variant-numeric: tabular-nums;
-  filter: drop-shadow(0 0 10px var(--score));
+  text-shadow: 0 0 12px var(--score);
 }
 
-.perf-score-kpi .perf-score-tier {
-  margin-top: 0;
-  color: var(--score);
-  font-size: 0.62rem;
+.perf-portal-core small {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 0.5rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  text-shadow: 0 0 12px var(--score);
+  color: var(--score);
+  text-shadow: 0 0 10px var(--score);
+}
+
+.perf-portal-base {
+  position: absolute;
+  bottom: 0.35rem;
+  width: 4rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(125, 83, 255, 0.9), rgba(54, 194, 255, 0.82) 38%, rgba(6, 11, 30, 0.2) 66%, transparent 72%);
+  filter: blur(1px);
 }
 
 .perf-score-elite {
