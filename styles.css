@@ -2940,6 +2940,31 @@ body::before {
   filter: drop-shadow(0 0 8px rgba(94, 224, 255, 0.95));
 }
 
+.perf-mesh-fill {
+  opacity: 0.22;
+}
+
+.perf-mesh-line {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.perf-mesh-line-blue {
+  color: rgba(62, 220, 255, 0.8);
+}
+
+.perf-mesh-line-pink {
+  color: rgba(255, 85, 219, 0.8);
+}
+
+.perf-mesh-dot-pink {
+  fill: #ff61d8;
+  filter: drop-shadow(0 0 6px rgba(255, 85, 219, 0.9));
+}
+
 .perf-grid-line {
   stroke: rgba(120, 160, 255, 0.1);
   stroke-width: 1;
@@ -3030,6 +3055,16 @@ body::before {
   box-shadow: 0 0 6px rgba(94, 224, 255, 0.8);
 }
 
+.perf-legend-line-blue {
+  border-top-color: #53f5ff;
+  box-shadow: 0 0 6px rgba(62, 220, 255, 0.8);
+}
+
+.perf-legend-line-pink {
+  border-top-color: #ff61d8;
+  box-shadow: 0 0 6px rgba(255, 85, 219, 0.8);
+}
+
 @media (max-width: 1100px) {
   .perf-overview,
   .perf-main {
@@ -3105,7 +3140,8 @@ body::before {
 }
 
 .perf-svg-neon .perf-grid-line {
-  stroke: rgba(120, 160, 255, 0.06);
+  stroke: rgba(196, 208, 255, 0.08);
+  stroke-dasharray: 4 7;
 }
 
 .perf-svg-neon .perf-axis-y {

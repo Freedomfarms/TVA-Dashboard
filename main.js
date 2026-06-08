@@ -1477,6 +1477,28 @@ const perfNiceMax = (value) => {
   return nice * pow;
 };
 
+const perfSmoothPath = (pts) => {
+  if (!pts.length) {
+    return "";
+  }
+  if (pts.length === 1) {
+    return `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  }
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+};
+
 const renderComboChart = (container, data, options = {}) => {
   if (!container) {
     return;
@@ -1511,28 +1533,14 @@ const renderComboChart = (container, data, options = {}) => {
   const labelStep = Math.max(1, Math.ceil(data.length / maxLabels), options.minLabelStep || 1);
   const defs = isNeonVariant
     ? `<defs>`
-      + `<linearGradient id="${chartId}-bar-gradient" x1="0" y1="0" x2="0" y2="1">`
-      + `<stop offset="0%" stop-color="#63f6ff" stop-opacity="0.95"/>`
-      + `<stop offset="45%" stop-color="#4d8dff" stop-opacity="0.72"/>`
-      + `<stop offset="100%" stop-color="#4d8dff" stop-opacity="0.08"/>`
+      + `<linearGradient id="${chartId}-blue" x1="0" x2="1">`
+      + `<stop offset="0%" stop-color="#3db4ff"/>`
+      + `<stop offset="100%" stop-color="#53f5ff"/>`
       + `</linearGradient>`
-      + `<linearGradient id="${chartId}-line-gradient" x1="0" y1="0" x2="1" y2="0">`
-      + `<stop offset="0%" stop-color="#8a5cff"/>`
-      + `<stop offset="50%" stop-color="#5ee0ff"/>`
-      + `<stop offset="100%" stop-color="#39f0a5"/>`
+      + `<linearGradient id="${chartId}-pink" x1="0" x2="1">`
+      + `<stop offset="0%" stop-color="#d34cff"/>`
+      + `<stop offset="100%" stop-color="#ff61d8"/>`
       + `</linearGradient>`
-      + `<linearGradient id="${chartId}-area-gradient" x1="0" y1="0" x2="0" y2="1">`
-      + `<stop offset="0%" stop-color="#5ee0ff" stop-opacity="0.18"/>`
-      + `<stop offset="100%" stop-color="#5ee0ff" stop-opacity="0"/>`
-      + `</linearGradient>`
-      + `<filter id="${chartId}-bar-glow" x="-40%" y="-20%" width="180%" height="180%">`
-      + `<feGaussianBlur stdDeviation="5" result="blur"/>`
-      + `<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`
-      + `</filter>`
-      + `<filter id="${chartId}-line-glow" x="-10%" y="-30%" width="140%" height="170%">`
-      + `<feGaussianBlur stdDeviation="3" result="blur"/>`
-      + `<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`
-      + `</filter>`
       + `</defs>`
     : "";
 
@@ -1544,44 +1552,57 @@ const renderComboChart = (container, data, options = {}) => {
         + `<text x="${padL - 6}" y="${(yy + 3).toFixed(1)}" class="perf-axis-y">${val}</text>`;
     })
     .join("");
-  const plotFrame = isNeonVariant
-    ? `<rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" rx="20" class="perf-plot-shell"/>`
-      + `<rect x="${padL + 1.5}" y="${padT + 1.5}" width="${plotW - 3}" height="${plotH - 3}" rx="18" class="perf-plot-outline"/>`
-      + `<circle cx="${padL + plotW * 0.28}" cy="${padT + plotH * 0.28}" r="${plotH * 0.22}" class="perf-plot-orb perf-plot-orb-left"/>`
-      + `<circle cx="${padL + plotW * 0.78}" cy="${padT + plotH * 0.18}" r="${plotH * 0.16}" class="perf-plot-orb perf-plot-orb-right"/>`
-    : "";
+  const plotFrame = "";
 
-  const bars = data
-    .map((d, i) => {
-      if (!Number.isFinite(d.bar)) {
-        return "";
+  let bars = "";
+  let lineArea = "";
+  let line = "";
+  let dots = "";
+  if (isNeonVariant) {
+    const bottom = (padT + plotH).toFixed(1);
+    const deliveryPts = [];
+    data.forEach((d, i) => {
+      if (Number.isFinite(d.bar)) {
+        deliveryPts.push([cx(i), cy(d.bar)]);
       }
-      const x = cx(i) - barW / 2;
-      const yTop = cy(d.bar);
-      const h = Math.max(0, padT + plotH - yTop);
-      const fill = isNeonVariant ? ` fill="url(#${chartId}-bar-gradient)" filter="url(#${chartId}-bar-glow)"` : "";
-      const className = isNeonVariant ? "perf-bar perf-bar-neon" : "perf-bar";
-      return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="${isNeonVariant ? 8 : 3}" class="${className}"${fill}/>`;
-    })
-    .join("");
+    });
+    if (deliveryPts.length) {
+      const deliveryLine = perfSmoothPath(deliveryPts);
+      const firstX = deliveryPts[0][0].toFixed(1);
+      const lastX = deliveryPts[deliveryPts.length - 1][0].toFixed(1);
+      bars =
+        `<path d="${deliveryLine} L${lastX} ${bottom} L${firstX} ${bottom} Z" class="perf-mesh-fill perf-mesh-fill-blue" fill="url(#${chartId}-blue)"/>`
+        + `<path d="${deliveryLine}" class="perf-mesh-line perf-mesh-line-blue" stroke="url(#${chartId}-blue)"/>`;
+    }
 
-  const linePts = data.map((d, i) => `${cx(i).toFixed(1)},${cy(d.line).toFixed(1)}`).join(" ");
-  const lineArea = isNeonVariant
-    ? `<polygon points="${padL},${padT + plotH} ${linePts} ${W - padR},${padT + plotH}" class="perf-line-area" fill="url(#${chartId}-area-gradient)"/>`
-    : "";
-  const line = isNeonVariant
-    ? `<polyline points="${linePts}" class="perf-line perf-line-neon" stroke="url(#${chartId}-line-gradient)" filter="url(#${chartId}-line-glow)"/>`
-    : `<polyline points="${linePts}" class="perf-line"/>`;
-  const dots = data
-    .map((d, i) => {
-      const x = cx(i).toFixed(1);
-      const y = cy(d.line).toFixed(1);
-      return isNeonVariant
-        ? `<circle cx="${x}" cy="${y}" r="7.2" class="perf-dot-halo"/>`
-          + `<circle cx="${x}" cy="${y}" r="3.1" class="perf-dot perf-dot-neon"/>`
-        : `<circle cx="${x}" cy="${y}" r="3.2" class="perf-dot"/>`;
-    })
-    .join("");
+    const returnPts = data.map((d, i) => [cx(i), cy(d.line)]);
+    const returnLine = perfSmoothPath(returnPts);
+    const rFirstX = returnPts[0][0].toFixed(1);
+    const rLastX = returnPts[returnPts.length - 1][0].toFixed(1);
+    lineArea = `<path d="${returnLine} L${rLastX} ${bottom} L${rFirstX} ${bottom} Z" class="perf-mesh-fill perf-mesh-fill-pink" fill="url(#${chartId}-pink)"/>`;
+    line = `<path d="${returnLine}" class="perf-mesh-line perf-mesh-line-pink" stroke="url(#${chartId}-pink)"/>`;
+    dots = data
+      .map((d, i) => `<circle cx="${cx(i).toFixed(1)}" cy="${cy(d.line).toFixed(1)}" r="2.6" class="perf-mesh-dot perf-mesh-dot-pink"/>`)
+      .join("");
+  } else {
+    bars = data
+      .map((d, i) => {
+        if (!Number.isFinite(d.bar)) {
+          return "";
+        }
+        const x = cx(i) - barW / 2;
+        const yTop = cy(d.bar);
+        const h = Math.max(0, padT + plotH - yTop);
+        return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" class="perf-bar"/>`;
+      })
+      .join("");
+
+    const linePts = data.map((d, i) => `${cx(i).toFixed(1)},${cy(d.line).toFixed(1)}`).join(" ");
+    line = `<polyline points="${linePts}" class="perf-line"/>`;
+    dots = data
+      .map((d, i) => `<circle cx="${cx(i).toFixed(1)}" cy="${cy(d.line).toFixed(1)}" r="3.2" class="perf-dot"/>`)
+      .join("");
+  }
 
   const xLabels = data
     .map((d, i) => {
