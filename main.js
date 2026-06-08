@@ -1791,7 +1791,7 @@ const renderVendorWatch = () => {
     .join("");
 };
 
-const renderPerfKpis = (vendorScore, deliveryDays, lastDate) => {
+const renderPerfKpis = (vendorScore, metrics) => {
   if (!perfKpis) {
     return;
   }
@@ -1802,25 +1802,21 @@ const renderPerfKpis = (vendorScore, deliveryDays, lastDate) => {
   scoreCard.innerHTML = perfScoreGauge(vendorScore) + "<span>Vendor Score</span>";
   perfKpis.append(scoreCard);
 
-  const kpis = [
-    { label: "Delivery Days", value: formatCount(deliveryDays) },
-    {
-      label: "Last Delivery",
-      value: lastDate
-        ? lastDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-        : "\u2014",
-    },
-  ];
-  kpis.forEach((kpi) => {
-    const card = document.createElement("div");
-    card.className = "perf-kpi";
-    const value = document.createElement("strong");
-    value.textContent = kpi.value;
-    const label = document.createElement("span");
-    label.textContent = kpi.label;
-    card.append(value, label);
-    perfKpis.append(card);
-  });
+  const flowCard = document.createElement("div");
+  flowCard.className = "perf-kpi perf-flow-kpi";
+  const max = Math.max(1, ...metrics.map((m) => m.value));
+  flowCard.innerHTML = '<div class="status-list perf-flow-list">'
+    + metrics
+      .map((m) => {
+        const fill = Math.max(4, Math.round((m.value / max) * 100));
+        return `<div class="status-item ${m.tone}">`
+          + `<div class="status-top"><span>${m.label}</span><strong>${formatCount(m.value)}</strong></div>`
+          + `<span class="status-bar"><i style="width:${fill}%"></i></span>`
+          + `</div>`;
+      })
+      .join("")
+    + "</div>";
+  perfKpis.append(flowCard);
 };
 
 const updatePerfExportButton = (button, rows) => {
@@ -2243,7 +2239,12 @@ const renderPerformance = () => {
   const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
 
   const vendorScore = computeVendorScore(part, vendor, process, wipIndex);
-  renderPerfKpis(vendorScore, daily.size, lastDate);
+  renderPerfKpis(vendorScore, [
+    { label: "Total Delivered", value: totalUnits, tone: "cyan" },
+    { label: "Current WIP", value: currentWip, tone: "violet" },
+    { label: "Due This Month", value: ltDueThisMonth, tone: "amber" },
+    { label: "Due / 14 Days", value: ltDueNext14Days, tone: "pink" },
+  ]);
   const riskItems = matchingRows.length
     ? [
       {

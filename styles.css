@@ -2532,9 +2532,19 @@ body::before {
 
 .perf-kpis {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr);
   gap: 0.7rem;
   margin-top: 0.95rem;
+}
+
+.perf-flow-kpi {
+  display: flex;
+  align-items: center;
+}
+
+.perf-flow-list {
+  width: 100%;
+  gap: 0.72rem;
 }
 
 .perf-risk-subtitle {
