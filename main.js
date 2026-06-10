@@ -95,50 +95,50 @@ const perfTableExportState = {
   monthly: { rows: [], columns: ["Month", "Units"] },
 };
 const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
-\t4700912755\t5009904\tTech Company\tCBN\t0\t12\tMilitary
-\t4700912732\t5009905\tTech Company\tCBN\t0\t12\tMilitary
-\t4700917070\t5000806\tTech Company\tCBN\t0\t12\tMilitary
-\t4700917067\t5008207\tTech Company\tCBN\t0\t12\tMilitary
-\t4700917074\t5007508\tTech Company\tCBN\t0\t12\tMilitary
-\t4700917065\t5001129\tTech Company\tCBN\t0\t12\tMilitary
-\t4700915307\t4085004\tTech Company\tCBN\t0\t12\tMilitary
-\t4700915328\t4084105\tTech Company\tCBN\t0\t12\tMilitary
-\t4700915329\t4084106\tTech Company\tCBN\t0\t12\tMilitary
-4700911991\t4700915330\t4081507\tTech Company\tCBN\t0\t12\tMilitary
-\t4700915629\tDM5004613-91\tBerlin Indy\tTurn\t35\t45\tMilitary
-4700909661\t4700916287\t5009904\tWright Brothers\tPlasma\t0\t4\tMilitary
-4700909884\t4700916352\t5009905\tWright Brothers\tPlasma\t0\t4\tMilitary
-\t4700916356\t5008207\tWright Brothers\tPlasma\t0\t4\tMilitary
-4700912553\t4700916355\t5001129\tWright Brothers\tPlasma\t0\t4\tMilitary
-\t4700913839\t5008202\tWright Brothers\tPlasma\t0\t4\tMilitary
-\t4700916350\t4007321\tHouse\tDeburr\t21\t28\tMilitary
+\t7700912755\t5009904\tTech Company\tCBN\t0\t12\tMilitary
+\t7700912732\t5009905\tTech Company\tCBN\t0\t12\tMilitary
+\t7700917070\t5000806\tTech Company\tCBN\t0\t12\tMilitary
+\t7700917067\t5008207\tTech Company\tCBN\t0\t12\tMilitary
+\t7700917074\t5007508\tTech Company\tCBN\t0\t12\tMilitary
+\t7700917065\t5001129\tTech Company\tCBN\t0\t12\tMilitary
+\t7700915307\t4085004\tTech Company\tCBN\t0\t12\tMilitary
+\t7700915328\t4084105\tTech Company\tCBN\t0\t12\tMilitary
+\t7700915329\t4084106\tTech Company\tCBN\t0\t12\tMilitary
+7700911991\t7700915330\t4081507\tTech Company\tCBN\t0\t12\tMilitary
+\t7700915629\tDM5004613-91\tBerlin Indy\tTurn\t35\t45\tMilitary
+7700909661\t7700916287\t5009904\tWright Brothers\tPlasma\t0\t4\tMilitary
+7700909884\t7700916352\t5009905\tWright Brothers\tPlasma\t0\t4\tMilitary
+\t7700916356\t5008207\tWright Brothers\tPlasma\t0\t4\tMilitary
+7700912553\t7700916355\t5001129\tWright Brothers\tPlasma\t0\t4\tMilitary
+\t7700913839\t5008202\tWright Brothers\tPlasma\t0\t4\tMilitary
+\t7700916350\t4007321\tHouse\tDeburr\t21\t28\tMilitary
 \t\tDM500768-05\tHouse\tDeburr\t0\t7\tMilitary
-\t4700917773\tDM500768-06\tHouse\tDeburr\t0\t7\tMilitary
-\t4700917312\tDM5001129\tKorea\tTurn\t15\t35\tMilitary
-\t4700911826\t5009026\tManchester\tCoat / Grind\t1\t21\tMilitary
-\t4700910723\t5002602\tManchester\tCoat / Grind\t2\t21\tMilitary
-\t4700916250\t5006628\tHartford\tCoat\t1\t21\tMilitary
-\t4700913559\t5002743\tHartford\tCoat\t0\t21\tMilitary
-\t4700913282\t6W30P2594-01\tHawks\tSonic\t1\t21\tCommercial
-\t4700913815\t32G5307\tBerlin Indy\tTurn\t6\t6\tCommercial
-4700907130\t4700915655\t2004802\tBerlin Indy\tTurn\t5\t30\tCommercial
-\t4700917002\t32G1508\tBerlin Indy\tTurn\t2\t60\tCommercial
-\t4700917802\t32G1508\tBerlin Indy\tBalance\t0\t3\tCommercial
-4700912698\t4700917731\t32G7208\tWright Brothers\tAlox\t10\t6\tCommercial
-\t4700909289\t5004237\tKorea\tTurn\t0\t60\tCommercial
-\t4700916806\t500497\tKorea\tTurn\t1\t21\tCommercial
-\t4700915204\t32G4407\tManchester\tCBN\t10\t9\tCommercial
-\t4700912902\t32G5307\tManchester\tCBN\t10\t9\tCommercial
-\t4700915449\t32G8908\tManchester\tCBN / Alox\t31\t13\tCommercial
-\t4700917002\t32G1508\tManchester\tAlox\t0\t9\tCommercial
-\t4700917105\t32G1508\tManchester\tAlox\t0\t9\tCommercial
-4700911916\t4700916368\t32G8908\tBlack Gold\tBlack Gold\t18\t7\tCommercial
-\t4700917429\t32G1508\tBlack Gold\tBlack Gold\t0\t7\tCommercial
-4700913825\t4700910542\t500623\tPlasma Boys\tPlasma\t1\t14\tCommercial
-\t4700916888\t2005001\tTDI\tSpin\t0\t15\tCommercial
-4700906262\t4700916787\t2004802\tTDI\tSpin\t0\t15\tCommercial
-\t4700915229\t123158\tWater boys\tAnodize\t1\t30\tCommercial
-\t4700916685\t125925\tWater boys\tAnodize\t2\t30\tCommercial`;
+\t7700917773\tDM500768-06\tHouse\tDeburr\t0\t7\tMilitary
+\t7700917312\tDM5001129\tKorea\tTurn\t15\t35\tMilitary
+\t7700911826\t5009026\tManchester\tCoat / Grind\t1\t21\tMilitary
+\t7700910723\t5002602\tManchester\tCoat / Grind\t2\t21\tMilitary
+\t7700916250\t5006628\tHartford\tCoat\t1\t21\tMilitary
+\t7700913559\t5002743\tHartford\tCoat\t0\t21\tMilitary
+\t7700913282\t6W30P2594-01\tHawks\tSonic\t1\t21\tCommercial
+\t7700913815\t32G5307\tBerlin Indy\tTurn\t6\t6\tCommercial
+7700907130\t7700915655\t2004802\tBerlin Indy\tTurn\t5\t30\tCommercial
+\t7700917002\t32G1508\tBerlin Indy\tTurn\t2\t60\tCommercial
+\t7700917802\t32G1508\tBerlin Indy\tBalance\t0\t3\tCommercial
+7700912698\t7700917731\t32G7208\tWright Brothers\tAlox\t10\t6\tCommercial
+\t7700909289\t5004237\tKorea\tTurn\t0\t60\tCommercial
+\t7700916806\t500497\tKorea\tTurn\t1\t21\tCommercial
+\t7700915204\t32G4407\tManchester\tCBN\t10\t9\tCommercial
+\t7700912902\t32G5307\tManchester\tCBN\t10\t9\tCommercial
+\t7700915449\t32G8908\tManchester\tCBN / Alox\t31\t13\tCommercial
+\t7700917002\t32G1508\tManchester\tAlox\t0\t9\tCommercial
+\t7700917105\t32G1508\tManchester\tAlox\t0\t9\tCommercial
+7700911916\t7700916368\t32G8908\tBlack Gold\tBlack Gold\t18\t7\tCommercial
+\t7700917429\t32G1508\tBlack Gold\tBlack Gold\t0\t7\tCommercial
+7700913825\t7700910542\t500623\tPlasma Boys\tPlasma\t1\t14\tCommercial
+\t7700916888\t2005001\tTDI\tSpin\t0\t15\tCommercial
+7700906262\t7700916787\t2004802\tTDI\tSpin\t0\t15\tCommercial
+\t7700915229\t123158\tWater boys\tAnodize\t1\t30\tCommercial
+\t7700916685\t125925\tWater boys\tAnodize\t2\t30\tCommercial`;
 
 window.dashboardDataset = emptyDataset;
 window.dashboardDataAnchor = emptyDataset;
@@ -738,7 +738,7 @@ const mockHistoryNotes = [
   { id: "mock-0601-2", kind: "mock", date: "2026-06-01", severity: "positive", category: "Delivery", title: "On-time delivery rate at 94%", detail: "On-time performance held above target across active POs.", metric: "94%" },
   { id: "mock-0601-3", kind: "mock", date: "2026-06-01", severity: "info", category: "Outgoing", title: "21 units delivered", detail: "21 delivery lines logged \u00B7 latest movement Jun 1.", metric: "21" },
   { id: "mock-0602-1", kind: "mock", date: "2026-06-02", severity: "warning", category: "WIP", vendor: "NE Plasma", process: "Plasma", title: "1B6275-01 approaching minimum WIP", detail: "0 clean vs 1 required.", metric: "-1" },
-  { id: "mock-0602-2", kind: "mock", date: "2026-06-02", severity: "info", category: "Incoming", title: "Incoming PO 4700917312 received", detail: "4 units received against PO 4700917312 (MD4131129-21).", metric: "+4" },
+  { id: "mock-0602-2", kind: "mock", date: "2026-06-02", severity: "info", category: "Incoming", title: "Incoming PO 7700917312 received", detail: "4 units received against PO 7700917312 (MD4131129-21).", metric: "+4" },
   { id: "mock-0602-3", kind: "mock", date: "2026-06-02", severity: "info", category: "Outgoing", title: "8 units delivered", detail: "8 delivery lines logged \u00B7 latest movement Jun 2.", metric: "8" },
 ];
 
