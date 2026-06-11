@@ -61,6 +61,11 @@ const escDateLabel = document.querySelector("#esc-date-label");
 const perfPartSelect = document.querySelector("#perf-part");
 const perfVendorSelect = document.querySelector("#perf-vendor");
 const perfProcessSelect = document.querySelector("#perf-process");
+const pnFlowSelectors = document.querySelector("#pn-flow-selectors");
+const pnFlowTable = document.querySelector("#pn-flow-table");
+const pnFlowExportButton = document.querySelector("#pn-flow-export");
+const pnFlowParts = [];
+let pnFlowExportState = { rows: [], columns: [] };
 const perfPoLabel = document.querySelector("#perf-po-label");
 const perfKpis = document.querySelector("#perf-kpis");
 const perfDailyBody = document.querySelector("#perf-daily-body");
@@ -90,50 +95,50 @@ const perfTableExportState = {
   monthly: { rows: [], columns: ["Month", "Units"] },
 };
 const defaultAnchorRaw = `PO 2\tPO 1\tPart Number\tVendor\tProcess\tMin WIP\tLT\tBU
-\t4700912755\t4119904\tATA\tCBN\t0\t12\tMilitary
-\t4700912732\t4119905\tATA\tCBN\t0\t12\tMilitary
-\t4700917070\t4320806\tATA\tCBN\t0\t12\tMilitary
-\t4700917067\t4318207\tATA\tCBN\t0\t12\tMilitary
-\t4700917074\t4317508\tATA\tCBN\t0\t12\tMilitary
-\t4700917065\t4131129-01\tATA\tCBN\t0\t12\tMilitary
-\t4700915307\t4085004\tATA\tCBN\t0\t12\tMilitary
-\t4700915328\t4084105\tATA\tCBN\t0\t12\tMilitary
-\t4700915329\t4084106\tATA\tCBN\t0\t12\tMilitary
-4700911991\t4700915330\t4081507\tATA\tCBN\t0\t12\tMilitary
-\t4700915629\tMD4134613-91\tBudney\tTurn\t35\t45\tMilitary
-4700909661\t4700916287\t4119904\tCW\tPlasma\t0\t4\tMilitary
-4700909884\t4700916352\t4119905\tCW\tPlasma\t0\t4\tMilitary
-\t4700916356\t4318207\tCW\tPlasma\t0\t4\tMilitary
-4700912553\t4700916355\t4131129-01\tCW\tPlasma\t0\t4\tMilitary
-\t4700913839\t4138202\tCW\tPlasma\t0\t4\tMilitary
-\t4700916350\t4137321\tDHI\tDeburr\t21\t28\tMilitary
-\t\tMD4088768-02\tDHI\tDeburr\t0\t7\tMilitary
-\t4700917773\tMD4088768-03\tDHI\tDeburr\t0\t7\tMilitary
-\t4700917312\tMD4131129-21\tHanwha\tTurn\t15\t35\tMilitary
-\t4700911826\t4089026-01\tLinde\tCoat / Grind\t1\t21\tMilitary
-\t4700910723\t4082602\tLinde\tCoat / Grind\t2\t21\tMilitary
-\t4700916250\t4326628\tMSC\tCoat\t1\t21\tMilitary
-\t4700913559\t4322743-01\tMSC\tCoat\t0\t21\tMilitary
-\t4700913282\t6W30P2594-01\tATL\tSonic\t1\t21\tCommercial
-\t4700913815\t30G5307\tBudney\tTurn\t6\t6\tCommercial
-4700907130\t4700915655\t2A4802\tBudney\tTurn\t5\t30\tCommercial
-\t4700917002\t31G1508\tBudney\tTurn\t2\t60\tCommercial
-\t4700917802\t31G1508\tBudney\tBalance\t0\t3\tCommercial
-4700912698\t4700917731\t30G7208\tCW\tAlox\t10\t6\tCommercial
-\t4700909289\t1B4237\tHanwha\tTurn\t0\t60\tCommercial
-\t4700916806\t50D497\tHanwha\tTurn\t1\t21\tCommercial
-\t4700915204\t30G4407\tLinde\tCBN\t10\t9\tCommercial
-\t4700912902\t30G5307\tLinde\tCBN\t10\t9\tCommercial
-\t4700915449\t30G8908\tLinde\tCBN / Alox\t31\t13\tCommercial
-\t4700917002\t31G1508\tLinde\tAlox\t0\t9\tCommercial
-\t4700917105\t31G0508\tLinde\tAlox\t0\t9\tCommercial
-4700911916\t4700916368\t30G8908\tMDS\tBlack Gold\t18\t7\tCommercial
-\t4700917429\t31G0508\tMDS\tBlack Gold\t0\t7\tCommercial
-4700913825\t4700910542\t1B6275-01\tNE Plasma\tPlasma\t1\t14\tCommercial
-\t4700916888\t2A5001\tTest Devices\tSpin\t0\t15\tCommercial
-4700906262\t4700916787\t2A4802\tTest Devices\tSpin\t0\t15\tCommercial
-\t4700915229\t52G158\tValence\tAnodize\t1\t30\tCommercial
-\t4700916685\t53D925\tValence\tAnodize\t2\t30\tCommercial`;
+\t7700912755\t5009904\tTech Company\tCBN\t0\t12\tMilitary
+\t7700912732\t5009905\tTech Company\tCBN\t0\t12\tMilitary
+\t7700917070\t5000806\tTech Company\tCBN\t0\t12\tMilitary
+\t7700917067\t5008207\tTech Company\tCBN\t0\t12\tMilitary
+\t7700917074\t5007508\tTech Company\tCBN\t0\t12\tMilitary
+\t7700917065\t5001129\tTech Company\tCBN\t0\t12\tMilitary
+\t7700915307\t4085004\tTech Company\tCBN\t0\t12\tMilitary
+\t7700915328\t4084105\tTech Company\tCBN\t0\t12\tMilitary
+\t7700915329\t4084106\tTech Company\tCBN\t0\t12\tMilitary
+7700911991\t7700915330\t4081507\tTech Company\tCBN\t0\t12\tMilitary
+\t7700915629\tDM5004613-91\tBerlin Indy\tTurn\t35\t45\tMilitary
+7700909661\t7700916287\t5009904\tWright Brothers\tPlasma\t0\t4\tMilitary
+7700909884\t7700916352\t5009905\tWright Brothers\tPlasma\t0\t4\tMilitary
+\t7700916356\t5008207\tWright Brothers\tPlasma\t0\t4\tMilitary
+7700912553\t7700916355\t5001129\tWright Brothers\tPlasma\t0\t4\tMilitary
+\t7700913839\t5008202\tWright Brothers\tPlasma\t0\t4\tMilitary
+\t7700916350\t4007321\tHouse\tDeburr\t21\t28\tMilitary
+\t\tDM500768-05\tHouse\tDeburr\t0\t7\tMilitary
+\t7700917773\tDM500768-06\tHouse\tDeburr\t0\t7\tMilitary
+\t7700917312\tDM5001129\tKorea\tTurn\t15\t35\tMilitary
+\t7700911826\t5009026\tManchester\tCoat / Grind\t1\t21\tMilitary
+\t7700910723\t5002602\tManchester\tCoat / Grind\t2\t21\tMilitary
+\t7700916250\t5006628\tHartford\tCoat\t1\t21\tMilitary
+\t7700913559\t5002743\tHartford\tCoat\t0\t21\tMilitary
+\t7700913282\t6W30P2594-01\tHawks\tSonic\t1\t21\tCommercial
+\t7700913815\t32G5307\tBerlin Indy\tTurn\t6\t6\tCommercial
+7700907130\t7700915655\t2004802\tBerlin Indy\tTurn\t5\t30\tCommercial
+\t7700917002\t32G1508\tBerlin Indy\tTurn\t2\t60\tCommercial
+\t7700917802\t32G1508\tBerlin Indy\tBalance\t0\t3\tCommercial
+7700912698\t7700917731\t32G7208\tWright Brothers\tAlox\t10\t6\tCommercial
+\t7700909289\t5004237\tKorea\tTurn\t0\t60\tCommercial
+\t7700916806\t500497\tKorea\tTurn\t1\t21\tCommercial
+\t7700915204\t32G4407\tManchester\tCBN\t10\t9\tCommercial
+\t7700912902\t32G5307\tManchester\tCBN\t10\t9\tCommercial
+\t7700915449\t32G8908\tManchester\tCBN / Alox\t31\t13\tCommercial
+\t7700917002\t32G1508\tManchester\tAlox\t0\t9\tCommercial
+\t7700917105\t32G1508\tManchester\tAlox\t0\t9\tCommercial
+7700911916\t7700916368\t32G8908\tBlack Gold\tBlack Gold\t18\t7\tCommercial
+\t7700917429\t32G1508\tBlack Gold\tBlack Gold\t0\t7\tCommercial
+7700913825\t7700910542\t500623\tPlasma Boys\tPlasma\t1\t14\tCommercial
+\t7700916888\t2005001\tTDI\tSpin\t0\t15\tCommercial
+7700906262\t7700916787\t2004802\tTDI\tSpin\t0\t15\tCommercial
+\t7700915229\t123158\tWater boys\tAnodize\t1\t30\tCommercial
+\t7700916685\t125925\tWater boys\tAnodize\t2\t30\tCommercial`;
 
 window.dashboardDataset = emptyDataset;
 window.dashboardDataAnchor = emptyDataset;
@@ -317,6 +322,7 @@ const renderAnchorPreview = (dataset, statusText) => {
   renderProductionReadiness();
   refreshOutgoing();
   populatePerformance();
+  populatePnFlow();
 };
 
 const renderDeliveriesPreview = (dataset, statusText) => {
@@ -331,6 +337,7 @@ const renderDeliveriesPreview = (dataset, statusText) => {
     statusText,
   });
   renderPerformance();
+  renderVendorWatch();
 };
 
 const renderOutgoingPreview = (dataset, statusText) => {
@@ -344,6 +351,8 @@ const renderOutgoingPreview = (dataset, statusText) => {
     emptyMessage: "Paste outgoing rows from Excel and click Preview Data.",
     statusText,
   });
+  renderPerformance();
+  renderVendorWatch();
 };
 
 const hasHeaders = (dataset, requiredHeaders) => {
@@ -613,6 +622,7 @@ const renderProductionReadiness = () => {
   });
 
   renderEscalation();
+  renderVendorWatch();
 };
 
 const formatCount = (value) => Number(value).toLocaleString("en-US");
@@ -728,7 +738,7 @@ const mockHistoryNotes = [
   { id: "mock-0601-2", kind: "mock", date: "2026-06-01", severity: "positive", category: "Delivery", title: "On-time delivery rate at 94%", detail: "On-time performance held above target across active POs.", metric: "94%" },
   { id: "mock-0601-3", kind: "mock", date: "2026-06-01", severity: "info", category: "Outgoing", title: "21 units delivered", detail: "21 delivery lines logged \u00B7 latest movement Jun 1.", metric: "21" },
   { id: "mock-0602-1", kind: "mock", date: "2026-06-02", severity: "warning", category: "WIP", vendor: "NE Plasma", process: "Plasma", title: "1B6275-01 approaching minimum WIP", detail: "0 clean vs 1 required.", metric: "-1" },
-  { id: "mock-0602-2", kind: "mock", date: "2026-06-02", severity: "info", category: "Incoming", title: "Incoming PO 4700917312 received", detail: "4 units received against PO 4700917312 (MD4131129-21).", metric: "+4" },
+  { id: "mock-0602-2", kind: "mock", date: "2026-06-02", severity: "info", category: "Incoming", title: "Incoming PO 7700917312 received", detail: "4 units received against PO 7700917312 (MD4131129-21).", metric: "+4" },
   { id: "mock-0602-3", kind: "mock", date: "2026-06-02", severity: "info", category: "Outgoing", title: "8 units delivered", detail: "8 delivery lines logged \u00B7 latest movement Jun 2.", metric: "8" },
 ];
 
@@ -1290,6 +1300,270 @@ const populatePerformance = () => {
   renderPerformance();
 };
 
+const pnFlowPartOptions = () => perfUniqueValues(perfAnchorRows(), "Part Number");
+
+const pnFlowVendorOptions = (part) =>
+  perfUniqueValues(
+    perfAnchorRows().filter((row) => getRowValue(row, "Part Number") === part),
+    "Vendor",
+  );
+
+const pnFlowProcessOptions = (part, vendor) =>
+  perfUniqueValues(
+    perfAnchorRows().filter(
+      (row) => getRowValue(row, "Part Number") === part && getRowValue(row, "Vendor") === vendor,
+    ),
+    "Process",
+  );
+
+const normalizePnFlowEntry = (entry) => {
+  const parts = pnFlowPartOptions();
+  if (!parts.includes(entry.part)) {
+    entry.part = parts[0] || "";
+  }
+  const vendors = pnFlowVendorOptions(entry.part);
+  if (!vendors.includes(entry.vendor)) {
+    entry.vendor = vendors[0] || "";
+  }
+  const processes = pnFlowProcessOptions(entry.part, entry.vendor);
+  if (!processes.includes(entry.process)) {
+    entry.process = processes[0] || "";
+  }
+};
+
+const pnFlowOptionTags = (options, selected) =>
+  options
+    .map((value) => `<option value="${value}"${value === selected ? " selected" : ""}>${value}</option>`)
+    .join("");
+
+const renderPnFlowSelectors = () => {
+  if (!pnFlowSelectors) {
+    return;
+  }
+  const groups = pnFlowParts
+    .map((entry, index) => {
+      const showLabels = index === 0;
+      const partTag = (text) => (showLabels ? `<span>${text}</span>` : "");
+      const partOpts = pnFlowOptionTags(pnFlowPartOptions(), entry.part);
+      const vendorOpts = pnFlowOptionTags(pnFlowVendorOptions(entry.part), entry.vendor);
+      const processOpts = pnFlowOptionTags(pnFlowProcessOptions(entry.part, entry.vendor), entry.process);
+      return `<div class="pn-flow-group-selectors" data-index="${index}">`
+        + `<label class="pn-flow-field">${partTag("Part Number")}<select data-index="${index}" data-field="part" aria-label="Part number">${partOpts}</select></label>`
+        + `<label class="pn-flow-field">${partTag("Vendor")}<select data-index="${index}" data-field="vendor" aria-label="Vendor">${vendorOpts}</select></label>`
+        + `<label class="pn-flow-field">${partTag("Process")}<select data-index="${index}" data-field="process" aria-label="Process">${processOpts}</select></label>`
+        + `</div>`;
+    })
+    .join("");
+  pnFlowSelectors.innerHTML = groups
+    + `<button class="pn-flow-add" id="pn-flow-add" type="button" aria-label="Add another part">+ Add part</button>`;
+};
+
+const populatePnFlow = () => {
+  if (!pnFlowSelectors) {
+    return;
+  }
+  if (!pnFlowParts.length) {
+    pnFlowParts.push({ part: "", vendor: "", process: "" });
+  }
+  pnFlowParts.forEach((entry) => normalizePnFlowEntry(entry));
+  renderPnFlowSelectors();
+  renderPnFlow();
+};
+
+const pnFlowDays = () => {
+  const today = new Date();
+  return perfDayRange(new Date(today.getFullYear(), today.getMonth(), 1), today);
+};
+
+const pnFlowDayKey = (date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
+const pnFlowCompute = (selection, days) => {
+  const { part, vendor, process } = selection;
+  const matchingRows = perfAnchorRows().filter(
+    (row) =>
+      getRowValue(row, "Part Number") === part &&
+      getRowValue(row, "Vendor") === vendor &&
+      getRowValue(row, "Process") === process,
+  );
+
+  const poSet = new Set();
+  matchingRows.forEach((row) => {
+    [getRowValue(row, ["PO 1", "PO1"]), getRowValue(row, ["PO 2", "PO2"])]
+      .map((po) => String(po).trim())
+      .filter(Boolean)
+      .forEach((po) => poSet.add(po));
+  });
+
+  const wipIndex = buildWipQtyIndex(window.dashboardDataset);
+  const currentWip = [...poSet].reduce((sum, po) => sum + (wipIndex.get(po) || 0), 0);
+
+  const outByDay = new Map();
+  (window.dashboardOutgoing?.rows || []).forEach((row) => {
+    if (!poSet.has(String(getRowValue(row, ["REF_DOC / PO", "PO", "Incoming PO"])).trim())) {
+      return;
+    }
+    const date = perfParseDate(getRowValue(row, ["Ship Date", "Date"]));
+    if (!date) {
+      return;
+    }
+    const key = pnFlowDayKey(date);
+    outByDay.set(key, (outByDay.get(key) || 0) + toNumber(getRowValue(row, ["Qty", "Quantity"])));
+  });
+
+  const inByDay = new Map();
+  (window.dashboardDeliveries?.rows || []).forEach((row) => {
+    if (!poSet.has(String(getRowValue(row, ["PO", "Incoming PO"])).trim())) {
+      return;
+    }
+    const date = perfParseDate(getRowValue(row, ["Received", "Ship Date", "Date"]));
+    if (!date) {
+      return;
+    }
+    const key = pnFlowDayKey(date);
+    inByDay.set(key, (inByDay.get(key) || 0) + toNumber(getRowValue(row, ["Qty", "Quantity"])));
+  });
+
+  return {
+    currentWip,
+    outVals: days.map((date) => outByDay.get(pnFlowDayKey(date)) || 0),
+    inVals: days.map((date) => inByDay.get(pnFlowDayKey(date)) || 0),
+  };
+};
+
+const renderPnFlow = () => {
+  if (!pnFlowTable) {
+    return;
+  }
+
+  const days = pnFlowDays();
+  const dayHeadTop = days
+    .map((date) => `<th>${date.toLocaleDateString("en-US", { weekday: "short" })}</th>`)
+    .join("");
+  const dayHeadBottom = days
+    .map((date) => `<th>${date.getDate()}-${date.toLocaleDateString("en-US", { month: "short" })}</th>`)
+    .join("");
+  const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+  const ave = (arr) => (arr.length ? sum(arr) / arr.length : 0);
+
+  const blocks = pnFlowParts.filter((entry) => entry.part);
+
+  if (!blocks.length) {
+    const span = days.length + 5;
+    pnFlowTable.innerHTML = `<tbody><tr><td class="perf-empty" colspan="${span}">Select a part / vendor / process.</td></tr></tbody>`;
+    pnFlowExportState = { rows: [], columns: [] };
+    updatePerfExportButton(pnFlowExportButton, pnFlowExportState.rows);
+    return;
+  }
+
+  const exportColumns = [
+    "WIP",
+    "Part Number",
+    "Vendor",
+    "Process",
+    "Flow",
+    ...days.map((date) => `${date.getDate()}-${date.toLocaleDateString("en-US", { month: "short" })}`),
+    "Total",
+    "Ave",
+  ];
+  const exportRows = [];
+
+  const bodies = pnFlowParts
+    .map((sel, index) => {
+      if (!sel.part) {
+        return "";
+      }
+      const { currentWip, outVals, inVals } = pnFlowCompute(sel, days);
+      const outCells = outVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
+      const inCells = inVals.map((v) => `<td class="pn-flow-num">${formatCount(v)}</td>`).join("");
+      const vendorLabel = sel.vendor ? `<small>${sel.vendor}</small>` : "";
+      const sepClass = exportRows.length ? " pn-flow-group-sep" : "";
+
+      exportRows.push([
+        currentWip,
+        sel.part,
+        sel.vendor,
+        sel.process,
+        "Out to vendor",
+        ...outVals,
+        sum(outVals),
+        ave(outVals).toFixed(1),
+      ]);
+      exportRows.push([
+        "",
+        sel.part,
+        sel.vendor,
+        sel.process,
+        "In from vendor",
+        ...inVals,
+        sum(inVals),
+        ave(inVals).toFixed(1),
+      ]);
+
+      return `<tbody class="pn-flow-group${sepClass}">`
+        + `<tr>`
+        + `<td rowspan="2" class="pn-flow-wip">${formatCount(currentWip)}</td>`
+        + `<td rowspan="2" class="pn-flow-pn" data-index="${index}" title="Double-click to remove"><span>${sel.part}</span>${vendorLabel}</td>`
+        + `<td class="pn-flow-dir">Out to vendor</td>${outCells}`
+        + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(outVals))}</td>`
+        + `<td class="pn-flow-num">${ave(outVals).toFixed(1)}</td>`
+        + `</tr>`
+        + `<tr>`
+        + `<td class="pn-flow-dir">In from vendor</td>${inCells}`
+        + `<td class="pn-flow-num pn-flow-total">${formatCount(sum(inVals))}</td>`
+        + `<td class="pn-flow-num">${ave(inVals).toFixed(1)}</td>`
+        + `</tr>`
+        + `</tbody>`;
+    })
+    .join("");
+
+  pnFlowTable.innerHTML =
+    `<thead>`
+    + `<tr><th rowspan="2">WIP</th><th rowspan="2">Part Number</th><th rowspan="2">Flow</th>${dayHeadTop}<th rowspan="2">Total</th><th rowspan="2">Ave</th></tr>`
+    + `<tr>${dayHeadBottom}</tr>`
+    + `</thead>`
+    + bodies;
+
+  pnFlowExportState = { rows: exportRows, columns: exportColumns };
+  updatePerfExportButton(pnFlowExportButton, exportRows);
+};
+
+const addPnFlowPart = () => {
+  const seed = pnFlowParts[pnFlowParts.length - 1] || { part: "", vendor: "", process: "" };
+  const entry = { part: seed.part, vendor: seed.vendor, process: seed.process };
+  normalizePnFlowEntry(entry);
+  pnFlowParts.push(entry);
+  renderPnFlowSelectors();
+  renderPnFlow();
+};
+
+const removePnFlowPart = (index) => {
+  if (index >= 0 && index < pnFlowParts.length) {
+    pnFlowParts.splice(index, 1);
+    renderPnFlowSelectors();
+    renderPnFlow();
+  }
+};
+
+const downloadPnFlowCsv = () => {
+  if (!pnFlowExportState.rows.length) {
+    return;
+  }
+  const escapeCsv = (value) => `"${String(value).replace(/"/g, "\"\"")}"`;
+  const csv = [
+    pnFlowExportState.columns.map(escapeCsv).join(","),
+    ...pnFlowExportState.rows.map((row) => row.map(escapeCsv).join(",")),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `part-number-flow-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+};
+
 const perfParseDate = (value) => {
   const match = String(value).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   if (!match) {
@@ -1349,31 +1623,201 @@ const renderPerfTable = (body, entries, labelFn) => {
   });
 };
 
-const renderPerfKpis = (totalUnits, deliveryDays, lastDate) => {
+const perfScoreTier = (score) => {
+  if (!Number.isFinite(score)) {
+    return { label: "No data", toneClass: "perf-score-idle" };
+  }
+  if (score >= 95) {
+    return { label: "Elite", toneClass: "perf-score-elite" };
+  }
+  if (score >= 85) {
+    return { label: "Strong", toneClass: "perf-score-strong" };
+  }
+  if (score >= 70) {
+    return { label: "Watch", toneClass: "perf-score-watch" };
+  }
+  return { label: "Critical", toneClass: "perf-score-critical" };
+};
+
+const perfScoreGauge = (score) => {
+  const tier = perfScoreTier(score);
+  const radius = 46;
+  const circ = 2 * Math.PI * radius;
+  const pct = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) / 100 : 0;
+  const dash = (circ * pct).toFixed(1);
+  const display = Number.isFinite(score) ? Math.round(score) : "\u2014";
+  return `<div class="perf-score-gauge ${tier.toneClass}">`
+    + `<svg viewBox="0 0 120 120" role="img" aria-label="Vendor score ${display}">`
+    + `<defs>`
+    + `<linearGradient id="perf-score-grad" x1="0" y1="0" x2="1" y2="1">`
+    + `<stop offset="0%" stop-color="#5ee0ff"/>`
+    + `<stop offset="55%" stop-color="#8a5cff"/>`
+    + `<stop offset="100%" stop-color="#ff61d8"/>`
+    + `</linearGradient>`
+    + `<filter id="perf-score-glow" x="-30%" y="-30%" width="160%" height="160%">`
+    + `<feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>`
+    + `</filter>`
+    + `</defs>`
+    + `<circle class="perf-score-track" cx="60" cy="60" r="${radius}"/>`
+    + `<circle class="perf-score-track-inner" cx="60" cy="60" r="${radius - 9}"/>`
+    + `<circle class="perf-score-progress" cx="60" cy="60" r="${radius}" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 60 60)" filter="url(#perf-score-glow)"/>`
+    + `<text class="perf-score-value" x="60" y="60" dominant-baseline="central">${display}</text>`
+    + `</svg>`
+    + `<span class="perf-score-tier">${tier.label}</span>`
+    + `</div>`;
+};
+
+const computeVendorScore = (part, vendor, process, wipIndex) => {
+  const matchingRows = perfAnchorRows().filter(
+    (row) =>
+      getRowValue(row, "Part Number") === part &&
+      getRowValue(row, "Vendor") === vendor &&
+      getRowValue(row, "Process") === process,
+  );
+  if (!matchingRows.length) {
+    return null;
+  }
+
+  const poSet = new Set();
+  matchingRows.forEach((row) => {
+    [getRowValue(row, ["PO 1", "PO1"]), getRowValue(row, ["PO 2", "PO2"])]
+      .map((po) => String(po).trim())
+      .filter(Boolean)
+      .forEach((po) => poSet.add(po));
+  });
+
+  const index = wipIndex || buildWipQtyIndex(window.dashboardDataset);
+  const currentWip = [...poSet].reduce((sum, po) => sum + (index.get(po) || 0), 0);
+  const requiredWip = matchingRows.reduce((sum, row) => sum + toNumber(getRowValue(row, ["Min WIP", "Minimum WIP"])), 0);
+
+  const deliveryEntries = [];
+  (window.dashboardDeliveries?.rows || []).forEach((row) => {
+    if (!poSet.has(String(getRowValue(row, ["PO", "Incoming PO"])).trim())) {
+      return;
+    }
+    const date = perfParseDate(getRowValue(row, ["Received", "Ship Date", "Date"]));
+    if (date) {
+      deliveryEntries.push({ date, units: toNumber(getRowValue(row, ["Qty", "Quantity"])) });
+    }
+  });
+
+  const ltEntries = [];
+  (window.dashboardOutgoing?.rows || []).forEach((row) => {
+    if (!poSet.has(String(getRowValue(row, ["REF_DOC / PO", "PO", "Incoming PO"])).trim())) {
+      return;
+    }
+    const date = perfParseDate(getRowValue(row, ["LT Return"]));
+    if (date) {
+      ltEntries.push({ date, units: toNumber(getRowValue(row, ["Qty", "Quantity"])) });
+    }
+  });
+
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const next14Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
+  const deliveriesThisMonth = perfSumUnitsInRange(deliveryEntries, monthStart, today);
+  const ltDueThisMonth = perfSumUnitsInRange(ltEntries, monthStart, today);
+  const ltDueNext14Days = perfSumUnitsInRange(ltEntries, today, next14Days);
+
+  const clamp01 = (value) => Math.max(0, Math.min(1, value));
+  const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
+  const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
+  const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
+
+  return Math.round(
+    100 * (0.4 * clamp01(wipCoverage) + 0.35 * clamp01(deliveryPace) + 0.25 * clamp01(returnCoverage)),
+  );
+};
+
+const vendorWatchRing = (score) => {
+  const radius = 18;
+  const circ = 2 * Math.PI * radius;
+  const dash = (circ * (Math.max(0, Math.min(100, score)) / 100)).toFixed(1);
+  return `<svg class="vendor-watch-ring" viewBox="0 0 44 44" aria-hidden="true">`
+    + `<circle class="vendor-watch-ring-track" cx="22" cy="22" r="${radius}"/>`
+    + `<circle class="vendor-watch-ring-fill" cx="22" cy="22" r="${radius}" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 22 22)"/>`
+    + `</svg>`;
+};
+
+const renderVendorWatch = () => {
+  const grid = document.querySelector("#vendor-watch-grid");
+  if (!grid) {
+    return;
+  }
+
+  const wipIndex = buildWipQtyIndex(window.dashboardDataset);
+  const seen = new Set();
+  const items = [];
+  perfAnchorRows().forEach((row) => {
+    const part = String(getRowValue(row, "Part Number")).trim();
+    const vendor = String(getRowValue(row, "Vendor")).trim();
+    const process = String(getRowValue(row, "Process")).trim();
+    if (!part || !vendor || !process) {
+      return;
+    }
+    const key = `${part}\u0000${vendor}\u0000${process}`;
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    const score = computeVendorScore(part, vendor, process, wipIndex);
+    if (Number.isFinite(score) && score < 70) {
+      items.push({ part, vendor, process, score });
+    }
+  });
+
+  items.sort((a, b) => a.score - b.score);
+
+  if (!items.length) {
+    grid.innerHTML = `<article class="stat-card vendor-watch-card vendor-watch-empty">`
+      + `<div class="card-heading"><span>Vendor Watch</span></div>`
+      + `<div class="vendor-watch-empty-body"><strong>All clear</strong><span>No critical vendor scores</span></div>`
+      + `</article>`;
+    return;
+  }
+
+  grid.innerHTML = items
+    .map((item) => `<article class="stat-card vendor-watch-card">`
+      + `<div class="card-heading"><span>${item.vendor}</span><span class="vendor-watch-pill">Critical</span></div>`
+      + `<div class="metric-row">`
+      + `<div class="vendor-watch-info">`
+      + `<div class="metric-value vendor-watch-score">${item.score}</div>`
+      + `<div class="vendor-watch-part">${item.part}</div>`
+      + `<div class="vendor-watch-proc">${item.process}</div>`
+      + `</div>`
+      + vendorWatchRing(item.score)
+      + `</div>`
+      + `</article>`)
+    .join("");
+};
+
+const renderPerfKpis = (vendorScore, metrics) => {
   if (!perfKpis) {
     return;
   }
-  const kpis = [
-    { label: "Total Units", value: formatCount(totalUnits) },
-    { label: "Delivery Days", value: formatCount(deliveryDays) },
-    {
-      label: "Last Delivery",
-      value: lastDate
-        ? lastDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-        : "\u2014",
-    },
-  ];
   perfKpis.replaceChildren();
-  kpis.forEach((kpi) => {
-    const card = document.createElement("div");
-    card.className = "perf-kpi";
-    const value = document.createElement("strong");
-    value.textContent = kpi.value;
-    const label = document.createElement("span");
-    label.textContent = kpi.label;
-    card.append(value, label);
-    perfKpis.append(card);
-  });
+
+  const scoreCard = document.createElement("div");
+  scoreCard.className = "perf-kpi perf-score-kpi";
+  scoreCard.innerHTML = perfScoreGauge(vendorScore) + "<span>Vendor Score</span>";
+  perfKpis.append(scoreCard);
+
+  const flowCard = document.createElement("div");
+  flowCard.className = "perf-kpi perf-flow-kpi";
+  const autoMax = Math.max(1, ...metrics.filter((m) => m.fill == null).map((m) => m.value));
+  flowCard.innerHTML = '<div class="status-list perf-flow-list">'
+    + metrics
+      .map((m) => {
+        const raw = m.fill != null ? m.fill : (m.value / autoMax) * 100;
+        const fill = Math.max(4, Math.min(100, Math.round(raw)));
+        return `<div class="status-item ${m.tone}">`
+          + `<div class="status-top"><span>${m.label}</span><strong>${formatCount(m.value)}</strong></div>`
+          + `<span class="status-bar"><i style="width:${fill}%"></i></span>`
+          + `</div>`;
+      })
+      .join("")
+    + "</div>";
+  perfKpis.append(flowCard);
 };
 
 const updatePerfExportButton = (button, rows) => {
@@ -1477,6 +1921,28 @@ const perfNiceMax = (value) => {
   return nice * pow;
 };
 
+const perfSmoothPath = (pts) => {
+  if (!pts.length) {
+    return "";
+  }
+  if (pts.length === 1) {
+    return `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  }
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+};
+
 const renderComboChart = (container, data, options = {}) => {
   if (!container) {
     return;
@@ -1511,28 +1977,14 @@ const renderComboChart = (container, data, options = {}) => {
   const labelStep = Math.max(1, Math.ceil(data.length / maxLabels), options.minLabelStep || 1);
   const defs = isNeonVariant
     ? `<defs>`
-      + `<linearGradient id="${chartId}-bar-gradient" x1="0" y1="0" x2="0" y2="1">`
-      + `<stop offset="0%" stop-color="#63f6ff" stop-opacity="0.95"/>`
-      + `<stop offset="45%" stop-color="#4d8dff" stop-opacity="0.72"/>`
-      + `<stop offset="100%" stop-color="#4d8dff" stop-opacity="0.08"/>`
+      + `<linearGradient id="${chartId}-blue" x1="0" x2="1">`
+      + `<stop offset="0%" stop-color="#3db4ff"/>`
+      + `<stop offset="100%" stop-color="#53f5ff"/>`
       + `</linearGradient>`
-      + `<linearGradient id="${chartId}-line-gradient" x1="0" y1="0" x2="1" y2="0">`
-      + `<stop offset="0%" stop-color="#8a5cff"/>`
-      + `<stop offset="50%" stop-color="#5ee0ff"/>`
-      + `<stop offset="100%" stop-color="#39f0a5"/>`
+      + `<linearGradient id="${chartId}-pink" x1="0" x2="1">`
+      + `<stop offset="0%" stop-color="#d34cff"/>`
+      + `<stop offset="100%" stop-color="#ff61d8"/>`
       + `</linearGradient>`
-      + `<linearGradient id="${chartId}-area-gradient" x1="0" y1="0" x2="0" y2="1">`
-      + `<stop offset="0%" stop-color="#5ee0ff" stop-opacity="0.18"/>`
-      + `<stop offset="100%" stop-color="#5ee0ff" stop-opacity="0"/>`
-      + `</linearGradient>`
-      + `<filter id="${chartId}-bar-glow" x="-40%" y="-20%" width="180%" height="180%">`
-      + `<feGaussianBlur stdDeviation="5" result="blur"/>`
-      + `<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`
-      + `</filter>`
-      + `<filter id="${chartId}-line-glow" x="-10%" y="-30%" width="140%" height="170%">`
-      + `<feGaussianBlur stdDeviation="3" result="blur"/>`
-      + `<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`
-      + `</filter>`
       + `</defs>`
     : "";
 
@@ -1544,44 +1996,55 @@ const renderComboChart = (container, data, options = {}) => {
         + `<text x="${padL - 6}" y="${(yy + 3).toFixed(1)}" class="perf-axis-y">${val}</text>`;
     })
     .join("");
-  const plotFrame = isNeonVariant
-    ? `<rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" rx="20" class="perf-plot-shell"/>`
-      + `<rect x="${padL + 1.5}" y="${padT + 1.5}" width="${plotW - 3}" height="${plotH - 3}" rx="18" class="perf-plot-outline"/>`
-      + `<circle cx="${padL + plotW * 0.28}" cy="${padT + plotH * 0.28}" r="${plotH * 0.22}" class="perf-plot-orb perf-plot-orb-left"/>`
-      + `<circle cx="${padL + plotW * 0.78}" cy="${padT + plotH * 0.18}" r="${plotH * 0.16}" class="perf-plot-orb perf-plot-orb-right"/>`
-    : "";
+  const plotFrame = "";
 
-  const bars = data
-    .map((d, i) => {
-      if (!Number.isFinite(d.bar)) {
-        return "";
+  let bars = "";
+  let lineArea = "";
+  let line = "";
+  let dots = "";
+  if (isNeonVariant) {
+    const bottom = (padT + plotH).toFixed(1);
+    const deliveryPts = [];
+    data.forEach((d, i) => {
+      if (Number.isFinite(d.bar)) {
+        deliveryPts.push([cx(i), cy(d.bar)]);
       }
-      const x = cx(i) - barW / 2;
-      const yTop = cy(d.bar);
-      const h = Math.max(0, padT + plotH - yTop);
-      const fill = isNeonVariant ? ` fill="url(#${chartId}-bar-gradient)" filter="url(#${chartId}-bar-glow)"` : "";
-      const className = isNeonVariant ? "perf-bar perf-bar-neon" : "perf-bar";
-      return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="${isNeonVariant ? 8 : 3}" class="${className}"${fill}/>`;
-    })
-    .join("");
+    });
+    if (deliveryPts.length) {
+      const deliveryLine = perfSmoothPath(deliveryPts);
+      const firstX = deliveryPts[0][0].toFixed(1);
+      const lastX = deliveryPts[deliveryPts.length - 1][0].toFixed(1);
+      bars =
+        `<path d="${deliveryLine} L${lastX} ${bottom} L${firstX} ${bottom} Z" class="perf-mesh-fill perf-mesh-fill-blue" fill="url(#${chartId}-blue)"/>`
+        + `<path d="${deliveryLine}" class="perf-mesh-line perf-mesh-line-blue" stroke="url(#${chartId}-blue)"/>`;
+    }
 
-  const linePts = data.map((d, i) => `${cx(i).toFixed(1)},${cy(d.line).toFixed(1)}`).join(" ");
-  const lineArea = isNeonVariant
-    ? `<polygon points="${padL},${padT + plotH} ${linePts} ${W - padR},${padT + plotH}" class="perf-line-area" fill="url(#${chartId}-area-gradient)"/>`
-    : "";
-  const line = isNeonVariant
-    ? `<polyline points="${linePts}" class="perf-line perf-line-neon" stroke="url(#${chartId}-line-gradient)" filter="url(#${chartId}-line-glow)"/>`
-    : `<polyline points="${linePts}" class="perf-line"/>`;
-  const dots = data
-    .map((d, i) => {
-      const x = cx(i).toFixed(1);
-      const y = cy(d.line).toFixed(1);
-      return isNeonVariant
-        ? `<circle cx="${x}" cy="${y}" r="7.2" class="perf-dot-halo"/>`
-          + `<circle cx="${x}" cy="${y}" r="3.1" class="perf-dot perf-dot-neon"/>`
-        : `<circle cx="${x}" cy="${y}" r="3.2" class="perf-dot"/>`;
-    })
-    .join("");
+    const returnPts = data.map((d, i) => [cx(i), cy(d.line)]);
+    const returnLine = perfSmoothPath(returnPts);
+    const rFirstX = returnPts[0][0].toFixed(1);
+    const rLastX = returnPts[returnPts.length - 1][0].toFixed(1);
+    lineArea = `<path d="${returnLine} L${rLastX} ${bottom} L${rFirstX} ${bottom} Z" class="perf-mesh-fill perf-mesh-fill-pink" fill="url(#${chartId}-pink)"/>`;
+    line = `<path d="${returnLine}" class="perf-mesh-line perf-mesh-line-pink" stroke="url(#${chartId}-pink)"/>`;
+    dots = "";
+  } else {
+    bars = data
+      .map((d, i) => {
+        if (!Number.isFinite(d.bar)) {
+          return "";
+        }
+        const x = cx(i) - barW / 2;
+        const yTop = cy(d.bar);
+        const h = Math.max(0, padT + plotH - yTop);
+        return `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" class="perf-bar"/>`;
+      })
+      .join("");
+
+    const linePts = data.map((d, i) => `${cx(i).toFixed(1)},${cy(d.line).toFixed(1)}`).join(" ");
+    line = `<polyline points="${linePts}" class="perf-line"/>`;
+    dots = data
+      .map((d, i) => `<circle cx="${cx(i).toFixed(1)}" cy="${cy(d.line).toFixed(1)}" r="3.2" class="perf-dot"/>`)
+      .join("");
+  }
 
   const xLabels = data
     .map((d, i) => {
@@ -1698,8 +2161,6 @@ const renderPerformance = () => {
     monthly.set(monthKey, { date: monthDate, units: (monthly.get(monthKey)?.units || 0) + qty });
   });
 
-  renderPerfKpis(totalUnits, daily.size, lastDate);
-
   const byDateDesc = (a, b) => b.date - a.date;
   const dailyDates = [...daily.values()].map((entry) => entry.date.getTime());
   let dailyRows = [];
@@ -1774,9 +2235,23 @@ const renderPerformance = () => {
   const deliveriesThisMonth = perfSumUnitsInRange(dailySeries, monthStart, today);
   const ltDueThisMonth = perfSumUnitsInRange(ltDailyEntries, monthStart, today);
   const ltDueNext14Days = perfSumUnitsInRange(ltDailyEntries, today, next14Days);
+  const ltDueMonthTotal = perfSumUnitsInRange(ltDailyEntries, monthStart, perfEndOfMonth(today));
+  const remainingDue = Math.max(0, ltDueMonthTotal - deliveriesThisMonth);
   const wipCoverage = requiredWip > 0 ? currentWip / requiredWip : 1;
   const deliveryPace = ltDueThisMonth > 0 ? deliveriesThisMonth / ltDueThisMonth : 1;
   const returnCoverage = ltDueNext14Days > 0 ? currentWip / ltDueNext14Days : 1;
+
+  const vendorScore = computeVendorScore(part, vendor, process, wipIndex);
+  renderPerfKpis(vendorScore, [
+    {
+      label: `${today.toLocaleDateString("en-US", { month: "long" })} Deliveries`,
+      value: deliveriesThisMonth,
+      tone: "cyan",
+    },
+    { label: "Current WIP", value: currentWip, tone: "violet", fill: Math.min(1, wipCoverage) * 100 },
+    { label: "Remaining Due", value: remainingDue, tone: "amber" },
+    { label: "Due / 14 Days", value: ltDueNext14Days, tone: "pink" },
+  ]);
   const riskItems = matchingRows.length
     ? [
       {
@@ -2305,6 +2780,40 @@ perfVendorSelect?.addEventListener("change", () => {
   renderPerformance();
 });
 perfProcessSelect?.addEventListener("change", renderPerformance);
+
+pnFlowSelectors?.addEventListener("change", (event) => {
+  const select = event.target.closest("select[data-field]");
+  if (!select) {
+    return;
+  }
+  const entry = pnFlowParts[Number(select.dataset.index)];
+  if (!entry) {
+    return;
+  }
+  const field = select.dataset.field;
+  entry[field] = select.value;
+  if (field === "part") {
+    entry.vendor = "";
+    entry.process = "";
+  } else if (field === "vendor") {
+    entry.process = "";
+  }
+  normalizePnFlowEntry(entry);
+  renderPnFlowSelectors();
+  renderPnFlow();
+});
+pnFlowSelectors?.addEventListener("click", (event) => {
+  if (event.target.closest("#pn-flow-add")) {
+    addPnFlowPart();
+  }
+});
+pnFlowExportButton?.addEventListener("click", downloadPnFlowCsv);
+pnFlowTable?.addEventListener("dblclick", (event) => {
+  const cell = event.target.closest(".pn-flow-pn");
+  if (cell && cell.dataset.index !== undefined) {
+    removePnFlowPart(Number(cell.dataset.index));
+  }
+});
 perfMonthSelect?.addEventListener("change", () => {
   perfSelectedMonth = perfMonthSelect.value;
   renderPerformance();
